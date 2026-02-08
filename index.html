@@ -1708,7 +1708,159 @@
             </div>
         </div>
     </section>
+    <!-- Subscription Plans Section -->
+<section id="subscriptions" class="subscription-section">
+    <div class="container">
+        <h2 class="section-title">Subscription Plans</h2>
+        <p class="section-subtitle">Choose your access level to AI-powered predictions</p>
+        
+        <div class="subscription-tabs">
+            <button class="sub-tab active" onclick="showSubscriptionTier('normal')">Normal Tier</button>
+            <button class="sub-tab" onclick="showSubscriptionTier('deep')">Deep Tier</button>
+        </div>
+        
+        <!-- Normal Plans -->
+        <div class="plans-container" id="normalPlans">
+            <div class="plans-grid">
+                <!-- Normal 4 Days -->
+                <div class="plan-card">
+                    <div class="plan-badge normal">NORMAL</div>
+                    <h3>4 Days</h3>
+                    <div class="plan-price">£3.99</div>
+                    <ul class="plan-features">
+                        <li>✅ 50 Daily Predictions</li>
+                        <li>✅ 5 Multi Bets</li>
+                        <li>✅ 5 Same Bets</li>
+                        <li>✅ ACCAs: 2,2,2,2,4,12,8</li>
+                    </ul>
+                    <button class="subscribe-btn" onclick="selectPlan('normal_4', 3.99)">Subscribe</button>
+                </div>
+                
+                <!-- Normal 9 Days -->
+                <div class="plan-card">
+                    <div class="plan-badge normal">NORMAL</div>
+                    <h3>9 Days</h3>
+                    <div class="plan-price">£7.99</div>
+                    <ul class="plan-features">
+                        <li>✅ 100 Daily Predictions</li>
+                        <li>✅ 10 Multi Bets</li>
+                        <li>✅ 10 Same Bets</li>
+                        <li>✅ ACCAs: 4,4,4,4,8,24,16</li>
+                    </ul>
+                    <button class="subscribe-btn" onclick="selectPlan('normal_9', 7.99)">Subscribe</button>
+                </div>
+                
+                <!-- Normal 14 Days -->
+                <div class="plan-card">
+                    <div class="plan-badge normal">NORMAL</div>
+                    <h3>14 Days</h3>
+                    <div class="plan-price">£11.99</div>
+                    <ul class="plan-features">
+                        <li>✅ 150 Daily Predictions</li>
+                        <li>✅ 15 Multi Bets</li>
+                        <li>✅ 15 Same Bets</li>
+                        <li>✅ ACCAs: 5,5,5,5,10,30,20</li>
+                    </ul>
+                    <button class="subscribe-btn" onclick="selectPlan('normal_14', 11.99)">Subscribe</button>
+                </div>
+                
+                <!-- Normal 30 Days -->
+                <div class="plan-card">
+                    <div class="plan-badge normal">NORMAL</div>
+                    <h3>30 Days</h3>
+                    <div class="plan-price">£34.99</div>
+                    <ul class="plan-features">
+                        <li>✅ 300 Daily Predictions</li>
+                        <li>✅ 25 Multi Bets</li>
+                        <li>✅ 25 Same Bets</li>
+                        <li>✅ ACCAs: 10,10,10,10,20,60,40</li>
+                    </ul>
+                    <button class="subscribe-btn" onclick="selectPlan('normal_30', 34.99)">Subscribe</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Deep Plans (Initially Hidden) -->
+        <div class="plans-container" id="deepPlans" style="display: none;">
+            <div class="plans-grid">
+                <!-- Deep 4 Days -->
+                <div class="plan-card deep">
+                    <div class="plan-badge deep">DEEP</div>
+                    <h3>4 Days</h3>
+                    <div class="plan-price">£9.99</div>
+                    <ul class="plan-features">
+                        <li>✅ 75 Top 25% Predictions</li>
+                        <li>✅ 8 Multi Bets</li>
+                        <li>✅ 8 Same Bets</li>
+                        <li>✅ ACCAs: 3,3,3,3,6,18,12</li>
+                        <li>✅ Advanced Markets</li>
+                        <li>✅ Priority Support</li>
+                    </ul>
+                    <button class="subscribe-btn deep-btn" onclick="selectPlan('deep_4', 9.99)">Subscribe</button>
+                </div>
+                
+                <!-- Deep 9 Days -->
+                <div class="plan-card deep">
+                    <div class="plan-badge deep">DEEP</div>
+                    <h3>9 Days</h3>
+                    <div class="plan-price">£17.99</div>
+                    <ul class="plan-features">
+                        <li>✅ 150 Top 25% Predictions</li>
+                        <li>✅ 15 Multi Bets</li>
+                        <li>✅ 15 Same Bets</li>
+                        <li>✅ ACCAs: 6,6,6,6,12,36,24</li>
+                        <li>✅ Advanced Markets</li>
+                        <li>✅ Priority Support</li>
+                    </ul>
+                    <button class="subscribe-btn deep-btn" onclick="selectPlan('deep_9', 17.99)">Subscribe</button>
+                </div>
+                
+                <!-- Deep 14 Days -->
+                <div class="plan-card deep">
+                    <div class="plan-badge deep">DEEP</div>
+                    <h3>14 Days</h3>
+                    <div class="plan-price">£24.99</div>
+                    <ul class="plan-features">
+                        <li>✅ 225 Top 25% Predictions</li>
+                        <li>✅ 20 Multi Bets</li>
+                        <li>✅ 20 Same Bets</li>
+                        <li>✅ ACCAs: 8,8,8,8,16,48,32</li>
+                        <li>✅ Advanced Markets</li>
+                        <li>✅ Priority Support</li>
+                    </ul>
+                    <button class="subscribe-btn deep-btn" onclick="selectPlan('deep_14', 24.99)">Subscribe</button>
+                </div>
+                
+                <!-- Deep 30 Days -->
+                <div class="plan-card deep">
+                    <div class="plan-badge deep">DEEP</div>
+                    <h3>30 Days</h3>
+                    <div class="plan-price">£59.99</div>
+                    <ul class="plan-features">
+                        <li>✅ 500 Top 25% Predictions</li>
+                        <li>✅ 40 Multi Bets</li>
+                        <li>✅ 40 Same Bets</li>
+                        <li>✅ ACCAs: 15,15,15,15,30,90,60</li>
+                        <li>✅ Advanced Markets</li>
+                        <li>✅ Priority Support</li>
+                    </ul>
+                    <button class="subscribe-btn deep-btn" onclick="selectPlan('deep_30', 59.99)">Subscribe</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Simple Form -->
+        <div class="subscription-form" id="subForm" style="display: none; margin-top: 3rem;">
+            <h3>Subscribe to <span id="selectedPlanName">Normal 4 Days</span></h3>
+            <input type="email" id="subEmail" placeholder="Your Email" style="width: 100%; padding: 1rem; margin: 1rem 0;">
+            <input type="text" id="subName" placeholder="Your Name" style="width: 100%; padding: 1rem; margin-bottom: 1rem;">
+            <button onclick="submitSubscription()" style="background: #667eea; color: white; padding: 1rem 2rem; border: none; border-radius: 5px; width: 100%;">Get Payment Link</button>
+        </div>
+    </div>
+</section>
 
+<!-- Footer -->
+<footer class="footer">
     <!-- Footer -->
     <footer class="footer">
         <div class="footer-content">
