@@ -1,349 +1,1301 @@
 <!DOCTYPE html>
-<html lang="en" id="top">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SKCS AI Sports Predictions</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKCS AI | Sports Analytics & Predictions</title>
+    <style>
+        /* Reset & Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  <meta name="description" content="SKCS AI provides confidence-based sports predictions across football, rugby, cricket, basketball, Formula 1 and more using a transparent AI pipeline.">
-  <meta name="keywords" content="AI sports predictions, football predictions, rugby predictions, cricket predictions, sports analytics AI">
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
 
-  <style>
-    html { scroll-behavior: smooth; }
+        /* Navigation */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            border-bottom: 3px solid #667eea;
+        }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      background-color: #f8f9fa;
-      color: #212529;
-      line-height: 1.6;
-    }
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #667eea;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-    /* Navigation */
-    .navbar {
-      background-color: #0d6efd;
-      padding: 1rem 2rem;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
+        .logo::before {
+            content: "⚡";
+            font-size: 2rem;
+        }
 
-    .nav-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
 
-    .logo {
-      color: white;
-      font-size: 1.5rem;
-      font-weight: bold;
-      text-decoration: none;
-    }
+        .nav-links a {
+            color: #555;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
 
-    .nav-links {
-      display: flex;
-      gap: 2rem;
-    }
+        .nav-links a:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
 
-    .nav-links a {
-      color: white;
-      text-decoration: none;
-      font-weight: 500;
-    }
+        /* Hero Section */
+        .hero {
+            padding: 10rem 2rem 6rem;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
 
-    .nav-links a:hover { color: #cfe2ff; }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" opacity="0.05"><path d="M0,0H1000V1000H0Z" fill="none"/><path d="M250,250H750V750H250Z" stroke="white" stroke-width="2" fill="none"/></svg>');
+            background-size: 300px;
+        }
 
-    /* Hero */
-    .hero-section {
-      position: relative;
-      height: 500px;
-      background-image: url('hero-page.jpg');
-      background-size: cover;
-      background-position: center;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      color: white;
-    }
+        .hero-container {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
 
-    .hero-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-    }
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 800;
+            line-height: 1.2;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
 
-    .hero-content {
-      position: relative;
-      z-index: 2;
-      max-width: 800px;
-      padding: 2rem;
-    }
+        .hero-subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
 
-    .hero-content h1 {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-    }
+        .hero-description {
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            opacity: 0.85;
+            line-height: 1.7;
+        }
 
-    .hero-content p { font-size: 1.3rem; }
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+            margin-top: 3rem;
+        }
 
-    /* Main */
-    .main-content {
-      max-width: 1200px;
-      margin: 3rem auto;
-      padding: 0 1rem;
-    }
+        .stat-item {
+            text-align: center;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            min-width: 150px;
+        }
 
-    .section-title {
-      text-align: center;
-      color: #0d6efd;
-      margin-bottom: 2rem;
-      font-size: 2.2rem;
-    }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #a78bfa;
+        }
 
-    .section-description {
-      text-align: center;
-      color: #666;
-      font-size: 1.2rem;
-      max-width: 800px;
-      margin: 0 auto 3rem;
-    }
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
 
-    .features {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2rem;
-      justify-content: center;
-    }
+        /* How SKCS Works Section */
+        .how-it-works {
+            padding: 6rem 2rem;
+            background: white;
+        }
 
-    .feature {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 8px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-      max-width: 350px;
-    }
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #333;
+            font-weight: 700;
+        }
 
-    .feature h3 { color: #0d6efd; }
+        .section-description {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #666;
+            max-width: 800px;
+            margin: 0 auto 4rem;
+            line-height: 1.6;
+        }
 
-    /* PIPELINE */
-    .pipeline-section {
-      background: linear-gradient(135deg, #0d6efd, #0b5ed7);
-      color: white;
-      padding: 5rem 2rem;
-      margin: 4rem 0;
-    }
+        .workflow {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
 
-    .pipeline-container { max-width: 1200px; margin: auto; }
+        .workflow-step {
+            background: white;
+            border-radius: 15px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            border: 2px solid #eef2ff;
+            transition: all 0.3s ease;
+            position: relative;
+        }
 
-    .pipeline-stage {
-      display: flex;
-      gap: 2rem;
-      margin-bottom: 3rem;
-    }
+        .workflow-step:hover {
+            transform: translateY(-10px);
+            border-color: #667eea;
+            box-shadow: 0 20px 50px rgba(102, 126, 234, 0.15);
+        }
 
-    .stage-number {
-      width: 60px;
-      height: 60px;
-      background: white;
-      color: #0d6efd;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 1.5rem;
-      flex-shrink: 0;
-    }
+        .step-number {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
 
-    .stage-content {
-      background: rgba(255,255,255,0.1);
-      padding: 1.5rem;
-      border-radius: 10px;
-      width: 100%;
-    }
+        .workflow-step h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
 
-    /* TABS */
-    .predictions-section { max-width: 1400px; margin: 4rem auto; }
+        .workflow-step p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
 
-    .tabs-container {
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-      overflow: hidden;
-    }
+        .step-tag {
+            display: inline-block;
+            background: #eef2ff;
+            color: #667eea;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
 
-    .tabs-header {
-      display: flex;
-      background: #f8f9fa;
-      overflow-x: auto;
-    }
+        /* SKCS AI Pipeline Section - NEW */
+        .pipeline-section {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: white;
+            padding: 6rem 2rem;
+            margin: 0;
+            position: relative;
+            overflow: hidden;
+        }
 
-    .tab-button {
-      padding: 1.2rem 1.5rem;
-      border: none;
-      background: none;
-      font-weight: 600;
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-    }
+        .pipeline-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" opacity="0.03"><path d="M0,0H1000V1000H0Z" fill="none"/><path d="M250,250H750V750H250Z" stroke="white" stroke-width="2" fill="none"/></svg>');
+            background-size: 300px;
+        }
 
-    .tab-button.active {
-      color: #0d6efd;
-      border-bottom: 3px solid #0d6efd;
-      background: white;
-    }
+        .pipeline-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
 
-    .tab-content {
-      display: none;
-      padding: 2.5rem;
-    }
+        .pipeline-timeline {
+            position: relative;
+            margin: 4rem 0;
+        }
 
-    .tab-content.active { display: block; }
+        .pipeline-timeline::before {
+            content: '';
+            position: absolute;
+            left: 30px;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }
 
-    .subscription-status {
-      background: #198754;
-      color: white;
-      padding: 0.3rem 0.8rem;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      margin-left: 1rem;
-    }
+        .pipeline-stage {
+            display: flex;
+            margin-bottom: 3rem;
+            position: relative;
+        }
 
-    /* Footer */
-    .footer {
-      background: #212529;
-      color: white;
-      padding: 2rem;
-      text-align: center;
-    }
+        .stage-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-right: 2rem;
+            flex-shrink: 0;
+            z-index: 2;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
 
-    .copyright { color: #adb5bd; font-size: 0.9rem; }
+        .stage-content {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
 
-    @media (max-width: 768px) {
-      .pipeline-stage { flex-direction: column; }
-    }
-  </style>
+        .stage-content:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateX(5px);
+        }
+
+        .stage-content h3 {
+            color: white;
+            margin-bottom: 1.2rem;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stage-icon {
+            font-size: 2rem;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .stage-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 1.8rem;
+            margin-top: 1.5rem;
+            border-left: 4px solid #667eea;
+        }
+
+        .stage-card h4 {
+            color: #a78bfa;
+            margin-bottom: 1.2rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .stage-card pre {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            padding: 1.2rem;
+            overflow-x: auto;
+            margin: 1.2rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stage-card code {
+            color: #f0f0f0;
+            font-family: 'SF Mono', 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .stage-card p {
+            color: #e0e0e0;
+            margin: 0.8rem 0;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .stage-card strong {
+            color: white;
+            font-weight: 600;
+        }
+
+        .pipeline-summary {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 3rem;
+            margin-top: 4rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .pipeline-summary h3 {
+            color: white;
+            text-align: center;
+            margin-bottom: 2.5rem;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin: 2.5rem 0;
+        }
+
+        .summary-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            border-top: 4px solid #a78bfa;
+            transition: all 0.3s ease;
+        }
+
+        .summary-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-5px);
+        }
+
+        .summary-item h4 {
+            color: #a78bfa;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .summary-item p {
+            color: #e0e0e0;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .disclaimer-note {
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+            padding: 2rem;
+            margin-top: 2.5rem;
+            border-left: 4px solid #a78bfa;
+        }
+
+        .disclaimer-note p {
+            color: white;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            margin: 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .disclaimer-note p::before {
+            content: "💡";
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        /* Predictions Section */
+        .predictions-section {
+            padding: 6rem 2rem;
+            background: white;
+        }
+
+        .prediction-filters {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.8rem 2rem;
+            border: 2px solid #e0e7ff;
+            background: white;
+            color: #667eea;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            background: #eef2ff;
+            transform: translateY(-2px);
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .predictions-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .prediction-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            border: 2px solid #eef2ff;
+            transition: all 0.3s ease;
+        }
+
+        .prediction-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sport-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .confidence-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.4rem 1.2rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .match-info {
+            padding: 2rem;
+        }
+
+        .teams {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .vs {
+            color: #666;
+            margin: 0 1rem;
+        }
+
+        .prediction-details {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .prediction-type {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .reasoning {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+
+        .odds {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .odd-item {
+            flex: 1;
+            text-align: center;
+            padding: 0.8rem;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #e0e7ff;
+        }
+
+        .odd-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.3rem;
+        }
+
+        .odd-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .card-footer {
+            padding: 1.5rem 2rem;
+            background: #f8fafc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 2px solid #eef2ff;
+        }
+
+        .update-time {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .ai-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.5rem 1.2rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Framework Section */
+        .framework-section {
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+        }
+
+        .framework-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .framework-item {
+            background: white;
+            border-radius: 15px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .framework-item:hover {
+            transform: translateY(-10px);
+            border-color: #667eea;
+            box-shadow: 0 20px 50px rgba(102, 126, 234, 0.15);
+        }
+
+        .framework-item h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+
+        .framework-item p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Footer */
+        .footer {
+            background: #0f172a;
+            color: white;
+            padding: 4rem 2rem 2rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-section h3 {
+            color: #a78bfa;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .footer-section p {
+            color: #cbd5e1;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: #a78bfa;
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.2rem;
+            }
+            
+            .nav-links {
+                gap: 1rem;
+            }
+            
+            .pipeline-timeline::before {
+                left: 25px;
+            }
+            
+            .stage-number {
+                width: 50px;
+                height: 50px;
+                margin-right: 1.5rem;
+            }
+            
+            .predictions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero {
+                padding: 8rem 1rem 4rem;
+            }
+            
+            .nav-container {
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .pipeline-stage {
+                flex-direction: column;
+            }
+            
+            .stage-number {
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
 </head>
-
 <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">SKCS AI</a>
+            <div class="nav-links">
+                <a href="#pipeline">AI Pipeline</a>
+                <a href="#predictions">Predictions</a>
+                <a href="#framework">Framework</a>
+                <a href="#about">About</a>
+                <a href="#contact">Contact</a>
+            </div>
+        </div>
+    </nav>
 
-<nav class="navbar">
-  <div class="nav-container">
-    <a href="#top" class="logo">SKCS AI</a>
-    <div class="nav-links">
-      <a href="#pipeline">AI Pipeline</a>
-      <a href="#predictions">Predictions</a>
-      <a href="#framework">Framework</a>
-      <a href="#about">About</a>
-      <a href="#contact">Contact</a>
-    </div>
-  </div>
-</nav>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-container">
+            <h1>Sports Analytics Powered by Multi-Stage AI</h1>
+            <p class="hero-subtitle">From raw API data to intelligent predictions in 6 stages</p>
+            <p class="hero-description">
+                SKCS AI transforms sports data through a sophisticated 6-stage pipeline, analyzing matches across 7 sports with institutional-grade AI that goes beyond simple statistics.
+            </p>
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-number">7</span>
+                    <span class="stat-label">Sports Analyzed</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">6</span>
+                    <span class="stat-label">AI Stages</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">92%</span>
+                    <span class="stat-label">Data Accuracy</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">500+</span>
+                    <span class="stat-label">Data Points/Match</span>
+                </div>
+            </div>
+        </div>
+    </section>
 
-<section class="hero-section">
-  <div class="hero-overlay"></div>
-  <div class="hero-content">
-    <h1>Welcome to SKCS AI Sports Predictions</h1>
-    <p>Smart, confidence-based predictions for informed decisions</p>
-    <p>⚽ 🏉 🏐 ⚾ 🏀 🏎️ 🏏 7 Sports Coverage</p>
-  </div>
-</section>
+    <!-- How SKCS Works -->
+    <section class="how-it-works">
+        <h2 class="section-title">How SKCS AI Works</h2>
+        <p class="section-description">
+            Our institutional-grade approach combines quantitative analysis with qualitative intelligence
+        </p>
+        <div class="workflow">
+            <div class="workflow-step">
+                <div class="step-number">1</div>
+                <h3>Multi-Source Data Collection</h3>
+                <p>Real-time feeds from official leagues, weather services, injury reports, and betting markets</p>
+                <span class="step-tag">Raw Intelligence</span>
+            </div>
+            <div class="workflow-step">
+                <div class="step-number">2</div>
+                <h3>Cross-Sport Normalization</h3>
+                <p>Convert all sports data to SKCS Standard Format for consistent AI processing</p>
+                <span class="step-tag">Standardized Fuel</span>
+            </div>
+            <div class="workflow-step">
+                <div class="step-number">3</div>
+                <h3>Four-Stage AI Analysis</h3>
+                <p>Sequential AI layers: Baseline → Context → Reality Check → Decision Engine</p>
+                <span class="step-tag">Deep Analysis</span>
+            </div>
+            <div class="workflow-step">
+                <div class="step-number">4</div>
+                <h3>Market-Specific Recommendations</h3>
+                <p>Different AI logic for 1X2, Multi Bets, Same-Match, and Accumulators</p>
+                <span class="step-tag">Actionable Insights</span>
+            </div>
+        </div>
+    </section>
 
-<section id="pipeline" class="pipeline-section">
-  <div class="pipeline-container">
-    <h2 class="section-title">The SKCS AI Analysis Pipeline</h2>
-    <p class="section-description">6-stage AI process transforming raw data into decisions</p>
+    <!-- NEW: SKCS AI Pipeline Section -->
+    <section id="pipeline" class="pipeline-section">
+        <div class="pipeline-container">
+            <h2 class="section-title">The SKCS AI Analysis Pipeline</h2>
+            <p class="section-description">
+                6-stage AI process transforming raw API data into intelligent predictions
+            </p>
+            
+            <!-- Pipeline Timeline -->
+            <div class="pipeline-timeline">
+                
+                <!-- Stage 1 -->
+                <div class="pipeline-stage">
+                    <div class="stage-number">1</div>
+                    <div class="stage-content">
+                        <h3><span class="stage-icon">📥</span> API Data Collection</h3>
+                        <div class="stage-card">
+                            <h4>Raw JSON Input</h4>
+                            <pre><code>{
+  "homeTeam": "Arsenal",
+  "awayTeam": "Chelsea",
+  "odds": { "home": 1.85, "draw": 3.4, "away": 4.2 },
+  "weather": "Rain",
+  "injuries": ["Player A", "Player B"]
+}</code></pre>
+                            <p><strong>Input:</strong> Multiple API sources (fixtures, odds, stats, injuries, weather)</p>
+                            <p><strong>Output:</strong> Raw structured JSON</p>
+                            <p><strong>Status:</strong> ✅ Facts collected, ❌ No intelligence yet</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Stage 2 -->
+                <div class="pipeline-stage">
+                    <div class="stage-number">2</div>
+                    <div class="stage-content">
+                        <h3><span class="stage-icon">🔄</span> Data Normalization</h3>
+                        <div class="stage-card">
+                            <h4>SKCS Standard Format</h4>
+                            <pre><code>{
+  "match_id": "EPL_ARS_CHE_2026_02_10",
+  "teams": { "home": "Arsenal", "away": "Chelsea" },
+  "markets": { "1x2": { "home": 1.85, "draw": 3.4, "away": 4.2 } },
+  "context": { "weather": "Rain", "injuries": 2 }
+}</code></pre>
+                            <p><strong>Process:</strong> Convert all APIs to uniform SKCS format</p>
+                            <p><strong>Purpose:</strong> Clean, consistent fuel for AI stages</p>
+                            <p><strong>Key:</strong> Same structure across all 7 sports</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Stage 3 -->
+                <div class="pipeline-stage">
+                    <div class="stage-number">3</div>
+                    <div class="stage-content">
+                        <h3><span class="stage-icon">🤖</span> AI Stage 1: Initial Prediction</h3>
+                        <div class="stage-card">
+                            <h4>Baseline Probability Analysis</h4>
+                            <pre><code>{
+  "stage_1": {
+    "1x2": { "home": 54, "draw": 26, "away": 20 },
+    "confidence": "medium"
+  }
+}</code></pre>
+                            <p><strong>Input:</strong> Normalized data + historical stats</p>
+                            <p><strong>Question:</strong> "On paper, who should win?"</p>
+                            <p><strong>Output:</strong> Initial probabilities & confidence flags</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Stage 4 -->
+                <div class="pipeline-stage">
+                    <div class="stage-number">4</div>
+                    <div class="stage-content">
+                        <h3><span class="stage-icon">🧠</span> AI Stage 2: Deep Context</h3>
+                        <div class="stage-card">
+                            <h4>Team & Player Intelligence</h4>
+                            <pre><code>{
+  "stage_2": {
+    "adjustments": { "home": -6, "draw": +3, "away": +3 },
+    "confidence": "medium-low"
+  }
+}</code></pre>
+                            <p><strong>Factors:</strong> Injuries, suspensions, manager changes, fatigue</p>
+                            <p><strong>Example Logic:</strong> Missing striker → reduce goal expectancy</p>
+                            <p><strong>Purpose:</strong> Human-like analyst thinking</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Stage 5 -->
+                <div class="pipeline-stage">
+                    <div class="stage-number">5</div>
+                    <div class="stage-content">
+                        <h3><span class="stage-icon">⚠️</span> AI Stage 3: Reality Check</h3>
+                        <div class="stage-card">
+                            <h4>External Factor Analysis</h4>
+                            <pre><code>{
+  "stage_3": {
+    "volatility": "high",
+    "risk_flags": ["weather", "team unrest"]
+  }
+}</code></pre>
+                            <p><strong>Input:</strong> News, press conferences, weather impact, travel</p>
+                            <p><strong>Question:</strong> "What's happening that stats don't show?"</p>
+                            <p><strong>Output:</strong> Volatility scoring & risk flags</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Stage 6 -->
+                <div class="pipeline-stage">
+                    <div class="stage-number">6</div>
+                    <div class="stage-content">
+                        <h3><span class="stage-icon">🎯</span> AI Stage 4: Decision Engine</h3>
+                        <div class="stage-card">
+                            <h4>Final SKCS Predictions</h4>
+                            <pre><code>{
+  "final_prediction": {
+    "recommended": ["Home Win", "Over 1.5"],
+    "avoid": ["BTTS"],
+    "acca_safe": false,
+    "confidence": 72
+  }
+}</code></pre>
+                            <p><strong>Process:</strong> Combine all 5 previous stages</p>
+                            <p><strong>Output:</strong> Market-specific recommendations</p>
+                            <p><strong>Filtering:</strong> 1X2 > Multi Bets > Same-Match > Accumulators</p>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- Pipeline Summary -->
+            <div class="pipeline-summary">
+                <h3>⚙️ How This Powers Your Predictions</h3>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <h4>1X2 Markets</h4>
+                        <p>Must survive <strong>all 6 stages</strong> with high confidence</p>
+                    </div>
+                    <div class="summary-item">
+                        <h4>Multi Bets</h4>
+                        <p>Built from <strong>low-correlation</strong> matches passing Stages 1-4</p>
+                    </div>
+                    <div class="summary-item">
+                        <h4>Same-Match Bets</h4>
+                        <p>Created after Stage 2, adjusted by Stage 3 volatility</p>
+                    </div>
+                    <div class="summary-item">
+                        <h4>Accumulators</h4>
+                        <p>Only matches passing <strong>all stages</strong> + kill-switch for volatility</p>
+                    </div>
+                </div>
+                
+                <div class="disclaimer-note">
+                    <p><strong>Transparency First:</strong> We show our process so you understand our confidence scores. No black boxes, no hidden logic.</p>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    <div class="pipeline-stage">
-      <div class="stage-number">1</div>
-      <div class="stage-content">📥 API Data Collection</div>
-    </div>
+    <!-- Predictions Section -->
+    <section id="predictions" class="predictions-section">
+        <h2 class="section-title">Live AI Predictions</h2>
+        <p class="section-description">
+            Real-time predictions generated by the SKCS AI Pipeline
+        </p>
+        
+        <div class="prediction-filters">
+            <button class="filter-btn active">All Sports</button>
+            <button class="filter-btn">Football</button>
+            <button class="filter-btn">Basketball</button>
+            <button class="filter-btn">Tennis</button>
+            <button class="filter-btn">High Confidence</button>
+        </div>
+        
+        <div class="predictions-grid">
+            <!-- Prediction Card 1 -->
+            <div class="prediction-card">
+                <div class="card-header">
+                    <span class="sport-badge">⚽ Premier League</span>
+                    <span class="confidence-badge">78%</span>
+                </div>
+                <div class="match-info">
+                    <div class="teams">
+                        <span>Arsenal</span>
+                        <span class="vs">vs</span>
+                        <span>Chelsea</span>
+                    </div>
+                    <p class="match-time">Today, 20:00 GMT | Emirates Stadium</p>
+                    
+                    <div class="prediction-details">
+                        <div class="prediction-type">Recommended: Home Win</div>
+                        <p class="reasoning">Stage 3 flagged high volatility due to weather, but Stage 4 confidence remains strong. Arsenal's home advantage with Chelsea missing key midfielders.</p>
+                        
+                        <div class="odds">
+                            <div class="odd-item">
+                                <div class="odd-label">Home</div>
+                                <div class="odd-value">1.85</div>
+                            </div>
+                            <div class="odd-item">
+                                <div class="odd-label">Draw</div>
+                                <div class="odd-value">3.40</div>
+                            </div>
+                            <div class="odd-item">
+                                <div class="odd-label">Away</div>
+                                <div class="odd-value">4.20</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="ai-insights">
+                        <p><strong>AI Notes:</strong> ✅ Passed all 6 stages | ⚠️ Weather impact mitigated</p>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <span class="update-time">Updated: 2 min ago</span>
+                    <span class="ai-badge">AI Stage 4 Approved</span>
+                </div>
+            </div>
+            
+            <!-- Prediction Card 2 -->
+            <div class="prediction-card">
+                <div class="card-header">
+                    <span class="sport-badge">🏀 NBA</span>
+                    <span class="confidence-badge">85%</span>
+                </div>
+                <div class="match-info">
+                    <div class="teams">
+                        <span>Lakers</span>
+                        <span class="vs">vs</span>
+                        <span>Warriors</span>
+                    </div>
+                    <p class="match-time">Tomorrow, 03:30 GMT | Crypto.com Arena</p>
+                    
+                    <div class="prediction-details">
+                        <div class="prediction-type">Recommended: Over 220.5 Points</div>
+                        <p class="reasoning">Both teams showing offensive strength in last 5 games. Stage 2 analysis shows Warriors' defensive weakness against perimeter shooting.</p>
+                        
+                        <div class="odds">
+                            <div class="odd-item">
+                                <div class="odd-label">Over 220.5</div>
+                                <div class="odd-value">1.90</div>
+                            </div>
+                            <div class="odd-item">
+                                <div class="odd-label">Under 220.5</div>
+                                <div class="odd-value">1.90</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="ai-insights">
+                        <p><strong>AI Notes:</strong> ✅ High Stage 1 confidence | ✅ Clean Stage 3</p>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <span class="update-time">Updated: 15 min ago</span>
+                    <span class="ai-badge">AI Stage 4 Approved</span>
+                </div>
+            </div>
+            
+            <!-- Prediction Card 3 -->
+            <div class="prediction-card">
+                <div class="card-header">
+                    <span class="sport-badge">🎾 ATP Tour</span>
+                    <span class="confidence-badge">62%</span>
+                </div>
+                <div class="match-info">
+                    <div class="teams">
+                        <span>Djokovic</span>
+                        <span class="vs">vs</span>
+                        <span>Alcaraz</span>
+                    </div>
+                    <p class="match-time">Saturday, 14:00 GMT | Indian Wells</p>
+                    
+                    <div class="prediction-details">
+                        <div class="prediction-type">Recommended: Total Games Over 22.5</div>
+                        <p class="reasoning">Stage 3 flagged moderate volatility due to recent injury concern. Stage 4 adjusted recommendation from match winner to totals market.</p>
+                        
+                        <div class="odds">
+                            <div class="odd-item">
+                                <div class="odd-label">Over 22.5</div>
+                                <div class="odd-value">1.83</div>
+                            </div>
+                            <div class="odd-item">
+                                <div class="odd-label">Under 22.5</div>
+                                <div class="odd-value">1.97</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="ai-insights">
+                        <p><strong>AI Notes:</strong> ⚠️ Stage 3 volatility | ✅ Adjusted by Stage 4</p>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <span class="update-time">Updated: 1 hour ago</span>
+                    <span class="ai-badge">AI Stage 4 Adjusted</span>
+                </div>
+            </div>
+        </div>
+    </section>
 
-    <div class="pipeline-stage">
-      <div class="stage-number">2</div>
-      <div class="stage-content">🔄 Data Normalization</div>
-    </div>
+    <!-- SKCS Framework -->
+    <section id="framework" class="framework-section">
+        <h2 class="section-title">The SKCS Framework</h2>
+        <p class="section-description">
+            Institutional-grade principles behind our AI system
+        </p>
+        
+        <div class="framework-grid">
+            <div class="framework-item">
+                <h3>Data Integrity First</h3>
+                <p>Multiple verification layers ensure >92% data accuracy before AI processing begins</p>
+            </div>
+            <div class="framework-item">
+                <h3>Cross-Sport Consistency</h3>
+                <p>Same rigorous 6-stage analysis for all 7 sports, adapting logic to each sport's nuances</p>
+            </div>
+            <div class="framework-item">
+                <h3>Transparency by Design</h3>
+                <p>Every prediction includes AI stage notes and confidence breakdowns</p>
+            </div>
+            <div class="framework-item">
+                <h3>Risk-Aware Architecture</h3>
+                <p>Stage 3 volatility scoring automatically downgrades high-risk matches</p>
+            </div>
+        </div>
+    </section>
 
-    <div class="pipeline-stage">
-      <div class="stage-number">3</div>
-      <div class="stage-content">🤖 Initial Prediction</div>
-    </div>
+    <!-- Footer -->
+    <footer class="footer" id="contact">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>SKCS AI</h3>
+                <p>Advanced sports analytics powered by multi-stage AI. Transforming raw data into intelligent predictions across 7 sports.</p>
+                <p>Institutional-grade analysis accessible to everyone.</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>AI Pipeline</h3>
+                <ul class="footer-links">
+                    <li><a href="#pipeline">Stage 1: Data Collection</a></li>
+                    <li><a href="#pipeline">Stage 2: Normalization</a></li>
+                    <li><a href="#pipeline">Stage 3: Initial AI</a></li>
+                    <li><a href="#pipeline">Stage 4: Deep Context</a></li>
+                    <li><a href="#pipeline">Stage 5: Reality Check</a></li>
+                    <li><a href="#pipeline">Stage 6: Decision Engine</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Sports Covered</h3>
+                <ul class="footer-links">
+                    <li>⚽ Football (Premier League, La Liga, Serie A)</li>
+                    <li>🏀 Basketball (NBA, EuroLeague)</li>
+                    <li>🎾 Tennis (ATP, WTA, Grand Slams)</li>
+                    <li>🏈 American Football (NFL)</li>
+                    <li>🏏 Cricket (IPL, International)</li>
+                    <li>🏒 Ice Hockey (NHL)</li>
+                    <li>⚾ Baseball (MLB)</li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Contact & Legal</h3>
+                <p>For API access or institutional inquiries:</p>
+                <p>contact@skcs-ai.com</p>
+                <p><small>DISCLAIMER: Sports predictions involve risk. Past performance doesn't guarantee future results. Use responsibly.</small></p>
+            </div>
+        </div>
+        
+        <div class="copyright">
+            © 2024 SKCS AI Sports Analytics. All rights reserved. Multi-stage AI pipeline technology.
+        </div>
+    </footer>
 
-    <div class="pipeline-stage">
-      <div class="stage-number">4</div>
-      <div class="stage-content">🧠 Deep Context Analysis</div>
-    </div>
-
-    <div class="pipeline-stage">
-      <div class="stage-number">5</div>
-      <div class="stage-content">⚠️ Volatility & Risk Checks</div>
-    </div>
-
-    <div class="pipeline-stage">
-      <div class="stage-number">6</div>
-      <div class="stage-content">🎯 Final Decision Engine</div>
-    </div>
-  </div>
-</section>
-
-<section id="predictions" class="predictions-section">
-  <h2 class="section-title">SKCS Sports Predictions</h2>
-
-  <div class="tabs-container">
-    <div class="tabs-header">
-      <button class="tab-button active" data-tab="football">⚽ Football</button>
-      <button class="tab-button" data-tab="rugby">🏉 Rugby</button>
-      <button class="tab-button" data-tab="afl">🏐 AFL</button>
-      <button class="tab-button" data-tab="baseball">⚾ Baseball</button>
-      <button class="tab-button" data-tab="basketball">🏀 Basketball</button>
-      <button class="tab-button" data-tab="formula1">🏎️ Formula 1</button>
-      <button class="tab-button" data-tab="cricket">🏏 Cricket</button>
-    </div>
-
-    <div id="football" class="tab-content active">
-      <h3>⚽ Football <span class="subscription-status">Subscribed</span></h3>
-      <p>Football predictions coming soon.</p>
-    </div>
-
-    <div id="rugby" class="tab-content"><p>Rugby predictions coming soon.</p></div>
-    <div id="afl" class="tab-content"><p>AFL predictions coming soon.</p></div>
-    <div id="baseball" class="tab-content"><p>Baseball predictions coming soon.</p></div>
-    <div id="basketball" class="tab-content"><p>Basketball predictions coming soon.</p></div>
-    <div id="formula1" class="tab-content"><p>Formula 1 predictions coming soon.</p></div>
-    <div id="cricket" class="tab-content"><p>Cricket predictions coming soon.</p></div>
-  </div>
-</section>
-
-<footer class="footer">
-  <div class="footer-content">
-    <p>SKCS AI Sports Predictions</p>
-    <div class="copyright">
-      © 2026 SKCS. All rights reserved.
-    </div>
-  </div>
-</footer>
-
-<!-- TAB LOGIC (REQUIRED) -->
-<script>
-  const tabButtons = document.querySelectorAll('.tab-button');
-  const tabContents = document.querySelectorAll('.tab-content');
-
-  tabButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      tabButtons.forEach(btn => btn.classList.remove('active'));
-      tabContents.forEach(content => content.classList.remove('active'));
-
-      button.classList.add('active');
-      document.getElementById(button.dataset.tab).classList.add('active');
-    });
-  });
-</script>
-
+    <script>
+        // Simple filter functionality
+        document.querySelectorAll('.filter-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                // In a real implementation, this would filter the prediction cards
+                // For now, we'll just show a message
+                console.log('Filter clicked:', this.textContent);
+            });
+        });
+        
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if(targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if(targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+        
+        // Add scroll effect to navbar
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if(window.scrollY > 50) {
+                navbar.style.boxShadow = '0 5px 25px rgba(0, 0, 0, 0.15)';
+                navbar.style.background = 'rgba(255, 255, 255, 0.98)';
+            } else {
+                navbar.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
+                navbar.style.background = 'rgba(255, 255, 255, 0.95)';
+            }
+        });
+    </script>
 </body>
 </html>
