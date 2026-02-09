@@ -924,6 +924,191 @@
                 grid-template-columns: 1fr;
             }
         }
+</style>
+                /* Your existing CSS code above here */
+
+    /* ===== SUBSCRIPTION SECTION CSS ===== */
+    /* Subscription Section */
+    .subscription-section {
+        padding: 5rem 2rem;
+        background: #1a1a3a;
+    }
+
+    .section-subtitle {
+        text-align: center;
+        color: #b0b0d0;
+        margin-bottom: 3rem;
+        font-size: 1.2rem;
+    }
+
+    .subscription-tabs {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .sub-tab {
+        background: #2a2a4a;
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background 0.3s;
+    }
+
+    .sub-tab.active {
+        background: #667eea;
+    }
+
+    .plans-container {
+        margin-bottom: 3rem;
+    }
+
+    .plans-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+    }
+
+    .plan-card {
+        background: #0f0f23;
+        border-radius: 10px;
+        padding: 2rem;
+        border: 2px solid #2a2a4a;
+        text-align: center;
+        transition: transform 0.3s;
+    }
+
+    .plan-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .plan-card.deep {
+        border-color: #764ba2;
+    }
+
+    .plan-badge {
+        display: inline-block;
+        padding: 0.3rem 1rem;
+        border-radius: 20px;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+
+    .plan-badge.normal {
+        background: #667eea;
+        color: white;
+    }
+
+    .plan-badge.deep {
+        background: #764ba2;
+        color: white;
+    }
+
+    .plan-card h3 {
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+        color: white;
+    }
+
+    .plan-price {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 1rem 0;
+        color: #667eea;
+    }
+
+    .plan-card.deep .plan-price {
+        color: #764ba2;
+    }
+
+    .plan-features {
+        list-style: none;
+        margin: 2rem 0;
+        text-align: left;
+        padding: 0;
+    }
+
+    .plan-features li {
+        padding: 0.5rem 0;
+        color: #b0b0d0;
+        border-bottom: 1px solid #2a2a4a;
+    }
+
+    .subscribe-btn {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 5px;
+        width: 100%;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background 0.3s;
+    }
+
+    .subscribe-btn:hover {
+        background: #764ba2;
+    }
+
+    .deep-btn {
+        background: #764ba2;
+    }
+
+    .deep-btn:hover {
+        background: #a78bfa;
+    }
+
+    .subscription-form {
+        background: #0f0f23;
+        padding: 2rem;
+        border-radius: 10px;
+        border: 2px solid #667eea;
+    }
+
+    .subscription-form h3 {
+        color: white;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .subscription-form input {
+        width: 100%;
+        padding: 1rem;
+        background: #1a1a3a;
+        border: 1px solid #2a2a4a;
+        border-radius: 5px;
+        color: white;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .subscription-form input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .plans-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .plans-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .subscription-tabs {
+            flex-direction: column;
+        }
+    }
+    /* ===== END SUBSCRIPTION CSS ===== */
     </style>
 </head>
 <body>
@@ -1708,7 +1893,7 @@
             </div>
         </div>
     </section>
-    <!-- Subscription Plans Section -->
+   <!-- Subscription Plans Section -->
 <section id="subscriptions" class="subscription-section">
     <div class="container">
         <h2 class="section-title">Subscription Plans</h2>
@@ -1859,85 +2044,55 @@
     </div>
 </section>
 
-<section id="subscriptions" style="padding: 4rem 2rem; background: #1a1a3a;">
-    <div style="max-width: 1200px; margin: 0 auto; text-align: center;">
-        <h2 style="color: #667eea; margin-bottom: 1rem;">Subscription Plans</h2>
-        <p style="color: #b0b0d0; margin-bottom: 2rem;">Choose your plan</p>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-            <div style="background: #0f0f23; padding: 2rem; border-radius: 10px;">
-                <h3 style="color: white;">Normal Tier</h3>
-                <p style="color: #b0b0d0;">From £3.99 for 4 days</p>
-                <button style="background: #667eea; color: white; padding: 1rem 2rem; border: none; border-radius: 5px; margin-top: 1rem;">
-                    View Plans
-                </button>
-            </div>
-            
-            <div style="background: #0f0f23; padding: 2rem; border-radius: 10px; border: 2px solid #764ba2;">
-                <h3 style="color: white;">Deep Tier</h3>
-                <p style="color: #b0b0d0;">From £9.99 for 4 days</p>
-                <button style="background: #764ba2; color: white; padding: 1rem 2rem; border: none; border-radius: 5px; margin-top: 1rem;">
-                    View Plans
-                </button>
-            </div>
-        </div>
-    </div>
-</section>
-
-<footer class="footer">
 <!-- Footer -->
 <footer class="footer">
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-content">
-            <p>SKCS AI Sports Predictions</p>
-            <p>AI-powered multi-sport prediction platform covering 7+ sports</p>
-            <p class="copyright">
-                © 2024 SKCS AI. All rights reserved.<br>
-                For analytical purposes only. No guarantees provided.
-            </p>
-        </div>
-    </footer>
+    <div class="footer-content">
+        <p>SKCS AI Sports Predictions</p>
+        <p>AI-powered multi-sport prediction platform covering 7+ sports</p>
+        <p class="copyright">
+            © 2024 SKCS AI. All rights reserved.<br>
+            For analytical purposes only. No guarantees provided.
+        </p>
+    </div>
+</footer>
 
-    <!-- Simple JavaScript for Tab Switching -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const tabButtons = document.querySelectorAll('.tab-button');
-            const tabContents = document.querySelectorAll('.tab-content');
-            
-            tabButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    // Remove active class from all buttons and contents
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
-                    tabContents.forEach(content => content.classList.remove('active'));
-                    
-                    // Add active class to clicked button
-                    this.classList.add('active');
-                    
-                    // Show corresponding tab content
-                    const tabId = this.getAttribute('data-tab');
-                    document.getElementById(tabId).classList.add('active');
-                });
-            });
-            
-            // Update navigation links to scroll to sections
-            document.querySelectorAll('.nav-links a').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    if (this.getAttribute('href').startsWith('#')) {
-                        e.preventDefault();
-                        const targetId = this.getAttribute('href').substring(1);
-                        const targetElement = document.getElementById(targetId);
-                        
-                        if (targetElement) {
-                            window.scrollTo({
-                                top: targetElement.offsetTop - 20,
-                                behavior: 'smooth'
-                            });
-                        }
-                    }
-                });
+<!-- Simple JavaScript for Tab Switching -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons and contents
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked button
+                this.classList.add('active');
+                
+                // Show corresponding tab content
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
             });
         });
-    </script>
-</body>
-</html>
+        
+        // Update navigation links to scroll to sections
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                if (this.getAttribute('href').startsWith('#')) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 20,
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            });
+        });
+    });
+</script>
