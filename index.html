@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SKCS AI Sports Predictions</title>
+    <title>SKCS AI - Subscription Plans</title>
     <style>
-        /* Reset and base styles */
+        /* Basic Styles */
         * {
             margin: 0;
             padding: 0;
@@ -13,1357 +13,550 @@
         }
         
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: #f8f9fa;
-            color: #212529;
+            font-family: Arial, sans-serif;
+            background: #0f0f23;
+            color: white;
             line-height: 1.6;
         }
         
-        /* Navigation */
         .navbar {
-            background-color: #0d6efd;
+            background: #1a1a3a;
             padding: 1rem 2rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         
         .logo {
-            color: white;
+            color: #667eea;
             font-size: 1.5rem;
             font-weight: bold;
             text-decoration: none;
-        }
-        
-        .nav-links {
-            display: flex;
-            gap: 2rem;
         }
         
         .nav-links a {
             color: white;
             text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s;
+            margin-left: 1rem;
         }
         
-        .nav-links a:hover {
-            color: #cfe2ff;
-        }
-        
-        /* Hero section */
-        .hero-section {
-            position: relative;
-            height: 500px;
-            background-image: url('hero-page.jpg');
-            background-size: cover;
-            background-position: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            color: white;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 2rem;
         }
         
-        /* Dark overlay to make text more readable */
-        .hero-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            max-width: 800px;
-        }
-        
-        .hero-content h1 {
-            font-size: 3rem;
+        h1 {
+            color: #667eea;
+            text-align: center;
             margin-bottom: 1rem;
-            color: white;
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+            font-size: 2.5rem;
         }
         
-        .hero-content p {
-            font-size: 1.3rem;
+        .subtitle {
+            text-align: center;
+            color: #b0b0d0;
+            margin-bottom: 3rem;
+            font-size: 1.2rem;
+        }
+        
+        /* Tier Tabs */
+        .tier-tabs {
+            display: flex;
+            justify-content: center;
             margin-bottom: 2rem;
-            text-shadow: 1px 1px 4px rgba(0,0,0,0.7);
         }
         
-        /* Main content */
-        .main-content {
-            max-width: 1200px;
-            margin: 3rem auto;
-            padding: 0 1rem;
+        .tier-tab {
+            background: #2a2a4a;
+            padding: 1rem 2rem;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            margin: 0 0.5rem;
+        }
+        
+        .tier-tab.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .tier-tab.normal.active {
+            background: #667eea;
+        }
+        
+        .tier-tab.deep.active {
+            background: #764ba2;
+        }
+        
+        /* Plans Grid */
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .plan-card {
+            background: #1a1a3a;
+            border-radius: 10px;
+            padding: 2rem;
+            border: 2px solid #2a2a4a;
+            transition: all 0.3s;
+        }
+        
+        .plan-card:hover {
+            transform: translateY(-5px);
+            border-color: #667eea;
+        }
+        
+        .plan-card.deep {
+            border: 2px solid #764ba2;
+        }
+        
+        .plan-card.deep:hover {
+            border-color: #a78bfa;
+        }
+        
+        .plan-badge {
+            background: #667eea;
+            color: white;
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+        
+        .plan-badge.deep {
+            background: #764ba2;
+        }
+        
+        .plan-name {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+        
+        .plan-duration {
+            color: #b0b0d0;
+            margin-bottom: 1.5rem;
+        }
+        
+        .plan-price {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+        }
+        
+        .plan-price.normal {
+            color: #667eea;
+        }
+        
+        .plan-price.deep {
+            color: #764ba2;
+        }
+        
+        .price-period {
+            font-size: 1rem;
+            color: #b0b0d0;
         }
         
         .features {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 2rem;
-            justify-content: center;
-            margin: 3rem 0;
-        }
-        
-        .feature {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-            flex: 1;
-            min-width: 250px;
-            max-width: 350px;
-        }
-        
-        .feature h3 {
-            color: #0d6efd;
-            margin-bottom: 0.5rem;
-        }
-        
-        .section-title {
-            text-align: center;
-            color: #0d6efd;
+            list-style: none;
             margin-bottom: 2rem;
-            font-size: 2.2rem;
         }
         
-        .section-description {
-            text-align: center;
-            color: #666;
-            font-size: 1.2rem;
-            max-width: 800px;
-            margin: 0 auto 3rem auto;
+        .features li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #2a2a4a;
+            color: #b0b0d0;
         }
         
-        /* UPDATED: Sports Predictions Tabs Section - NOW 7 SPORTS */
-        .predictions-section {
-            max-width: 1400px;
-            margin: 4rem auto;
-            padding: 0 1rem;
+        .features li strong {
+            color: white;
         }
         
-        .tabs-container {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        
-        .tabs-header {
-            display: flex;
-            background-color: #f8f9fa;
-            border-bottom: 2px solid #e9ecef;
-            overflow-x: auto;
-            scrollbar-width: none;
-        }
-        
-        .tabs-header::-webkit-scrollbar {
-            display: none;
-        }
-        
-        .tab-button {
-            flex-shrink: 0;
-            padding: 1.2rem 1.5rem;
-            background: none;
+        .select-button {
+            background: #667eea;
+            color: white;
             border: none;
-            font-size: 1rem;
-            font-weight: 600;
-            color: #6c757d;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-bottom: 3px solid transparent;
-            white-space: nowrap;
-        }
-        
-        .tab-button:hover {
-            background-color: #e9ecef;
-            color: #0d6efd;
-        }
-        
-        .tab-button.active {
-            background-color: white;
-            color: #0d6efd;
-            border-bottom: 3px solid #0d6efd;
-        }
-        
-        .tab-content {
-            padding: 2.5rem;
-            display: none;
-            animation: fadeIn 0.5s ease;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        .sport-icon {
-            font-size: 1.5rem;
-            margin-right: 10px;
-            vertical-align: middle;
-        }
-        
-        .tab-title {
-            color: #0d6efd;
-            font-size: 1.8rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-        }
-        
-        .subscription-status {
-            display: inline-block;
-            background-color: #198754;
-            color: white;
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            margin-left: 1rem;
-            font-weight: 600;
-        }
-        
-        .coming-soon-message {
-            text-align: center;
-            padding: 3rem 1rem;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            margin-bottom: 2rem;
-        }
-        
-        .coming-soon-message h3 {
-            color: #0d6efd;
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-        }
-        
-        .prediction-sample {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-top: 2rem;
-            border-left: 4px solid #0d6efd;
-        }
-        
-        .prediction-sample h4 {
-            color: #0d6efd;
-            margin-bottom: 1rem;
-        }
-        
-        .prediction-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1.5rem;
-        }
-        
-        .prediction-card {
-            background: white;
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-            border-top: 3px solid #0d6efd;
-        }
-        
-        .match-info {
-            margin-bottom: 1rem;
-        }
-        
-        .teams {
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: #212529;
-        }
-        
-        .match-date {
-            color: #6c757d;
-            font-size: 0.9rem;
-            margin-top: 0.3rem;
-        }
-        
-        .prediction-details {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #e9ecef;
-        }
-        
-        .prediction {
-            font-weight: 600;
-            color: #198754;
-        }
-        
-        .confidence {
-            background-color: #e7f1ff;
-            color: #0d6efd;
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-        
-        .note {
-            font-size: 0.9rem;
-            color: #6c757d;
-            font-style: italic;
-            margin-top: 2rem;
-            text-align: center;
-        }
-        
-        /* Framework Section */
-        .framework-section {
-            background-color: #212529;
-            color: white;
-            padding: 5rem 2rem;
-            margin: 4rem 0;
-        }
-        
-        .framework-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .framework-title {
-            color: #fff;
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-        
-        .framework-subtitle {
-            color: #adb5bd;
-            font-size: 1.2rem;
-            text-align: center;
-            max-width: 800px;
-            margin: 0 auto 3rem auto;
-            font-style: italic;
-        }
-        
-        .framework-intro {
-            background-color: rgba(255, 255, 255, 0.05);
-            padding: 2rem;
-            border-radius: 8px;
-            margin-bottom: 3rem;
-            border-left: 4px solid #0d6efd;
-        }
-        
-        .framework-intro p {
-            font-size: 1.1rem;
-            line-height: 1.8;
-            margin-bottom: 1rem;
-        }
-        
-        .framework-intro strong {
-            color: #0d6efd;
-        }
-        
-        .framework-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            margin: 3rem 0;
-        }
-        
-        .framework-card {
-            background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            padding: 2rem;
-            border-top: 3px solid #0d6efd;
-            transition: transform 0.3s ease;
-        }
-        
-        .framework-card:hover {
-            transform: translateY(-5px);
-            background-color: rgba(255, 255, 255, 0.08);
-        }
-        
-        .framework-card-title {
-            color: #0d6efd;
-            font-size: 1.5rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .market-icon {
-            background-color: #0d6efd;
-            color: white;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1rem;
-        }
-        
-        .framework-card-text {
-            color: #e9ecef;
-            line-height: 1.7;
-            margin-bottom: 1.5rem;
-        }
-        
-        .framework-list {
-            list-style-type: none;
-            padding-left: 0;
-            margin: 1.5rem 0;
-        }
-        
-        .framework-list li {
-            padding: 0.8rem 0;
-            color: #adb5bd;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-left: 1.5rem;
-            position: relative;
-        }
-        
-        .framework-list li:before {
-            content: "•";
-            color: #0d6efd;
-            position: absolute;
-            left: 0;
-            font-size: 1.2rem;
-        }
-        
-        .framework-list li:last-child {
-            border-bottom: none;
-        }
-        
-        .philosophy-section {
-            background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            padding: 3rem;
-            margin-top: 4rem;
-            border: 1px solid rgba(0, 110, 253, 0.3);
-        }
-        
-        .philosophy-title {
-            color: #0d6efd;
-            font-size: 1.8rem;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-        
-        .principles-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin: 2rem 0;
-        }
-        
-        .principle {
-            background-color: rgba(0, 110, 253, 0.1);
-            padding: 1.5rem;
-            border-radius: 6px;
-            text-align: center;
-            border: 1px solid rgba(0, 110, 253, 0.2);
-        }
-        
-        .principle h4 {
-            color: #0d6efd;
-            margin: 0;
-            font-size: 1.1rem;
-        }
-        
-        .philosophy-statement {
-            font-size: 1.2rem;
-            color: #fff;
-            line-height: 1.8;
-            margin-top: 2rem;
-            text-align: center;
-            font-style: italic;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 2rem;
-        }
-        
-        .philosophy-statement strong {
-            color: #0d6efd;
-        }
-        
-        /* About Us Section with Background Image */
-        .about-section {
-            position: relative;
-            padding: 4rem 2rem;
-            margin: 3rem 0;
-            border-radius: 10px;
-            overflow: hidden;
-            background-image: url('about-bg.jpg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-        }
-        
-        /* Lighter overlay for MORE VISIBLE background */
-        .about-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(255, 255, 255, 0.7);
-            z-index: 1;
-        }
-        
-        .about-container {
-            position: relative;
-            max-width: 1000px;
-            margin: 0 auto;
-            z-index: 2;
-        }
-        
-        .about-title {
-            color: #0d6efd;
-            font-size: 2.5rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.8);
-        }
-        
-        .mission-statement {
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 2rem;
-            border-radius: 8px;
-            margin: 2rem 0;
-            border-left: 4px solid #0d6efd;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        
-        .mission-statement h3 {
-            color: #0d6efd;
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-        }
-        
-        .mission-statement p {
-            font-size: 1.1rem;
-            line-height: 1.8;
-        }
-        
-        .highlight {
-            background-color: rgba(255, 243, 205, 0.95);
-            padding: 0.2rem 0.4rem;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-        
-        .section-subtitle {
-            color: #0d6efd;
-            font-size: 1.8rem;
-            margin: 2.5rem 0 1.5rem 0;
-            border-bottom: 2px solid rgba(0, 110, 253, 0.3);
-            padding-bottom: 0.5rem;
-            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
-        }
-        
-        .feature-list {
-            list-style-type: none;
-            padding-left: 0;
-        }
-        
-        .feature-list li {
             padding: 1rem;
-            margin-bottom: 1rem;
-            background-color: rgba(255, 255, 255, 0.9);
-            border-radius: 6px;
-            border-left: 3px solid #0d6efd;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
         }
         
-        .feature-list strong {
-            color: #0d6efd;
-            font-size: 1.1rem;
+        .select-button:hover {
+            background: #764ba2;
         }
         
-        .vision-list {
-            list-style-type: none;
-            padding-left: 0;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
+        .select-button.deep {
+            background: #764ba2;
         }
         
-        .vision-list li {
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 1.5rem;
-            border-radius: 8px;
-            text-align: center;
-            border-top: 3px solid #0d6efd;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        .select-button.deep:hover {
+            background: #a78bfa;
         }
         
-        .core-principle {
-            font-size: 1.1rem;
-            color: #495057;
-            margin-top: 0.5rem;
-        }
-        
-        /* Contact Section */
-        .contact-section {
-            background-color: #e9ecef;
-            padding: 4rem 2rem;
-            margin-top: 3rem;
-        }
-        
-        .contact-container {
-            max-width: 800px;
-            margin: 0 auto;
-            text-align: center;
-        }
-        
-        .contact-title {
-            color: #0d6efd;
-            font-size: 2.2rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .contact-info {
-            background: white;
-            padding: 2rem;
+        /* Form Section */
+        .form-section {
+            background: #1a1a3a;
             border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        
-        .contact-item {
-            margin-bottom: 1.5rem;
-            text-align: left;
-            padding-left: 1rem;
-        }
-        
-        .contact-item h4 {
-            color: #0d6efd;
-            margin-bottom: 0.5rem;
-            font-size: 1.2rem;
-        }
-        
-        .contact-item p {
-            color: #495057;
-            margin-bottom: 0.3rem;
-        }
-        
-        .email-link {
-            color: #0d6efd;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        
-        .email-link:hover {
-            text-decoration: underline;
-        }
-        
-        .contact-note {
-            color: #6c757d;
-            font-size: 0.9rem;
+            padding: 3rem;
             margin-top: 2rem;
-            font-style: italic;
+            display: none;
         }
         
-        /* Footer */
-        .footer {
-            background-color: #212529;
-            color: white;
-            padding: 2rem;
+        .form-title {
             text-align: center;
+            margin-bottom: 2rem;
+            color: #667eea;
         }
         
-        .footer-content {
-            max-width: 1200px;
-            margin: 0 auto;
+        .form-group {
+            margin-bottom: 1.5rem;
         }
         
-        .copyright {
-            margin-top: 1rem;
-            color: #adb5bd;
-            font-size: 0.9rem;
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #b0b0d0;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 1rem;
+            background: #0f0f23;
+            border: 1px solid #2a2a4a;
+            border-radius: 5px;
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .payment-methods {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .payment-method {
+            flex: 1;
+            text-align: center;
+            padding: 1rem;
+            background: #0f0f23;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 2px solid #2a2a4a;
+        }
+        
+        .payment-method.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .submit-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 1.2rem;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .plans-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .plans-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .payment-methods {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
+    <!-- Navigation -->
     <nav class="navbar">
-        <div class="nav-container">
-            <a href="#" class="logo">SKCS AI</a>
-            <div class="nav-links">
-                <a href="#predictions">Predictions</a>
-                <a href="#framework">Framework</a>
-                <a href="#about">About</a>
-                <a href="#contact">Contact</a>
-            </div>
+        <a href="index.html" class="logo">SKCS AI</a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="subscription.html">Subscribe</a>
         </div>
     </nav>
 
-    <!-- Hero Section with Background Image -->
-    <section class="hero-section">
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <h1>Welcome to SKCS AI Sports Predictions</h1>
-            <p>Smart, confidence-based predictions for informed decisions</p>
-            <p>⚽ 🏉 🏐 ⚾ 🏀 🏎️ 🏏 7 Sports Coverage</p>
-        </div>
-    </section>
-
     <!-- Main Content -->
-    <div class="main-content">
-        <h2 class="section-title">How SKCS Works</h2>
-        <p class="section-description">
-            Our platform uses advanced AI to analyze sports data and provide 
-            intelligent probability analysis for better decision making.
-        </p>
+    <div class="container">
+        <h1>Choose Your AI Plan</h1>
+        <p class="subtitle">Access professional-grade sports predictions with our 6-stage AI analysis</p>
         
-        <div class="features">
-            <div class="feature">
-                <h3>🎯 Confidence-Based</h3>
-                <p>Every prediction comes with a confidence score, not just guesses. We show you how sure we are about each recommendation.</p>
+        <!-- Tier Tabs -->
+        <div class="tier-tabs">
+            <div class="tier-tab normal active" onclick="showTier('normal')">Normal Tier</div>
+            <div class="tier-tab deep" onclick="showTier('deep')">Deep Tier</div>
+        </div>
+        
+        <!-- Normal Plans Grid -->
+        <div class="plans-grid" id="normalPlans">
+            <!-- Normal 4 Days -->
+            <div class="plan-card">
+                <div class="plan-badge">NORMAL</div>
+                <h3 class="plan-name">Normal 4 Days</h3>
+                <p class="plan-duration">4 Days Access</p>
+                <div class="plan-price normal">£3.99</div>
+                <ul class="features">
+                    <li><strong>50</strong> Daily Predictions</li>
+                    <li><strong>5</strong> Daily Multi Bets</li>
+                    <li><strong>5</strong> Daily Same Bets</li>
+                    <li>Daily ACCAs: Mon-2, Tue-2, Wed-2, Thu-2, Fri-4, Sat-12, Sun-8</li>
+                    <li>All 7 Sports Coverage</li>
+                </ul>
+                <button class="select-button" onclick="selectPlan('normal_4', 'Normal 4 Days', 3.99)">Select Plan</button>
             </div>
-            <div class="feature">
-                <h3>🛡️ Responsible Analytics</h3>
-                <p>We provide safer alternatives for volatile matches. When confidence is low, we suggest more conservative options.</p>
+            
+            <!-- Normal 9 Days -->
+            <div class="plan-card">
+                <div class="plan-badge">NORMAL</div>
+                <h3 class="plan-name">Normal 9 Days</h3>
+                <p class="plan-duration">9 Days Access</p>
+                <div class="plan-price normal">£7.99</div>
+                <ul class="features">
+                    <li><strong>100</strong> Daily Predictions</li>
+                    <li><strong>10</strong> Daily Multi Bets</li>
+                    <li><strong>10</strong> Daily Same Bets</li>
+                    <li>Daily ACCAs: Mon-4, Tue-4, Wed-4, Thu-4, Fri-8, Sat-24, Sun-16</li>
+                    <li>All 7 Sports Coverage</li>
+                </ul>
+                <button class="select-button" onclick="selectPlan('normal_9', 'Normal 9 Days', 7.99)">Select Plan</button>
             </div>
-            <div class="feature">
-                <h3>📊 Multi-Sport Coverage</h3>
-                <p>7 sports covered: Football, Rugby, AFL, Baseball, Basketball, Formula 1, and Cricket.</p>
+            
+            <!-- Normal 14 Days -->
+            <div class="plan-card">
+                <div class="plan-badge">NORMAL</div>
+                <h3 class="plan-name">Normal 14 Days</h3>
+                <p class="plan-duration">14 Days Access</p>
+                <div class="plan-price normal">£11.99</div>
+                <ul class="features">
+                    <li><strong>150</strong> Daily Predictions</li>
+                    <li><strong>15</strong> Daily Multi Bets</li>
+                    <li><strong>15</strong> Daily Same Bets</li>
+                    <li>Daily ACCAs: Mon-5, Tue-5, Wed-5, Thu-5, Fri-10, Sat-30, Sun-20</li>
+                    <li>All 7 Sports Coverage</li>
+                </ul>
+                <button class="select-button" onclick="selectPlan('normal_14', 'Normal 14 Days', 11.99)">Select Plan</button>
             </div>
+            
+            <!-- Normal 30 Days -->
+            <div class="plan-card">
+                <div class="plan-badge">NORMAL</div>
+                <h3 class="plan-name">Normal 30 Days</h3>
+                <p class="plan-duration">30 Days Access</p>
+                <div class="plan-price normal">£34.99</div>
+                <ul class="features">
+                    <li><strong>300</strong> Daily Predictions</li>
+                    <li><strong>25</strong> Daily Multi Bets</li>
+                    <li><strong>25</strong> Daily Same Bets</li>
+                    <li>Daily ACCAs: Mon-10, Tue-10, Wed-10, Thu-10, Fri-20, Sat-60, Sun-40</li>
+                    <li>All 7 Sports Coverage</li>
+                </ul>
+                <button class="select-button" onclick="selectPlan('normal_30', 'Normal 30 Days', 34.99)">Select Plan</button>
+            </div>
+        </div>
+        
+        <!-- Deep Plans Grid (Initially Hidden) -->
+        <div class="plans-grid" id="deepPlans" style="display: none;">
+            <!-- Deep 4 Days -->
+            <div class="plan-card deep">
+                <div class="plan-badge deep">DEEP</div>
+                <h3 class="plan-name">Deep 4 Days</h3>
+                <p class="plan-duration">4 Days Access</p>
+                <div class="plan-price deep">£9.99</div>
+                <ul class="features">
+                    <li><strong>75</strong> Daily Predictions (Top 25% Confidence)</li>
+                    <li><strong>8</strong> Daily Multi Bets</li>
+                    <li><strong>8</strong> Daily Same Bets</li>
+                    <li>Daily ACCAs: Mon-3, Tue-3, Wed-3, Thu-3, Fri-6, Sat-18, Sun-12</li>
+                    <li>Advanced Markets & Filters</li>
+                    <li>Priority Support</li>
+                </ul>
+                <button class="select-button deep" onclick="selectPlan('deep_4', 'Deep 4 Days', 9.99)">Select Plan</button>
+            </div>
+            
+            <!-- Deep 9 Days -->
+            <div class="plan-card deep">
+                <div class="plan-badge deep">DEEP</div>
+                <h3 class="plan-name">Deep 9 Days</h3>
+                <p class="plan-duration">9 Days Access</p>
+                <div class="plan-price deep">£17.99</div>
+                <ul class="features">
+                    <li><strong>150</strong> Daily Predictions (Top 25% Confidence)</li>
+                    <li><strong>15</strong> Daily Multi Bets</li>
+                    <li><strong>15</strong> Daily Same Bets</li>
+                    <li>Daily ACCAs: Mon-6, Tue-6, Wed-6, Thu-6, Fri-12, Sat-36, Sun-24</li>
+                    <li>Advanced Markets & Filters</li>
+                    <li>Priority Support</li>
+                </ul>
+                <button class="select-button deep" onclick="selectPlan('deep_9', 'Deep 9 Days', 17.99)">Select Plan</button>
+            </div>
+            
+            <!-- Deep 14 Days -->
+            <div class="plan-card deep">
+                <div class="plan-badge deep">DEEP</div>
+                <h3 class="plan-name">Deep 14 Days</h3>
+                <p class="plan-duration">14 Days Access</p>
+                <div class="plan-price deep">£24.99</div>
+                <ul class="features">
+                    <li><strong>225</strong> Daily Predictions (Top 25% Confidence)</li>
+                    <li><strong>20</strong> Daily Multi Bets</li>
+                    <li><strong>20</strong> Daily Same Bets</li>
+                    <li>Daily ACCAs: Mon-8, Tue-8, Wed-8, Thu-8, Fri-16, Sat-48, Sun-32</li>
+                    <li>Advanced Markets & Filters</li>
+                    <li>Priority Support</li>
+                </ul>
+                <button class="select-button deep" onclick="selectPlan('deep_14', 'Deep 14 Days', 24.99)">Select Plan</button>
+            </div>
+            
+            <!-- Deep 30 Days -->
+            <div class="plan-card deep">
+                <div class="plan-badge deep">DEEP</div>
+                <h3 class="plan-name">Deep 30 Days</h3>
+                <p class="plan-duration">30 Days Access</p>
+                <div class="plan-price deep">£59.99</div>
+                <ul class="features">
+                    <li><strong>500</strong> Daily Predictions (Top 25% Confidence)</li>
+                    <li><strong>40</strong> Daily Multi Bets</li>
+                    <li><strong>40</strong> Daily Same Bets</li>
+                    <li>Daily ACCAs: Mon-15, Tue-15, Wed-15, Thu-15, Fri-30, Sat-90, Sun-60</li>
+                    <li>Advanced Markets & Filters</li>
+                    <li>Priority Support</li>
+                </ul>
+                <button class="select-button deep" onclick="selectPlan('deep_30', 'Deep 30 Days', 59.99)">Select Plan</button>
+            </div>
+        </div>
+        
+        <!-- Subscription Form -->
+        <div class="form-section" id="formSection">
+            <h2 class="form-title">Subscribe to <span id="selectedPlanName">Normal 4 Days</span></h2>
+            
+            <form id="paymentForm">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" required placeholder="your.email@example.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" required placeholder="John Smith">
+                </div>
+                
+                <div class="form-group">
+                    <label>Select Payment Method</label>
+                    <div class="payment-methods">
+                        <div class="payment-method selected" onclick="selectPayment('card')">
+                            💳 Credit/Debit Card
+                        </div>
+                        <div class="payment-method" onclick="selectPayment('paypal')">
+                            🌐 PayPal
+                        </div>
+                        <div class="payment-method" onclick="selectPayment('crypto')">
+                            ₿ Crypto
+                        </div>
+                    </div>
+                </div>
+                
+                <input type="hidden" id="selectedPlanId" value="normal_4">
+                <input type="hidden" id="selectedPaymentMethod" value="card">
+                
+                <button type="submit" class="submit-button">
+                    Subscribe Now - £<span id="planPrice">3.99</span>
+                </button>
+            </form>
         </div>
     </div>
 
-    <!-- UPDATED: Sports Predictions Tabs Section - 7 SUBSCRIBED SPORTS -->
-    <section id="predictions" class="predictions-section">
-        <h2 class="section-title">SKCS Sports Predictions</h2>
-        <p class="section-description">
-            AI-powered predictions across 7 subscribed sports with confidence scoring
-        </p>
-        
-        <div class="tabs-container">
-            <div class="tabs-header">
-                <!-- 7 Tabs for your 7 subscribed sports -->
-                <button class="tab-button active" data-tab="football">
-                    <span class="sport-icon">⚽</span> Football
-                </button>
-                <button class="tab-button" data-tab="rugby">
-                    <span class="sport-icon">🏉</span> Rugby
-                </button>
-                <button class="tab-button" data-tab="afl">
-                    <span class="sport-icon">🏐</span> AFL
-                </button>
-                <button class="tab-button" data-tab="baseball">
-                    <span class="sport-icon">⚾</span> Baseball
-                </button>
-                <button class="tab-button" data-tab="basketball">
-                    <span class="sport-icon">🏀</span> Basketball
-                </button>
-                <button class="tab-button" data-tab="formula1">
-                    <span class="sport-icon">🏎️</span> Formula 1
-                </button>
-                <button class="tab-button" data-tab="cricket">
-                    <span class="sport-icon">🏏</span> Cricket
-                </button>
-            </div>
-            
-            <!-- Football Tab -->
-            <div id="football" class="tab-content active">
-                <h3 class="tab-title">
-                    <span class="sport-icon">⚽</span> Football (Soccer) Predictions
-                    <span class="subscription-status">✅ Subscribed</span>
-                </h3>
-                
-                <div class="coming-soon-message">
-                    <h3>Football Predictions Coming Soon!</h3>
-                    <p>Our AI is currently analyzing football data from major leagues including Premier League, La Liga, Serie A, Bundesliga, and more.</p>
-                    <p>Check back for match predictions with confidence scores and safer alternatives.</p>
-                </div>
-                
-                <div class="prediction-sample">
-                    <h4>Sample Prediction Format:</h4>
-                    <div class="prediction-grid">
-                        <div class="prediction-card">
-                            <div class="match-info">
-                                <div class="teams">Manchester United vs Liverpool</div>
-                                <div class="match-date">Saturday, March 15 • 15:00 GMT</div>
-                            </div>
-                            <div class="prediction-details">
-                                <div class="prediction">Home Win</div>
-                                <div class="confidence">72% Confidence</div>
-                            </div>
-                        </div>
-                        
-                        <div class="prediction-card">
-                            <div class="match-info">
-                                <div class="teams">Barcelona vs Real Madrid</div>
-                                <div class="match-date">Sunday, March 16 • 20:00 CET</div>
-                            </div>
-                            <div class="prediction-details">
-                                <div class="prediction">Draw</div>
-                                <div class="confidence">45% Confidence</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Rugby Tab -->
-            <div id="rugby" class="tab-content">
-                <h3 class="tab-title">
-                    <span class="sport-icon">🏉</span> Rugby Predictions
-                    <span class="subscription-status">✅ Subscribed</span>
-                </h3>
-                
-                <div class="coming-soon-message">
-                    <h3>Rugby Predictions Coming Soon!</h3>
-                    <p>Our AI is analyzing Six Nations, Rugby Championship, Premiership Rugby, and Super Rugby data.</p>
-                    <p>Coming soon: Match winner predictions, point spreads, and try scorer analysis.</p>
-                </div>
-                
-                <div class="prediction-sample">
-                    <h4>Sample Prediction Format:</h4>
-                    <div class="prediction-grid">
-                        <div class="prediction-card">
-                            <div class="match-info">
-                                <div class="teams">All Blacks vs Springboks</div>
-                                <div class="match-date">Saturday, March 22 • 19:30 NZT</div>
-                            </div>
-                            <div class="prediction-details">
-                                <div class="prediction">Home Win by 1-7</div>
-                                <div class="confidence">68% Confidence</div>
-                            </div>
-                        </div>
-                        
-                        <div class="prediction-card">
-                            <div class="match-info">
-                                <div class="teams">England vs Ireland</div>
-                                <div class="match-date">Sunday, March 23 • 15:00 GMT</div>
-                            </div>
-                            <div class="prediction-details">
-                                <div class="prediction">Away Win</div>
-                                <div class="confidence">64% Confidence</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- AFL Tab -->
-            <div id="afl" class="tab-content">
-                <h3 class="tab-title">
-                    <span class="sport-icon">🏐</span> AFL Predictions
-                    <span class="subscription-status">✅ Subscribed</span>
-                </h3>
-                
-                <div class="coming-soon-message">
-                    <h3>AFL Predictions Coming Soon!</h3>
-                    <p>Our AI is analyzing Australian Football League data for the 2024 season.</p>
-                    <p>Coming soon: Match winner predictions, margin betting, and total points analysis.</p>
-                </div>
-                
-                <div class="prediction-sample">
-                    <h4>Sample Prediction Format:</h4>
-                    <div class="prediction-grid">
-                        <div class="prediction-card">
-                            <div class="match-info">
-                                <div class="teams">Collingwood vs Carlton</div>
-                                <div class="match-date">Friday, March 28 • 19:50 AEDT</div>
-                            </div>
-                            <div class="prediction-details">
-                                <div class="prediction">Home Win</div>
-                                <div class="confidence">71% Confidence</div>
-                            </div>
-                        </div>
-                        
-                        <div class="prediction-card">
-                            <div class="match-info">
-                                <div class="teams">Richmond vs Essendon</div>
-                                <div class="match-date">Saturday, March 29 • 13:45 AEDT</div>
-                            </div>
-                            <div class="prediction-details">
-                                <div class="prediction">Over 165.5 Points</div>
-                                <div class="confidence">58% Confidence</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Baseball Tab -->
-            <div id="baseball" class="tab-content">
-                <h3 class="tab-title">
-                    <span class="sport-icon">⚾</span> Baseball Predictions
-                    <span class="subscription-status">✅ Subscribed</span>
-                </h3>
-                
-                <div class="coming-soon-message">
-                    <h3>Baseball Predictions Coming Soon!</h3>
-                    <p>Our AI is analyzing MLB data including pitching matchups, batting averages, and stadium factors.</p>
-                    <p>Coming soon: Moneyline predictions, run lines, and over/under totals.</p>
-                </div>
-                
-                <div class="prediction-sample">
-                    <h4>Sample Prediction Format:</h4>
-                    <div class="prediction-grid">
-                        <div class="prediction-card">
-                            <div class="match-info">
-                                <div class="teams">NY Yankees vs Boston Red Sox</div>
-                                <div class="match-date">Friday, April 5 • 19:05 EDT</div>
-                            </div>
-                            <div class="prediction-details">
-                                <div class="prediction">Away Win</div>
-                                <div class="confidence">62% Confidence</div>
-                            </div>
-                        </div>
-                        
-                        <div class="prediction-card">
-                            <div class="match-info">
-                                <div class="teams">LA Dodgers vs SF Giants</div>
-                                <div class="match-date">Saturday, April 6 • 16:05 PDT</div>
-                            </div>
-                            <div class="prediction-details">
-                                <div class="prediction">Over 8.5 Runs</div>
-                                <div class="confidence">59% Confidence</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Basketball Tab -->
-            <div id="basketball" class="tab-content">
-                <h3 class="tab-title">
-                    <span class="sport-icon">🏀</span> Basketball Predictions
-                    <span class="subscription-status">✅ Subscribed</span>
-                </h3>
-                
-                <div class="coming-soon-message">
-                    <h3>Basketball Predictions Coming Soon!</h3>
-                    <p>Our AI is analyzing NBA, EuroLeague, and other major basketball competitions.</p>
-                    <p>Coming soon: Game winner predictions, point spreads, and over/under analysis.</p>
-                </div>
-                
-                <div class="prediction-sample">
-                    <h4>Sample Prediction Format:</h4>
-                    <div class="prediction-grid">
-                        <div class="prediction-card">
-                            <div class="match-info">
-                                <div class="teams">Lakers vs Celtics</div>
-                                <div class="match-date">Friday, March 14 • 19:30 EDT</div>
-                            </div>
-                            <div class="prediction-details">
-                                <div class="prediction">Away Win</div>
-                                <div class="confidence">68% Confidence</div>
-                            </div>
-                        </div>
-                        
-                        <div class="prediction-card">
-                            <div class="match-info">
-                                <div class="teams">Warriors vs Bucks</div>
-                                <div class="match-date">Saturday, March 15 • 21:00 EDT</div>
-                            </div>
-                            <div class="prediction-details">
-                                <div class="prediction">Over 215.5 Points</div>
-                                <div class="confidence">64% Confidence</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Formula 1 Tab -->
-            <div id="formula1" class="tab-content">
-                <h3 class="tab-title">
-                    <span class="sport-icon">🏎️</span> Formula 1 Predictions
-                    <span class="subscription-status">✅ Subscribed</span>
-                </h3>
-                
-                <div class="coming-soon-message">
-                    <h3>Formula 1 Predictions Coming Soon!</h3>
-                    <p>Our AI is analyzing F1 race data including qualifying performance, tire strategies, and track characteristics.</p>
-                    <p>Coming soon: Race winner predictions, podium finishes, and qualifying outcomes.</p>
-                </div>
-                
-                <div class="prediction-sample">
-                    <h4>Sample Prediction Format:</h4>
-                    <div class="prediction-grid">
-                        <div class="prediction-card">
-                            <div class="match-info">
-                                <div class="teams">Monaco Grand Prix</div>
-                                <div class="match-date">Sunday, May 26 • 15:00 CET</div>
-                            </div>
-                            <div class="prediction-details">
-                                <div class="prediction">Verstappen P1</div>
-                                <div class="confidence">78% Confidence</div>
-                            </div>
-                        </div>
-                        
-                        <div class="prediction-card">
-                            <div class="match-info">
-                                <div class="teams">British Grand Prix</div>
-                                <div class="match-date">Sunday, July 7 • 15:00 BST</div>
-                            </div>
-                            <div class="prediction-details">
-                                <div class="prediction">Hamilton Podium</div>
-                                <div class="confidence">65% Confidence</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Cricket Tab -->
-            <div id="cricket" class="tab-content">
-                <h3 class="tab-title">
-                    <span class="sport-icon">🏏</span> Cricket Predictions
-                    <span class="subscription-status">✅ Subscribed</span>
-                </h3>
-                
-                <div class="coming-soon-message">
-                    <h3>Cricket Predictions Coming Soon!</h3>
-                    <p>Our AI is analyzing Test, ODI, and T20 cricket data from international matches and major leagues.</p>
-                    <p>Coming soon: Match winner predictions, top batsman/bowler, and total runs analysis.</p>
-                </div>
-                
-                <div class="prediction-sample">
-                    <h4>Sample Prediction Format:</h4>
-                    <div class="prediction-grid">
-                        <div class="prediction-card">
-                            <div class="match-info">
-                                <div class="teams">India vs Australia (Test)</div>
-                                <div class="match-date">Thursday, March 20 • 09:30 IST</div>
-                            </div>
-                            <div class="prediction-details">
-                                <div class="prediction">Home Win</div>
-                                <div class="confidence">70% Confidence</div>
-                            </div>
-                        </div>
-                        
-                        <div class="prediction-card">
-                            <div class="match-info">
-                                <div class="teams">England vs Pakistan (T20)</div>
-                                <div class="match-date">Friday, March 21 • 18:30 GMT</div>
-                            </div>
-                            <div class="prediction-details">
-                                <div class="prediction">Over 320.5 Runs</div>
-                                <div class="confidence">55% Confidence</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <p class="note">All predictions are for informational purposes only. No guarantees are provided.</p>
-    </section>
-
-    <!-- Framework Section -->
-    <section id="framework" class="framework-section">
-        <div class="framework-container">
-            <h2 class="framework-title">SKCS – Overall Outcome & Sports Analysis Framework</h2>
-            <p class="framework-subtitle">
-                Pure SKCS vision + outcomes — probability-driven system evaluating single markets and combined markets
-            </p>
-            
-            <div class="framework-intro">
-                <p>
-                    SKCS is built to analyze sports outcomes through a structured, probability-driven system that evaluates 
-                    <strong>single markets and combined markets</strong> with the same level of discipline and risk awareness.
-                </p>
-                <p>
-                    Rather than treating all bets the same, SKCS categorizes and processes outcomes based on 
-                    <strong>complexity, correlation, and exposure</strong>.
-                </p>
-            </div>
-            
-            <div class="framework-grid">
-                <!-- 1X2 Card -->
-                <div class="framework-card">
-                    <h3 class="framework-card-title">
-                        <span class="market-icon">1X2</span>
-                        1X2 (Single Outcome Markets)
-                    </h3>
-                    <p class="framework-card-text">
-                        For standard match result markets (Home / Draw / Away), SKCS focuses on:
-                    </p>
-                    <ul class="framework-list">
-                        <li>Event context (team form, lineup data, scheduling factors)</li>
-                        <li>Market efficiency and implied probability</li>
-                        <li>Cross-source validation to detect pricing inconsistencies</li>
-                        <li>Risk-adjusted confidence scoring</li>
-                    </ul>
-                    <p class="framework-card-text">
-                        The goal is not prediction certainty, but <strong>identifying when a market price meaningfully diverges from calculated probability</strong>.
-                    </p>
-                </div>
-                
-                <!-- Multi Bets Card -->
-                <div class="framework-card">
-                    <h3 class="framework-card-title">
-                        <span class="market-icon">M</span>
-                        Multi Bets (Cross-Event Selections)
-                    </h3>
-                    <p class="framework-card-text">
-                        For multi bets involving <strong>separate events</strong>, SKCS:
-                    </p>
-                    <ul class="framework-list">
-                        <li>Evaluates each leg independently</li>
-                        <li>Applies probability decay across combined selections</li>
-                        <li>Flags combinations where added legs increase exposure without proportional value</li>
-                        <li>Rejects weak or redundant selections automatically</li>
-                    </ul>
-                    <p class="framework-card-text">
-                        This prevents inflated confidence caused by stacking low-value outcomes.
-                    </p>
-                </div>
-                
-                <!-- Same Match Bets Card -->
-                <div class="framework-card">
-                    <h3 class="framework-card-title">
-                        <span class="market-icon">S</span>
-                        Same Match Bets (Correlated Markets)
-                    </h3>
-                    <p class="framework-card-text">
-                        Same-match combinations require additional controls due to correlation risk. SKCS:
-                    </p>
-                    <ul class="framework-list">
-                        <li>Identifies dependent outcomes within the same event</li>
-                        <li>Adjusts probability models to reflect correlation strength</li>
-                        <li>Penalizes over-stacked or logically overlapping selections</li>
-                        <li>Prioritizes balance between correlation and value</li>
-                    </ul>
-                    <p class="framework-card-text">
-                        Only combinations that pass correlation thresholds are considered viable.
-                    </p>
-                </div>
-                
-                <!-- Accumulators Card -->
-                <div class="framework-card">
-                    <h3 class="framework-card-title">
-                        <span class="market-icon">A</span>
-                        Accumulators (High-Exposure Structures)
-                    </h3>
-                    <p class="framework-card-text">
-                        Accumulators represent the highest risk category and are treated as such. SKCS:
-                    </p>
-                    <ul class="framework-list">
-                        <li>Applies strict filtering and value thresholds</li>
-                        <li>Limits accumulator depth to avoid exponential exposure</li>
-                        <li>Highlights where perceived value is mathematically diluted</li>
-                        <li>Scores accumulators conservatively, not optimistically</li>
-                    </ul>
-                    <p class="framework-card-text">
-                        Most accumulator structures are filtered out unless value survives compounding risk.
-                    </p>
-                </div>
-            </div>
-            
-            <div class="philosophy-section">
-                <h3 class="philosophy-title">Core Outcome Philosophy</h3>
-                <p class="framework-card-text" style="text-align: center; color: #e9ecef;">
-                    Across all market types, SKCS operates on the same principles:
-                </p>
-                
-                <div class="principles-grid">
-                    <div class="principle">
-                        <h4>Probability over prediction</h4>
-                    </div>
-                    <div class="principle">
-                        <h4>Structure over emotion</h4>
-                    </div>
-                    <div class="principle">
-                        <h4>Risk awareness over payout appeal</h4>
-                    </div>
-                    <div class="principle">
-                        <h4>Consistency over short-term results</h4>
-                    </div>
-                </div>
-                
-                <p class="philosophy-statement">
-                    SKCS does not promise wins.<br>
-                    It provides <strong>clarity</strong>, <strong>discipline</strong>, and <strong>measured insight</strong> into how outcomes behave — individually and in combination.<br>
-                    The final outcome is not a bet — it is a <strong>decision framework</strong>.
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <!-- About Us Section with Background Image -->
-    <section id="about" class="about-section">
-        <div class="about-overlay"></div>
-        <div class="about-container">
-            <h2 class="about-title">About SKCS AI</h2>
-            
-            <div class="mission-statement">
-                <h3>Our Mission</h3>
-                <p>
-                    <strong>SKCS (Smart Knowledge & Control Systems)</strong> is a data-driven analytics platform 
-                    focused on transforming raw sports data into structured, responsible insights.
-                </p>
-                <p>
-                    Our core mission is simple: <span class="highlight">turn complex, fragmented sports data into clear, 
-                    intelligent decision support.</span>
-                </p>
-            </div>
-            
-            <p>
-                SKCS AI aggregates and processes information from multiple trusted data sources — including 
-                football, rugby, AFL, baseball, basketball, Formula 1, cricket, and more — using automated pipelines, 
-                statistical models, and validation layers. Rather than relying on hype or guarantees, 
-                SKCS emphasizes <span class="highlight">probability, context, and transparency</span>.
-            </p>
-            
-            <h3 class="section-subtitle">What Makes SKCS Different</h3>
-            <ul class="feature-list">
-                <li>
-                    <strong>Multi-sport intelligence</strong> – One unified system across 7+ sports and competitions
-                </li>
-                <li>
-                    <strong>Layered analysis</strong> – Data is filtered, validated, and refined before insights are generated
-                </li>
-                <li>
-                    <strong>Responsible design</strong> – No promises, no manipulation, no false certainty
-                </li>
-                <li>
-                    <strong>Automation-first</strong> – Built to scale with minimal manual intervention
-                </li>
-                <li>
-                    <strong>Developer-friendly</strong> – Modular architecture designed for expansion and integration
-                </li>
-            </ul>
-            
-            <h3 class="section-subtitle">Our Vision</h3>
-            <p>SKCS is designed to grow beyond predictions alone. The long-term vision includes:</p>
-            
-            <ul class="vision-list">
-                <li>
-                    <strong>Advanced Performance Analytics</strong>
-                    <p class="core-principle">Deep insights into team and player performance</p>
-                </li>
-                <li>
-                    <strong>Risk-Aware Modeling</strong>
-                    <p class="core-principle">Volatility controls and risk management tools</p>
-                </li>
-                <li>
-                    <strong>AI-Assisted Research</strong>
-                    <p class="core-principle">Smart comparison and research tools</p>
-                </li>
-                <li>
-                    <strong>Scalable Infrastructure</strong>
-                    <p class="core-principle">Suitable for SaaS and enterprise use</p>
-                </li>
-            </ul>
-            
-            <div class="mission-statement" style="margin-top: 2.5rem;">
-                <p style="font-size: 1.2rem; font-style: italic;">
-                    At its core, SKCS is about <strong>clarity over noise</strong>, <strong>data over emotion</strong>, 
-                    and <strong>systems that evolve responsibly</strong> as technology and information improve.
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section id="contact" class="contact-section">
-        <div class="contact-container">
-            <h2 class="contact-title">Get In Touch</h2>
-            <div class="contact-info">
-                <div class="contact-item">
-                    <h4>📧 General Inquiries</h4>
-                    <p>
-                        Email: <a href="mailto:info@skcsaisportspredictions.co.za" class="email-link">
-                            info@skcsaisportspredictions.co.za
-                        </a>
-                    </p>
-                    <p>Response time: 24-48 hours</p>
-                </div>
-                
-                <div class="contact-item">
-                    <h4>🔧 Technical Support</h4>
-                    <p>
-                        Email: <a href="mailto:support@skcsaisportspredictions.co.za" class="email-link">
-                            support@skcsaisportspredictions.co.za
-                        </a>
-                    </p>
-                    <p>For website or platform issues</p>
-                </div>
-                
-                <div class="contact-item">
-                    <h4>📍 Follow Our Updates</h4>
-                    <p>Updates and announcements coming soon</p>
-                    <p>Check back for social media links</p>
-                </div>
-                
-                <p class="contact-note">
-                    We're currently in development phase. Full contact options will be available when we launch.
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-content">
-            <p>SKCS AI Sports Predictions</p>
-            <p>AI-powered multi-sport prediction platform covering 7+ sports</p>
-            <p class="copyright">
-                © 2024 SKCS AI. All rights reserved.<br>
-                For analytical purposes only. No guarantees provided.
-            </p>
-        </div>
-    </footer>
-
-    <!-- Simple JavaScript for Tab Switching -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const tabButtons = document.querySelectorAll('.tab-button');
-            const tabContents = document.querySelectorAll('.tab-content');
+        // Show/Hide Tier Plans
+        function showTier(tier) {
+            const normalTab = document.querySelector('.tier-tab.normal');
+            const deepTab = document.querySelector('.tier-tab.deep');
+            const normalPlans = document.getElementById('normalPlans');
+            const deepPlans = document.getElementById('deepPlans');
             
-            tabButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    // Remove active class from all buttons and contents
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
-                    tabContents.forEach(content => content.classList.remove('active'));
-                    
-                    // Add active class to clicked button
-                    this.classList.add('active');
-                    
-                    // Show corresponding tab content
-                    const tabId = this.getAttribute('data-tab');
-                    document.getElementById(tabId).classList.add('active');
-                });
-            });
+            if (tier === 'normal') {
+                normalTab.classList.add('active');
+                deepTab.classList.remove('active');
+                normalPlans.style.display = 'grid';
+                deepPlans.style.display = 'none';
+            } else {
+                normalTab.classList.remove('active');
+                deepTab.classList.add('active');
+                normalPlans.style.display = 'none';
+                deepPlans.style.display = 'grid';
+            }
+        }
+        
+        // Select Plan
+        function selectPlan(planId, planName, price) {
+            document.getElementById('selectedPlanId').value = planId;
+            document.getElementById('selectedPlanName').textContent = planName;
+            document.getElementById('planPrice').textContent = price.toFixed(2);
             
-            // Update navigation links to scroll to sections
-            document.querySelectorAll('.nav-links a').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    if (this.getAttribute('href').startsWith('#')) {
-                        e.preventDefault();
-                        const targetId = this.getAttribute('href').substring(1);
-                        const targetElement = document.getElementById(targetId);
-                        
-                        if (targetElement) {
-                            window.scrollTo({
-                                top: targetElement.offsetTop - 20,
-                                behavior: 'smooth'
-                            });
-                        }
-                    }
-                });
-            });
+            // Show form
+            document.getElementById('formSection').style.display = 'block';
+            
+            // Scroll to form
+            document.getElementById('formSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Select Payment Method
+        function selectPayment(method) {
+            const methods = document.querySelectorAll('.payment-method');
+            methods.forEach(m => m.classList.remove('selected'));
+            event.target.classList.add('selected');
+            document.getElementById('selectedPaymentMethod').value = method;
+        }
+        
+        // Form Submission
+        document.getElementById('paymentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const name = document.getElementById('name').value;
+            const planId = document.getElementById('selectedPlanId').value;
+            const paymentMethod = document.getElementById('selectedPaymentMethod').value;
+            
+            // Simple validation
+            if (!email.includes('@')) {
+                alert('Please enter a valid email address');
+                return;
+            }
+            
+            if (name.length < 2) {
+                alert('Please enter your full name');
+                return;
+            }
+            
+            // Show success message
+            alert(`🎉 Subscription Request Received!\n\nPlan: ${document.getElementById('selectedPlanName').textContent}\nEmail: ${email}\nName: ${name}\nPayment Method: ${paymentMethod}\n\nYou will receive payment instructions within 24 hours.`);
+            
+            // Reset form
+            document.getElementById('paymentForm').reset();
+            document.getElementById('formSection').style.display = 'none';
         });
     </script>
 </body>
