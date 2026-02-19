@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKCS AI - Subscription Plans</title>
+    <style>
+        /* Basic Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f0f23;
+            color: white;
+            line-height: 1.6;
+        }
+        
+        .navbar {
+            background: #1a1a3a;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            color: #667eea;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 1rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #b0b0d0;
+            margin-bottom: 3rem;
+            font-size: 1.2rem;
+        }
+        
+        /* Tier Tabs */
+        .tier-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        
+        .tier-tab {
+            background: #2a2a4a;
+            padding: 1rem 2rem;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            margin: 0 0.5rem;
+        }
+        
+        .tier-tab.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .tier-tab.normal.active {
+            background: #667eea;
+        }
+        
+        .tier-tab.deep.active {
+            background: #764ba2;
+        }
+        
+        /* Plans Grid */
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .plan-card {
+            background: #1a1a3a;
+            border-radius: 10px;
+            padding: 2rem;
+            border: 2px solid #2a2a4a;
+            transition: all 0.3s;
+        }
+        
+        .plan-card:hover {
+            transform: translateY(-5px);
+            border-color: #667eea;
+        }
+        
+        .plan-card.deep {
+            border: 2px solid #764ba2;
+        }
+        
+        .plan-card.deep:hover {
+            border-color: #a78bfa;
+        }
+        
+        .plan-badge {
+            background: #667eea;
+            color: white;
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+        
+        .plan-badge.deep {
+            background: #764ba2;
+        }
+        
+        .plan-name {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: white;
+        }
+        
+        .plan-duration {
+            color: #b0b0d0;
+            margin-bottom: 1.5rem;
+        }
+        
+        .plan-price {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+        }
+        
+        .plan-price.normal {
+            color: #667eea;
+        }
+        
+        .plan-price.deep {
+            color: #764ba2;
+        }
+        
+        .price-period {
+            font-size: 1rem;
+            color: #b0b0d0;
+        }
+        
+        .features {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+        
+        .features li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #2a2a4a;
+            color: #b0b0d0;
+        }
+        
+        .features li strong {
+            color: white;
+        }
+        
+        .select-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        
+        .select-button:hover {
+            background: #764ba2;
+        }
+        
+        .select-button.deep {
+            background: #764ba2;
+        }
+        
+        .select-button.deep:hover {
+            background: #a78bfa;
+        }
+        
+        /* Form Section */
+        .form-section {
+            background: #1a1a3a;
+            border-radius: 10px;
+            padding: 3rem;
+            margin-top: 2rem;
+            display: none;
+        }
+        
+        .form-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #667eea;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #b0b0d0;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 1rem;
+            background: #0f0f23;
+            border: 1px solid #2a2a4a;
+            border-radius: 5px;
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .payment-methods {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .payment-method {
+            flex: 1;
+            text-align: center;
+            padding: 1rem;
+            background: #0f0f23;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 2px solid #2a2a4a;
+        }
+        
+        .payment-method.selected {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .submit-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 1.2rem;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .plans-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .plans-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .payment-methods {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">SKCS AI</a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="subscription.html">Subscribe</a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <h1>Choose Your AI Plan</h1>
+        <p class="subtitle">Access professional-grade sports predictions with our 6-stage AI analysis</p>
+        
+        <!-- Tier Tabs -->
+        <div class="tier-tabs">
+            <div class="tier-tab normal active" onclick="showTier('normal')">Normal Tier</div>
+            <div class="tier-tab deep" onclick="showTier('deep')">Deep Tier</div>
+        </div>
+        
+        <!-- Normal Plans Grid -->
+        <div class="plans-grid" id="normalPlans">
+            <!-- Normal 4 Days -->
+            <div class="plan-card">
+                <div class="plan-badge">NORMAL</div>
+                <h3 class="plan-name">Normal 4 Days</h3>
+                <p class="plan-duration">4 Days Access</p>
+                <div class="plan-price normal">£3.99</div>
+                <ul class="features">
+                    <li><strong>50</strong> Daily Predictions</li>
+                    <li><strong>5</strong> Daily Multi Bets</li>
+                    <li><strong>5</strong> Daily Same Bets</li>
+                    <li>Daily ACCAs: Mon-2, Tue-2, Wed-2, Thu-2, Fri-4, Sat-12, Sun-8</li>
+                    <li>All 7 Sports Coverage</li>
+                </ul>
+                <button class="select-button" onclick="selectPlan('normal_4', 'Normal 4 Days', 3.99)">Select Plan</button>
+            </div>
+            
+            <!-- Normal 9 Days -->
+            <div class="plan-card">
+                <div class="plan-badge">NORMAL</div>
+                <h3 class="plan-name">Normal 9 Days</h3>
+                <p class="plan-duration">9 Days Access</p>
+                <div class="plan-price normal">£7.99</div>
+                <ul class="features">
+                    <li><strong>100</strong> Daily Predictions</li>
+                    <li><strong>10</strong> Daily Multi Bets</li>
+                    <li><strong>10</strong> Daily Same Bets</li>
+                    <li>Daily ACCAs: Mon-4, Tue-4, Wed-4, Thu-4, Fri-8, Sat-24, Sun-16</li>
+                    <li>All 7 Sports Coverage</li>
+                </ul>
+                <button class="select-button" onclick="selectPlan('normal_9', 'Normal 9 Days', 7.99)">Select Plan</button>
+            </div>
+            
+            <!-- Normal 14 Days -->
+            <div class="plan-card">
+                <div class="plan-badge">NORMAL</div>
+                <h3 class="plan-name">Normal 14 Days</h3>
+                <p class="plan-duration">14 Days Access</p>
+                <div class="plan-price normal">£11.99</div>
+                <ul class="features">
+                    <li><strong>150</strong> Daily Predictions</li>
+                    <li><strong>15</strong> Daily Multi Bets</li>
+                    <li><strong>15</strong> Daily Same Bets</li>
+                    <li>Daily ACCAs: Mon-5, Tue-5, Wed-5, Thu-5, Fri-10, Sat-30, Sun-20</li>
+                    <li>All 7 Sports Coverage</li>
+                </ul>
+                <button class="select-button" onclick="selectPlan('normal_14', 'Normal 14 Days', 11.99)">Select Plan</button>
+            </div>
+            
+            <!-- Normal 30 Days -->
+            <div class="plan-card">
+                <div class="plan-badge">NORMAL</div>
+                <h3 class="plan-name">Normal 30 Days</h3>
+                <p class="plan-duration">30 Days Access</p>
+                <div class="plan-price normal">£34.99</div>
+                <ul class="features">
+                    <li><strong>300</strong> Daily Predictions</li>
+                    <li><strong>25</strong> Daily Multi Bets</li>
+                    <li><strong>25</strong> Daily Same Bets</li>
+                    <li>Daily ACCAs: Mon-10, Tue-10, Wed-10, Thu-10, Fri-20, Sat-60, Sun-40</li>
+                    <li>All 7 Sports Coverage</li>
+                </ul>
+                <button class="select-button" onclick="selectPlan('normal_30', 'Normal 30 Days', 34.99)">Select Plan</button>
+            </div>
+        </div>
+        
+        <!-- Deep Plans Grid (Initially Hidden) -->
+        <div class="plans-grid" id="deepPlans" style="display: none;">
+            <!-- Deep 4 Days -->
+            <div class="plan-card deep">
+                <div class="plan-badge deep">DEEP</div>
+                <h3 class="plan-name">Deep 4 Days</h3>
+                <p class="plan-duration">4 Days Access</p>
+                <div class="plan-price deep">£9.99</div>
+                <ul class="features">
+                    <li><strong>75</strong> Daily Predictions (Top 25% Confidence)</li>
+                    <li><strong>8</strong> Daily Multi Bets</li>
+                    <li><strong>8</strong> Daily Same Bets</li>
+                    <li>Daily ACCAs: Mon-3, Tue-3, Wed-3, Thu-3, Fri-6, Sat-18, Sun-12</li>
+                    <li>Advanced Markets & Filters</li>
+                    <li>Priority Support</li>
+                </ul>
+                <button class="select-button deep" onclick="selectPlan('deep_4', 'Deep 4 Days', 9.99)">Select Plan</button>
+            </div>
+            
+            <!-- Deep 9 Days -->
+            <div class="plan-card deep">
+                <div class="plan-badge deep">DEEP</div>
+                <h3 class="plan-name">Deep 9 Days</h3>
+                <p class="plan-duration">9 Days Access</p>
+                <div class="plan-price deep">£17.99</div>
+                <ul class="features">
+                    <li><strong>150</strong> Daily Predictions (Top 25% Confidence)</li>
+                    <li><strong>15</strong> Daily Multi Bets</li>
+                    <li><strong>15</strong> Daily Same Bets</li>
+                    <li>Daily ACCAs: Mon-6, Tue-6, Wed-6, Thu-6, Fri-12, Sat-36, Sun-24</li>
+                    <li>Advanced Markets & Filters</li>
+                    <li>Priority Support</li>
+                </ul>
+                <button class="select-button deep" onclick="selectPlan('deep_9', 'Deep 9 Days', 17.99)">Select Plan</button>
+            </div>
+            
+            <!-- Deep 14 Days -->
+            <div class="plan-card deep">
+                <div class="plan-badge deep">DEEP</div>
+                <h3 class="plan-name">Deep 14 Days</h3>
+                <p class="plan-duration">14 Days Access</p>
+                <div class="plan-price deep">£24.99</div>
+                <ul class="features">
+                    <li><strong>225</strong> Daily Predictions (Top 25% Confidence)</li>
+                    <li><strong>20</strong> Daily Multi Bets</li>
+                    <li><strong>20</strong> Daily Same Bets</li>
+                    <li>Daily ACCAs: Mon-8, Tue-8, Wed-8, Thu-8, Fri-16, Sat-48, Sun-32</li>
+                    <li>Advanced Markets & Filters</li>
+                    <li>Priority Support</li>
+                </ul>
+                <button class="select-button deep" onclick="selectPlan('deep_14', 'Deep 14 Days', 24.99)">Select Plan</button>
+            </div>
+            
+            <!-- Deep 30 Days -->
+            <div class="plan-card deep">
+                <div class="plan-badge deep">DEEP</div>
+                <h3 class="plan-name">Deep 30 Days</h3>
+                <p class="plan-duration">30 Days Access</p>
+                <div class="plan-price deep">£59.99</div>
+                <ul class="features">
+                    <li><strong>500</strong> Daily Predictions (Top 25% Confidence)</li>
+                    <li><strong>40</strong> Daily Multi Bets</li>
+                    <li><strong>40</strong> Daily Same Bets</li>
+                    <li>Daily ACCAs: Mon-15, Tue-15, Wed-15, Thu-15, Fri-30, Sat-90, Sun-60</li>
+                    <li>Advanced Markets & Filters</li>
+                    <li>Priority Support</li>
+                </ul>
+                <button class="select-button deep" onclick="selectPlan('deep_30', 'Deep 30 Days', 59.99)">Select Plan</button>
+            </div>
+        </div>
+        
+        <!-- Subscription Form -->
+        <div class="form-section" id="formSection">
+            <h2 class="form-title">Subscribe to <span id="selectedPlanName">Normal 4 Days</span></h2>
+            
+            <form id="paymentForm">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" required placeholder="your.email@example.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" required placeholder="John Smith">
+                </div>
+                
+                <div class="form-group">
+                    <label>Select Payment Method</label>
+                    <div class="payment-methods">
+                        <div class="payment-method selected" onclick="selectPayment('card')">
+                            💳 Credit/Debit Card
+                        </div>
+                        <div class="payment-method" onclick="selectPayment('paypal')">
+                            🌐 PayPal
+                        </div>
+                        <div class="payment-method" onclick="selectPayment('crypto')">
+                            ₿ Crypto
+                        </div>
+                    </div>
+                </div>
+                
+                <input type="hidden" id="selectedPlanId" value="normal_4">
+                <input type="hidden" id="selectedPaymentMethod" value="card">
+                
+                <button type="submit" class="submit-button">
+                    Subscribe Now - £<span id="planPrice">3.99</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Show/Hide Tier Plans
+        function showTier(tier) {
+            const normalTab = document.querySelector('.tier-tab.normal');
+            const deepTab = document.querySelector('.tier-tab.deep');
+            const normalPlans = document.getElementById('normalPlans');
+            const deepPlans = document.getElementById('deepPlans');
+            
+            if (tier === 'normal') {
+                normalTab.classList.add('active');
+                deepTab.classList.remove('active');
+                normalPlans.style.display = 'grid';
+                deepPlans.style.display = 'none';
+            } else {
+                normalTab.classList.remove('active');
+                deepTab.classList.add('active');
+                normalPlans.style.display = 'none';
+                deepPlans.style.display = 'grid';
+            }
+        }
+        
+        // Select Plan
+        function selectPlan(planId, planName, price) {
+            document.getElementById('selectedPlanId').value = planId;
+            document.getElementById('selectedPlanName').textContent = planName;
+            document.getElementById('planPrice').textContent = price.toFixed(2);
+            
+            // Show form
+            document.getElementById('formSection').style.display = 'block';
+            
+            // Scroll to form
+            document.getElementById('formSection').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Select Payment Method
+        function selectPayment(method) {
+            const methods = document.querySelectorAll('.payment-method');
+            methods.forEach(m => m.classList.remove('selected'));
+            event.target.classList.add('selected');
+            document.getElementById('selectedPaymentMethod').value = method;
+        }
+        
+        // Form Submission
+        document.getElementById('paymentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const name = document.getElementById('name').value;
+            const planId = document.getElementById('selectedPlanId').value;
+            const paymentMethod = document.getElementById('selectedPaymentMethod').value;
+            
+            // Simple validation
+            if (!email.includes('@')) {
+                alert('Please enter a valid email address');
+                return;
+            }
+            
+            if (name.length < 2) {
+                alert('Please enter your full name');
+                return;
+            }
+            
+            // Show success message
+            alert(`🎉 Subscription Request Received!\n\nPlan: ${document.getElementById('selectedPlanName').textContent}\nEmail: ${email}\nName: ${name}\nPayment Method: ${paymentMethod}\n\nYou will receive payment instructions within 24 hours.`);
+            
+            // Reset form
+            document.getElementById('paymentForm').reset();
+            document.getElementById('formSection').style.display = 'none';
+        });
+    </script>
+</body>
+</html>
