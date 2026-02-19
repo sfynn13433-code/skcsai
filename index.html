@@ -145,7 +145,90 @@
             max-width: 800px;
             margin: 0 auto 3rem auto;
         }
+           
+	 /* =========================================== */
+    /* CONTACT FORM STYLING - Added for better look */
+    /* =========================================== */
+    
+    /* Style for form boxes - ONLY in contact section */
+    #contact .form-input, 
+    #contact .form-textarea {
+        width: 100%;
+        padding: 12px 15px;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        box-sizing: border-box;
+    }
+
+    #contact .form-input:focus, 
+    #contact .form-textarea:focus {
+        border-color: #0d6efd;
+        outline: none;
+        box-shadow: 0 0 5px rgba(13, 110, 253, 0.3);
+    }
+
+    #contact .form-textarea {
+        min-height: 150px;
+        resize: vertical;
+    }
+
+    /* Style for the submit button - ONLY in contact section */
+    #contact .submit-btn {
+        background-color: #0d6efd;
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 5px;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        width: 100%;
+    }
+
+    #contact .submit-btn:hover {
+        background-color: #0b5ed7;
+    }
+    
+        /* =========================================== */
+        /* CONTACT FORM TEXT IMPROVEMENTS */
+        /* =========================================== */
         
+        /* Improve placeholder text (the gray text inside boxes) */
+        #contact .form-input::placeholder,
+        #contact .form-textarea::placeholder {
+            color: #888;
+            font-size: 15px;
+            font-style: italic;
+        }
+        
+        /* Make the text inside boxes nicer */
+        #contact .form-input,
+        #contact .form-textarea {
+            color: #333;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        
+        /* Improve button text */
+        #contact .submit-btn {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Optional: Add a title above the form if needed */
+        #contact .form-title {
+            font-size: 24px;
+            color: #0d6efd;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+      
         /* ===== NEW: SKCS AI PIPELINE SECTION ===== */
         .pipeline-section {
             background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
@@ -1703,6 +1786,36 @@
     <section id="contact" class="contact-section">
         <div class="contact-container">
             <h2 class="contact-title">Get In Touch</h2>
+	<div class="form-container">
+    <form id="contact-form" class="contact-form">
+        <input 
+            type="text" 
+            name="name" 
+            placeholder="Your Name" 
+            required 
+            class="form-input"
+        >
+        
+        <input 
+            type="email" 
+            name="email" 
+            placeholder="Your Email" 
+            required 
+            class="form-input"
+        >
+        
+        <textarea 
+            name="message" 
+            placeholder="Your Message" 
+            required 
+            class="form-textarea"
+        ></textarea>
+        
+        <button type="submit" class="submit-btn">
+            Send Message
+        </button>
+    </form>
+</div>
             <div class="contact-info">
                 <div class="contact-item">
                     <h4>📧 General Inquiries</h4>
@@ -1737,6 +1850,39 @@
         </div>
     </section>
 
+
+    <!-- =========================================== -->
+    <!-- SECURE SUBSCRIPTION FORM -->
+    <!-- =========================================== -->
+    <section id="subscription" style="background: linear-gradient(135deg, #0d6efd, #0dcaf0); padding: 3rem 2rem; border-radius: 10px; margin: 3rem 0; color: white; text-align: center;">
+        <h2 style="font-size: 2.5rem; margin-bottom: 1rem;">📬 Stay Updated with AI Predictions</h2>
+        <p style="font-size: 1.2rem; max-width: 600px; margin: 0 auto 2rem;">Get exclusive sports predictions delivered to your inbox</p>
+        
+        <form id="secure-subscription-form" style="max-width: 500px; margin: 0 auto;">
+            <div style="margin-bottom: 1rem;">
+                <input type="text" name="name" placeholder="Your Name (Optional)" 
+                       style="width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;">
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <input type="email" name="email" placeholder="Your Email *" required
+                       style="width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px;">
+            </div>
+            <button type="submit" 
+                    style="background: white; color: #0d6efd; padding: 14px 30px; border: none; border-radius: 5px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%;">
+                🔒 Secure Subscribe
+            </button>
+        </form>
+        
+        <div id="subscription-result" 
+             style="margin-top: 1rem; display: none; padding: 15px; border-radius: 5px; background: rgba(255,255,255,0.2);">
+        </div>
+        
+        <p style="font-size: 0.9rem; margin-top: 1rem; opacity: 0.8;">
+            🔐 Encrypted & secure. We never share your data.
+        </p>
+    </section>
+
+    
     <!-- Footer -->
     <footer class="footer">
         <div class="footer-content">
@@ -1749,45 +1895,81 @@
         </div>
     </footer>
 
-    <!-- Simple JavaScript for Tab Switching -->
+    <!-- JavaScript: Tab Switching + Contact Form Handling -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const tabButtons = document.querySelectorAll('.tab-button');
-            const tabContents = document.querySelectorAll('.tab-content');
-            
-            tabButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    // Remove active class from all buttons and contents
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
-                    tabContents.forEach(content => content.classList.remove('active'));
-                    
-                    // Add active class to clicked button
-                    this.classList.add('active');
-                    
-                    // Show corresponding tab content
-                    const tabId = this.getAttribute('data-tab');
-                    document.getElementById(tabId).classList.add('active');
-                });
-            });
-            
-            // Update navigation links to scroll to sections
-            document.querySelectorAll('.nav-links a').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    if (this.getAttribute('href').startsWith('#')) {
-                        e.preventDefault();
-                        const targetId = this.getAttribute('href').substring(1);
-                        const targetElement = document.getElementById(targetId);
-                        
-                        if (targetElement) {
-                            window.scrollTo({
-                                top: targetElement.offsetTop - 20,
-                                behavior: 'smooth'
-                            });
-                        }
-                    }
-                });
+    document.addEventListener('DOMContentLoaded', function() {
+        // ────────────────────────────────
+        // Tab switching code
+        // ────────────────────────────────
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+       
+        tabButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Remove active class from all buttons and contents
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+               
+                // Add active class to clicked button
+                this.classList.add('active');
+               
+                // Show corresponding tab content
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
             });
         });
+
+        // ────────────────────────────────────────────────
+        // Contact form handling – sends to backend
+        // ────────────────────────────────────────────────
+        const form = document.getElementById('contact-form');
+
+        if (form) {
+            form.addEventListener('submit', async function(event) {
+                event.preventDefault(); // prevents reload / blank page / mailto
+                
+                // Get the form values
+                const formData = new FormData(form);
+                
+                try {
+                    // Send to backend
+                    const response = await fetch('http://localhost:3000/submit', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    // If successful
+                    if (response.ok) {
+                        alert("Thank you! Your message has been sent successfully.");
+                        form.reset();
+                    } else {
+                        alert("Oops! Something went wrong. Please try again.");
+                    }
+                } catch (error) {
+                    // If connection fails
+                    alert("Error: Could not connect to backend. Make sure server.js is running!");
+                }
+            });
+        } else {
+            console.log("Form with id='contact-form' not found");
+        }
+
+        // Smooth scrolling for navigation links (optional)
+        // document.querySelectorAll('nav a[href^="#"]').forEach(anchor => {
+        //     anchor.addEventListener('click', function(e) {
+        //         e.preventDefault();
+        //         const targetId = this.getAttribute('href');
+        //         const targetElement = document.querySelector(targetId);
+        //         if (targetElement) {
+        //             window.scrollTo({
+        //                 top: targetElement.offsetTop,
+        //                 behavior: 'smooth'
+        //             });
+        //         }
+        //     });
+        // });
+
+    }); // End of DOMContentLoaded
     </script>
 </body>
 </html>
