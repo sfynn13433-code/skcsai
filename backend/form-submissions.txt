@@ -1,0 +1,41 @@
+
+=== New Form Submission ===
+Time: 2026/02/10, 15:27:47
+------WebKitFormBoundary0QZ84HVdKCU5BoDx
+Content-Disposition: form-data; name="name"
+
+Stephen Fynn
+------WebKitFormBoundary0QZ84HVdKCU5BoDx
+Content-Disposition: form-data; name="email"
+
+sfynn13433@gmail.com
+------WebKitFormBoundary0QZ84HVdKCU5BoDx
+Content-Disposition: form-data; name="message"
+
+Testing the saving method
+------WebKitFormBoundary0QZ84HVdKCU5BoDx--
+
+
+=== New Form Submission ===
+Time: 2026/02/10, 15:36:56
+Name: Stephen Fynn
+Email: sfynn13433@gmail.com
+Message: doing another check
+
+=== New Form Submission ===
+Time: 2026/02/10, 15:42:09
+Name: Stephen Fynn
+Email: sfynn13433@gmail.com
+Message: New test message
+
+=== New Form Submission ===
+Time: 2026/02/19, 06:47:56
+Name: Stephen Fynn
+Email: test@email.com
+Message: This is a test email
+
+=== New Form Submission ===
+Time: 2026/02/19, 08:01:38
+Name: Stephen Fynn
+Email: sfynn13433@gmail.com
+Message: Test email
