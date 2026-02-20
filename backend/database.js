@@ -1,47 +1,276 @@
-// database.js - Encrypted database module
 const sqlite3 = require('sqlite3').verbose();
-const crypto = require('crypto');
+const path = require('path');
+const fs = require('fs');
 
-class SecureDatabase {
-    constructor() {
-        // Create encrypted database connection
-        this.db = new sqlite3.Database('subscriptions.db');
-        this.init();
+// Ensure the database file exists
+const dbPath = path.resolve(__dirname, 'database.sqlite');
+const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+        console.error('Error opening database:', err.message);
+    } else {
+        console.log('Connected to SQLite database.');
+        initializeTables();
     }
-    
-    init() {
-        this.db.run(`
-            CREATE TABLE IF NOT EXISTS subscribers (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                email TEXT UNIQUE NOT NULL,
-                name TEXT,
-                verification_token TEXT,
-                is_verified INTEGER DEFAULT 0,
-                ip_address TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                last_attempt DATETIME
-            )
-        `);
-        
-        this.db.run(`
-            CREATE TABLE IF NOT EXISTS access_logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                ip_address TEXT,
-                endpoint TEXT,
-                user_agent TEXT,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                status_code INTEGER
-            )
-        `);
-    }
-    
-    async logAccess(ip, endpoint, userAgent, status) {
-        return new Promise((resolve, reject) => {
-            this.db.run(
-                `INSERT INTO access_logs (ip_address, endpoint, user_agent, status_code) VALUES (?, ?, ?, ?)`,
-                [ip, endpoint, userAgent, status],
-                (err) => err ? reject(err) : resolve()
-            );
-        });
-    }
+});
+
+// Initialize tables if they don't exist
+function initializeTables() {
+    db.serialize(() => {
+        // Leagues table
+        db.run(`CREATE TABLE IF NOT EXISTS leagues (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sport TEXT NOT NULL,
+            name TEXT NOT NULL,
+            api_source TEXT,
+            api_league_id TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+
+        // Teams table
+        db.run(`CREATE TABLE IF NOT EXISTS teams (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            league_id INTEGER,
+            name TEXT NOT NULL,
+            short_name TEXT,
+            country TEXT,
+            venue TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (league_id) REFERENCES leagues(id)
+        )`);
+
+        // Matches table
+        db.run(`CREATE TABLE IF NOT EXISTS matches (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            league_id INTEGER,
+            home_team_id INTEGER,
+            away_team_id INTEGER,
+            match_date DATETIME,
+            status TEXT,
+            home_score INTEGER,
+            away_score INTEGER,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (league_id) REFERENCES leagues(id),
+            FOREIGN KEY (home_team_id) REFERENCES teams(id),
+            FOREIGN KEY (away_team_id) REFERENCES teams(id)
+        )`);
+
+        // Team stats table
+        db.run(`CREATE TABLE IF NOT EXISTS team_stats (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            team_id INTEGER,
+            season TEXT,
+            matches_played INTEGER,
+            wins INTEGER,
+            draws INTEGER,
+            losses INTEGER,
+            goals_for INTEGER,
+            goals_against INTEGER,
+            points INTEGER,
+            form_rating REAL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (team_id) REFERENCES teams(id)
+        )`);
+
+        // Injuries table
+        db.run(`CREATE TABLE IF NOT EXISTS injuries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            team_id INTEGER,
+            player_name TEXT,
+            injury_type TEXT,
+            severity TEXT,
+            status TEXT,
+            expected_return DATE,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (team_id) REFERENCES teams(id)
+        )`);
+
+        // News mentions table
+        db.run(`CREATE TABLE IF NOT EXISTS news_mentions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            team_id INTEGER,
+            source TEXT,
+            title TEXT,
+            content TEXT,
+            sentiment_score REAL,
+            relevance_score REAL,
+            published_at DATETIME,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (team_id) REFERENCES teams(id)
+        )`);
+
+        // Predictions table
+        db.run(`CREATE TABLE IF NOT EXISTS predictions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            match_id INTEGER,
+            prob_home REAL,
+            prob_draw REAL,
+            prob_away REAL,
+            btts_prob REAL,
+            over25_prob REAL,
+            under25_prob REAL,
+            recommended TEXT,
+            avoid TEXT,
+            acca_safe INTEGER,
+            confidence INTEGER,
+            volatility TEXT,
+            risk_flags TEXT,
+            normal_tier INTEGER,
+            deep_tier INTEGER,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            valid_until DATETIME,
+            FOREIGN KEY (match_id) REFERENCES matches(id)
+        )`);
+
+        console.log('Database tables initialized.');
+    });
 }
+
+// ========== PREDICTION PIPELINE HELPERS ==========
+
+// Get match by ID
+async function getMatch(matchId) {
+    return new Promise((resolve, reject) => {
+        db.get('SELECT * FROM matches WHERE id = ?', [matchId], (err, row) => {
+            if (err) reject(err);
+            else resolve(row);
+        });
+    });
+}
+
+// Get team stats for a team (most recent season)
+async function getTeamStats(teamId) {
+    return new Promise((resolve, reject) => {
+        db.get('SELECT * FROM team_stats WHERE team_id = ? ORDER BY season DESC LIMIT 1', [teamId], (err, row) => {
+            if (err) reject(err);
+            else resolve(row);
+        });
+    });
+}
+
+// Get active injuries for a team
+async function getInjuries(teamId) {
+    return new Promise((resolve, reject) => {
+        db.all('SELECT * FROM injuries WHERE team_id = ? AND status = "active"', [teamId], (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+}
+
+// Get average news sentiment for a team over last 3 days
+async function getNewsSentiment(teamId) {
+    return new Promise((resolve, reject) => {
+        db.get('SELECT AVG(sentiment_score) as avgSentiment FROM news_mentions WHERE team_id = ? AND created_at > datetime("now", "-3 days")', [teamId], (err, row) => {
+            if (err) reject(err);
+            else resolve(row?.avgSentiment || 0);
+        });
+    });
+}
+
+// Get all upcoming matches (within the next `days` days)
+async function getAllUpcomingMatches(days = 7, sport = null) {
+    return new Promise((resolve, reject) => {
+        let query = `
+            SELECT m.*, l.sport 
+            FROM matches m
+            LEFT JOIN leagues l ON m.league_id = l.id
+            WHERE m.match_date > datetime('now') 
+              AND m.match_date < datetime('now', '+' || ? || ' days')
+        `;
+        const params = [days];
+        if (sport) {
+            query += ' AND l.sport = ?';
+            params.push(sport);
+        }
+        query += ' ORDER BY m.match_date';
+        db.all(query, params, (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
+}
+
+// Save a generated prediction
+async function savePrediction(prediction) {
+    return new Promise((resolve, reject) => {
+        const {
+            matchId, probHome, probDraw, probAway, bttsProb, over25Prob, under25Prob,
+            recommended, avoid, accaSafe, confidence, volatility, riskFlags,
+            normalTier, deepTier, validUntil
+        } = prediction;
+
+        db.run(
+            `INSERT INTO predictions (
+                match_id, prob_home, prob_draw, prob_away, btts_prob, over25_prob, under25_prob,
+                recommended, avoid, acca_safe, confidence, volatility, risk_flags,
+                normal_tier, deep_tier, valid_until
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                matchId, probHome, probDraw, probAway, bttsProb, over25Prob, under25Prob,
+                JSON.stringify(recommended), JSON.stringify(avoid), accaSafe ? 1 : 0,
+                confidence, volatility, JSON.stringify(riskFlags),
+                normalTier ? 1 : 0, deepTier ? 1 : 0, validUntil
+            ],
+            function(err) {
+                if (err) reject(err);
+                else resolve({ id: this.lastID });
+            }
+        );
+    });
+}
+
+// Get predictions filtered by subscription tier and date
+async function getPredictionsByTier(tier, date) {
+    return new Promise((resolve, reject) => {
+        const tierConfig = require('./config').tiers[tier];
+        if (!tierConfig) {
+            return reject(new Error('Invalid tier'));
+        }
+
+        const tierField = tierConfig.deep ? 'deep_tier' : 'normal_tier';
+        const startDate = new Date(date);
+        startDate.setHours(0, 0, 0, 0);
+        const endDate = new Date(date);
+        endDate.setHours(23, 59, 59, 999);
+
+        db.all(
+            `SELECT p.*, m.match_date, 
+                home_team.name as home_team_name, away_team.name as away_team_name,
+                l.name as league_name, l.sport
+            FROM predictions p
+            JOIN matches m ON p.match_id = m.id
+            JOIN teams home_team ON m.home_team_id = home_team.id
+            JOIN teams away_team ON m.away_team_id = away_team.id
+            JOIN leagues l ON m.league_id = l.id
+            WHERE p.${tierField} = 1
+              AND m.match_date BETWEEN ? AND ?
+            ORDER BY p.confidence DESC
+            LIMIT ?`,
+            [startDate.toISOString(), endDate.toISOString(), tierConfig.daily],
+            (err, rows) => {
+                if (err) reject(err);
+                else {
+                    // Parse JSON fields
+                    rows.forEach(r => {
+                        r.recommended = JSON.parse(r.recommended || '[]');
+                        r.avoid = JSON.parse(r.avoid || '[]');
+                        r.risk_flags = JSON.parse(r.risk_flags || '[]');
+                    });
+                    resolve(rows);
+                }
+            }
+        );
+    });
+}
+
+// ========== EXPORTS ==========
+module.exports = {
+    db,
+    getMatch,
+    getTeamStats,
+    getInjuries,
+    getNewsSentiment,
+    getAllUpcomingMatches,
+    savePrediction,
+    getPredictionsByTier
+};
