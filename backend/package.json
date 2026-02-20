@@ -1,5 +1,8 @@
 {
   "dependencies": {
-    "sqlite3": "^5.0.2"
+    "axios": "^1.13.5",
+    "node-cron": "^4.2.1",
+    "sentiment": "^5.0.2",
+    "sqlite3": "^5.1.7"
   }
 }

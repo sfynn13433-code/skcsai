@@ -26,3 +26,7 @@ desktop.ini
 # *.jpg
 # *.png
 # *.gif
+
+# SQLite databases
+*.sqlite
+*.sqlite3
