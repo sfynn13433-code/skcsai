@@ -9,6 +9,7 @@ module.exports = {
     oddsApiKey: process.env.ODDS_API_KEY,
     maxPredictionsPerDay: 500,
     deepTierConfidenceThreshold: 75,
+    jwtSecret: process.env.JWT_SECRET,   // <-- new line
     tiers: {
         normal4:  { daily: 50,  deep: false },
         normal9:  { daily: 100, deep: false },

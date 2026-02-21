@@ -6,9 +6,14 @@ const cron = require('node-cron'); // for scheduling
 const SecureStorage = require('./secure-storage');
 const secureStorage = new SecureStorage();
 
-// ========== NEW: Prediction pipeline modules ==========
-require('dotenv').config(); // ensure .env is loaded
+// ========== NEW: Authentication modules ==========
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const config = require('./config');
+const { register, login, authenticateToken } = require('./auth');
+
+// ========== Prediction pipeline modules ==========
+require('dotenv').config(); // ensure .env is loaded
 const PredictionPipeline = require('./predictionPipeline');
 const { APISportsClient, OddsAPIClient } = require('./apiClients');
 
@@ -23,7 +28,7 @@ const {
     getPredictionsByTier 
 } = require('./database'); // adjust path if needed
 
-// ========== NEW: Scheduled job to generate predictions daily ==========
+// ========== Scheduled job to generate predictions daily ==========
 cron.schedule('0 2 * * *', async () => { // runs at 2:00 AM every day
     console.log('Running daily prediction generation...');
     try {
@@ -53,7 +58,7 @@ const server = http.createServer((req, res) => {
     // Set CORS headers for ALL requests
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
     // Handle preflight OPTIONS request
     if (req.method === 'OPTIONS') {
@@ -72,7 +77,53 @@ const server = http.createServer((req, res) => {
     const pathname = parsedUrl.pathname;
 
     // ========================================
-    // Existing routes
+    // AUTH ROUTES (public)
+    // ========================================
+    if (pathname === '/api/register' && req.method === 'POST') {
+        register(req, res);
+        return;
+    }
+
+    if (pathname === '/api/login' && req.method === 'POST') {
+        login(req, res);
+        return;
+    }
+
+    // ========================================
+    // PROTECTED PREDICTIONS (requires token)
+    // ========================================
+    if (pathname === '/api/user/predictions' && req.method === 'GET') {
+        // Run authentication; if fails, authenticateToken already sent response
+        if (!authenticateToken(req, res)) return;
+
+        // User is authenticated, proceed
+        (async () => {
+            try {
+                const user = req.user;
+                const date = parsedUrl.query.date || new Date().toISOString().split('T')[0];
+
+                // Map user subscription type to tier key
+                const tierKey = user.subscription_type === 'deep' ? 'deep30' : 'normal30';
+                const predictions = await getPredictionsByTier(tierKey, date);
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    tier: user.subscription_type,
+                    date,
+                    count: predictions.length,
+                    predictions
+                }));
+            } catch (error) {
+                console.error('Error fetching predictions:', error);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: 'Internal server error' }));
+            }
+        })();
+        return;
+    }
+
+    // ========================================
+    // Existing routes (unchanged)
     // ========================================
 
     // Messages page
@@ -289,7 +340,7 @@ const server = http.createServer((req, res) => {
     }
 
     // ========================================
-    // NEW: Prediction API routes
+    // Existing Prediction API routes (kept for testing)
     // ========================================
 
     // Get upcoming matches (optional sport filter)
@@ -310,7 +361,7 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // Get predictions filtered by tier
+    // Public predictions endpoint (kept for testing)
     if (pathname === '/api/predictions' && req.method === 'GET') {
         (async () => {
             try {
@@ -377,7 +428,9 @@ server.listen(PORT, () => {
     console.log(`View messages: http://localhost:${PORT}/messages`);
     console.log(`Subscribe endpoint: http://localhost:${PORT}/api/subscribe`);
     console.log(`Matches API: http://localhost:${PORT}/api/matches`);
-    console.log(`Predictions API: http://localhost:${PORT}/api/predictions?tier=deep30`);
+    console.log(`Public Predictions API: http://localhost:${PORT}/api/predictions?tier=deep30`);
+    console.log(`Protected Predictions API: http://localhost:${PORT}/api/user/predictions (requires token)`);
+    console.log(`Auth routes: /api/register, /api/login`);
     console.log('Form data will be saved to:');
     console.log('  - form-submissions.txt (text format)');
     console.log('  - submissions.json (JSON format)');
