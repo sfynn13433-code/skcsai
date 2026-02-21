@@ -1,0 +1,51 @@
+<<<<<<< HEAD
+# Node modules
+node_modules/
+
+# Environment variables
+.env
+
+# Logs and temporary files
+*.log
+*.txt
+*.json
+!package.json
+!package-lock.json
+
+# OS generated files
+.DS_Store
+Thumbs.db
+=======
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Logs and temp
+*.log
+*.log.*
+access-log.json
+rate-limit.json
+
+# Windows junk
+Thumbs.db
+desktop.ini
+
+# Editor folders
+.vscode/
+*.sublime-*
+
+# Optional: large files (uncomment if you don't want images in Git)
+# *.jpg
+# *.png
+# *.gif
+
+# SQLite databases
+*.sqlite
+*.sqlite3
+>>>>>>> ca04556ce67e21d4fc1f4823a90b8ac048f5ff3a
