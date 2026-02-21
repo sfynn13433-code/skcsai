@@ -1,33 +1,86 @@
-// apiClients.js
 const axios = require('axios');
 const config = require('./config');
 
 class APISportsClient {
     constructor() {
-        this.apiKey = config.rapidApiKey;
-        this.baseUrl = 'https://api-football-v1.p.rapidapi.com/v3';
+        this.apiKey = config.apiSportsKey;
         this.headers = {
-            'X-RapidAPI-Key': this.apiKey,
-            'X-RapidAPI-Host': 'api-football-v1.p.rapidapi.com'
+            'x-apisports-key': this.apiKey
         };
     }
 
-    async getFixtures(leagueId, season) {
+    getBaseUrl(sport) {
+        if (sport === 'basketball') {
+            return 'https://v1.basketball.api-sports.io';
+        }
+        // default to football
+        return 'https://v3.football.api-sports.io';
+    }
+
+    async getFixtures(leagueId, season, options = {}, sport = 'football') {
         try {
-            const response = await axios.get(`${this.baseUrl}/fixtures`, {
+            const baseUrl = this.getBaseUrl(sport);
+            const params = { league: leagueId, season };
+            if (options.from) params.from = options.from;
+            if (options.to) params.to = options.to;
+            if (options.page) params.page = options.page;
+
+            console.log(`🌐 Calling API: ${baseUrl}/fixtures`, params);
+
+            const response = await axios.get(`${baseUrl}/fixtures`, {
                 headers: this.headers,
-                params: { league: leagueId, season }
+                params
             });
+
+            console.log(`✅ API response status: ${response.status}`);
+            if (response.data.errors && Object.keys(response.data.errors).length > 0) {
+                console.log('⚠️ API errors:', response.data.errors);
+            }
+            console.log(`📊 Results count: ${response.data.results || 0}`);
+
             return response.data;
         } catch (error) {
-            console.error('API-Sports error:', error.message);
+            console.error('❌ API-Sports error:', error.message);
+            if (error.response) {
+                console.error('Response data:', error.response.data);
+            }
             return null;
         }
     }
 
-    async getTeamStats(leagueId, season, teamId) {
+    // NEW: Get teams for a league and season
+    async getTeams(leagueId, season, sport = 'football') {
         try {
-            const response = await axios.get(`${this.baseUrl}/teams/statistics`, {
+            const baseUrl = this.getBaseUrl(sport);
+            const params = { league: leagueId, season };
+
+            console.log(`🌐 Calling API: ${baseUrl}/teams`, params);
+
+            const response = await axios.get(`${baseUrl}/teams`, {
+                headers: this.headers,
+                params
+            });
+
+            console.log(`✅ API response status: ${response.status}`);
+            if (response.data.errors && Object.keys(response.data.errors).length > 0) {
+                console.log('⚠️ API errors:', response.data.errors);
+            }
+            console.log(`📊 Results count: ${response.data.results || 0}`);
+
+            return response.data;
+        } catch (error) {
+            console.error('❌ API-Sports teams error:', error.message);
+            if (error.response) {
+                console.error('Response data:', error.response.data);
+            }
+            return null;
+        }
+    }
+
+    async getTeamStats(leagueId, season, teamId, sport = 'football') {
+        try {
+            const baseUrl = this.getBaseUrl(sport);
+            const response = await axios.get(`${baseUrl}/teams/statistics`, {
                 headers: this.headers,
                 params: { league: leagueId, season, team: teamId }
             });
@@ -38,9 +91,10 @@ class APISportsClient {
         }
     }
 
-    async getInjuries(leagueId, season) {
+    async getInjuries(leagueId, season, sport = 'football') {
         try {
-            const response = await axios.get(`${this.baseUrl}/injuries`, {
+            const baseUrl = this.getBaseUrl(sport);
+            const response = await axios.get(`${baseUrl}/injuries`, {
                 headers: this.headers,
                 params: { league: leagueId, season }
             });
