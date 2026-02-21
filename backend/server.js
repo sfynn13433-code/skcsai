@@ -386,20 +386,21 @@ const server = http.createServer((req, res) => {
         })();
         return;
     }
-    // NEW: Get live predictions for any sport (this uses your new runner!)
+    // FIXED: Get live predictions for any sport – now properly async
     const { runPredictionsForSport } = require('./pipelineRunner');
-
     if (pathname.startsWith('/api/predictions/') && req.method === 'GET') {
-      const sport = pathname.split('/api/predictions/')[1];
-      try {
-        const predictions = await runPredictionsForSport(sport);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(predictions));
-      } catch (error) {
-        console.error('Pipeline error:', error);
-        res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Something went wrong, but we are fixing it!' }));
-      }
+      (async () => {  // ← This async wrapper fixes the await error
+        const sport = pathname.split('/api/predictions/')[1] || 'football';
+        try {
+          const predictions = await runPredictionsForSport(sport);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(predictions));
+        } catch (error) {
+          console.error('Pipeline error:', error);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Something went wrong, but we are fixing it!' }));
+        }
+      })();
       return;
     }
     // If no route matched
