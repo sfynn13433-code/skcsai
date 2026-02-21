@@ -238,21 +238,70 @@
             border-radius: 20px;
             font-weight: bold;
         }
+
+        /* ===== SCROLL TO TOP BUTTON ===== */
+        #scrollTopBtn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 99;
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 15px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: opacity 0.3s, transform 0.3s;
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+        }
+
+        #scrollTopBtn.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        #scrollTopBtn:hover {
+            background-color: #0b5ed7;
+        }
+
+        /* ===== AUTH MESSAGE ===== */
+        .auth-message {
+            text-align: center;
+            padding: 3rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .auth-message a {
+            color: #0d6efd;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        .auth-message a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
+    <!-- Navigation Bar (updated with auth link) -->
     <nav class="navbar">
         <div class="nav-container">
             <a href="#" class="logo">SKCS AI</a>
             <div class="nav-links">
-                <a href="#pipeline">AI Pipeline</a>
-                <a href="#predictions">Predictions</a>
-                <a href="#framework">Framework</a>
-                <a href="#about">About</a>
-                <a href="#contact">Contact</a>
-                <a href="subscription.html" class="subscribe-btn">Subscribe</a>
-                <a href="language-switch.html" class="language-link">Language</a>
+                <a href="#pipeline">🤖 AI Pipeline</a>
+                <a href="#predictions">📊 Predictions</a>
+                <a href="#framework">⚙️ Framework</a>
+                <a href="#about">📋 About</a>
+                <a href="#contact">📧 Contact</a>
+                <a href="accuracy.html">📈 Accuracy</a>
+                <a href="subscription.html">💎 Subscribe</a>
+                <a href="language-switch.html">🌐 Language</a>
+                <!-- Auth link will be dynamically replaced by JS -->
+                <a href="#" id="authLink">Login</a>
             </div>
         </div>
     </nav>
@@ -281,7 +330,7 @@
         </div>
     </div>
 
-    <!-- Pipeline Section (unchanged, includes your JSON examples) -->
+    <!-- Pipeline Section -->
     <section id="pipeline" class="pipeline-section">
         <div class="pipeline-container">
             <h2 class="section-title">The SKCS AI Analysis Pipeline</h2>
@@ -419,12 +468,11 @@
         </div>
     </section>
 
-    <!-- ===== NEW: SUBSCRIPTION PLANS SECTION ===== -->
+    <!-- SUBSCRIPTION PLANS SECTION -->
     <section class="plans-section">
         <h2 class="section-title">Subscription Plans</h2>
         <p class="section-description">Choose the tier that fits your needs. Deep tier gives you the top 25% most confident predictions.</p>
 
-        <!-- Plan Selector (simulated selection) -->
         <div class="plan-selector">
             <select id="planSelect" onchange="updateSelectedPlan()">
                 <optgroup label="Normal Tier">
@@ -443,7 +491,6 @@
             <div class="current-plan-badge" id="currentPlanDisplay">Deep 30 Days</div>
         </div>
 
-        <!-- Plan details (visual reference) -->
         <div class="plans-grid">
             <!-- Normal 4 -->
             <div class="plan-card">
@@ -552,7 +599,7 @@
         </div>
     </section>
 
-    <!-- ===== PREDICTIONS SECTION (with tabs and dynamic limits) ===== -->
+    <!-- PREDICTIONS SECTION -->
     <section id="predictions" class="predictions-section">
         <h2 class="section-title">SKCS Sports Predictions</h2>
         <p class="section-description" id="planDescription">Deep 30 Days: 500 daily predictions (top 25% confidence)</p>
@@ -573,7 +620,7 @@
                 <button class="tab-button" data-tab="volleyball"><span class="sport-icon">🏐</span> Volleyball</button>
             </div>
 
-            <!-- All tab contents (identical structure, each with a prediction grid) -->
+            <!-- All tab contents -->
             <div id="football" class="tab-content active">
                 <h3 class="tab-title"><span class="sport-icon">⚽</span> Football Predictions</h3>
                 <div class="prediction-sample">
@@ -662,7 +709,7 @@
         <p class="disclaimer">All predictions are for informational purposes only. No guarantees are provided.</p>
     </section>
 
-    <!-- Framework Section (includes your 1X2, Multi, Same, Accumulator details) -->
+    <!-- Framework Section -->
     <section id="framework" class="framework-section">
         <div class="framework-container">
             <h2 class="framework-title">SKCS – Overall Outcome & Sports Analysis Framework</h2>
@@ -792,10 +839,13 @@
         </div>
     </footer>
 
-    <!-- ==================== MASTER SCRIPT (Updated to fetch from backend) ==================== -->
+    <!-- Scroll to top button -->
+    <button id="scrollTopBtn" title="Go to top">⬆️</button>
+
+    <!-- ==================== MASTER SCRIPT ==================== -->
     <script>
         // ========== CONFIG ==========
-        const API_BASE_URL = 'https://skcsai.onrender.com';
+        const API_BASE_URL = 'http://localhost:3000'; // Change this when deploying
 
         // Plan limits (same as before)
         const planLimits = {
@@ -809,16 +859,64 @@
             deep30:   { total: 500, deep: true }
         };
 
-        let currentPlan = 'deep30'; // default
+        let currentPlan = 'deep30'; // default (will be overridden if user is logged in)
 
-        // ========== FETCH PREDICTIONS FROM BACKEND ==========
+        // ========== AUTH STATE ==========
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+        // Update navigation link
+        const authLink = document.getElementById('authLink');
+        if (token && user) {
+            authLink.textContent = 'Logout';
+            authLink.href = '#';
+            authLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.reload();
+            });
+            // Set currentPlan based on user tier
+            if (user.subscription_type === 'deep') {
+                currentPlan = 'deep30';
+            } else {
+                currentPlan = 'normal30';
+            }
+            // Update the plan selector to reflect user's tier
+            const select = document.getElementById('planSelect');
+            if (select) {
+                select.value = currentPlan;
+            }
+        } else {
+            authLink.textContent = 'Login';
+            authLink.href = 'login.html';
+        }
+
+        // ========== FETCH PREDICTIONS FROM BACKEND (protected) ==========
         async function fetchPredictions(tier, date) {
+            // If no token, return empty array (will be handled in updateAllTabs)
+            if (!token) return [];
+
             try {
-                const url = `${API_BASE_URL}/api/predictions?tier=${tier}&date=${date}`;
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP error ${response.status}`);
+                // Use the protected endpoint
+                const url = `${API_BASE_URL}/api/user/predictions?date=${date}`;
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (!response.ok) {
+                    if (response.status === 401 || response.status === 403) {
+                        // Token invalid/expired – clear storage and redirect to login
+                        localStorage.removeItem('token');
+                        localStorage.removeItem('user');
+                        window.location.href = 'login.html';
+                        return [];
+                    }
+                    throw new Error(`HTTP error ${response.status}`);
+                }
                 const data = await response.json();
-                return data.predictions; // array of prediction objects
+                return data.predictions;
             } catch (error) {
                 console.error('Error fetching predictions:', error);
                 return [];
@@ -831,7 +929,6 @@
             if (!container) return;
             container.innerHTML = '';
 
-            // Filter predictions for this sport
             const sportPreds = predictions.filter(p => p.sport === sport);
 
             if (sportPreds.length === 0) {
@@ -843,7 +940,6 @@
                 const card = document.createElement('div');
                 card.className = 'prediction-card';
 
-                // Format date
                 const matchDate = new Date(p.match_date);
                 const formattedDate = matchDate.toLocaleString('en-GB', {
                     weekday: 'short',
@@ -853,7 +949,6 @@
                     minute: '2-digit'
                 });
 
-                // Build recommended markets string
                 const recommendedStr = p.recommended.join(', ');
 
                 card.innerHTML = `
@@ -877,13 +972,26 @@
             document.getElementById('currentPlanDisplay').innerText = planName;
             document.getElementById('planDescription').innerText = `${planName}: ${plan.total} daily predictions ${plan.deep ? '(top 25% confidence)' : ''}`;
 
-            // Get today's date in YYYY-MM-DD
             const today = new Date().toISOString().split('T')[0];
 
-            // Fetch predictions from backend
+            // If no token, show login message in all prediction grids
+            if (!token) {
+                const grids = [
+                    'football-matches', 'rugby-matches', 'afl-matches', 'baseball-matches',
+                    'basketball-matches', 'formula1-matches', 'cricket-matches', 'nfl-matches',
+                    'hockey-matches', 'mma-matches', 'handball-matches', 'volleyball-matches'
+                ];
+                grids.forEach(id => {
+                    const container = document.getElementById(id);
+                    if (container) {
+                        container.innerHTML = '<div class="auth-message">Please <a href="login.html">login</a> to view predictions.</div>';
+                    }
+                });
+                return;
+            }
+
             const predictions = await fetchPredictions(currentPlan, today);
 
-            // Render each sport tab
             renderSport('football', 'football-matches', predictions);
             renderSport('rugby', 'rugby-matches', predictions);
             renderSport('afl', 'afl-matches', predictions);
@@ -924,8 +1032,22 @@
                 });
             });
 
-            // Initial load
             updateAllTabs();
+        });
+    </script>
+
+    <!-- Scroll to top button script -->
+    <script>
+        const scrollTopBtn = document.getElementById('scrollTopBtn');
+        window.addEventListener('scroll', function() {
+            if (window.scrollY > 300) {
+                scrollTopBtn.classList.add('show');
+            } else {
+                scrollTopBtn.classList.remove('show');
+            }
+        });
+        scrollTopBtn.addEventListener('click', function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     </script>
 </body>
