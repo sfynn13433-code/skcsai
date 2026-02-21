@@ -150,7 +150,6 @@
         .tab-button { flex: 0 0 auto; white-space: nowrap; }
         .tabs-container { position: relative; width: 100%; max-width: 1400px; margin: 0 auto; }
         .tabs-container::after { content: ''; position: absolute; top: 0; right: 0; height: 100%; width: 40px; background: linear-gradient(to right, transparent, white); pointer-events: none; opacity: 0.8; z-index: 1; }
-
         /* ===== NEW STYLES FOR SUBSCRIPTION PLANS ===== */
         .plans-section {
             max-width: 1200px;
@@ -238,7 +237,6 @@
             border-radius: 20px;
             font-weight: bold;
         }
-
         /* ===== SCROLL TO TOP BUTTON ===== */
         #scrollTopBtn {
             position: fixed;
@@ -258,17 +256,14 @@
             transform: translateY(20px);
             pointer-events: none;
         }
-
         #scrollTopBtn.show {
             opacity: 1;
             transform: translateY(0);
             pointer-events: auto;
         }
-
         #scrollTopBtn:hover {
             background-color: #0b5ed7;
         }
-
         /* ===== AUTH MESSAGE ===== */
         .auth-message {
             text-align: center;
@@ -305,7 +300,6 @@
             </div>
         </div>
     </nav>
-
     <!-- Hero Section -->
     <section class="hero-section">
         <div class="hero-overlay"></div>
@@ -315,12 +309,11 @@
             <p>⚽ 🏉 🏐 ⚾ 🏀 🏎️ 🏏 13 Sports Coverage</p>
         </div>
     </section>
-
     <!-- Main Content -->
     <div class="main-content">
         <h2 class="section-title">How SKCS Works</h2>
         <p class="section-description">
-            Our platform uses advanced AI to analyze sports data and provide 
+            Our platform uses advanced AI to analyze sports data and provide
             intelligent probability analysis for better decision making.
         </p>
         <div class="features">
@@ -329,7 +322,6 @@
             <div class="feature"><h3>📊 Multi-Sport Coverage</h3><p>13 sports covered: Football, Rugby, AFL, Baseball, Basketball, Formula 1, Cricket, NFL, Hockey, MMA, Handball, Volleyball.</p></div>
         </div>
     </div>
-
     <!-- Pipeline Section -->
     <section id="pipeline" class="pipeline-section">
         <div class="pipeline-container">
@@ -467,12 +459,10 @@
             </div>
         </div>
     </section>
-
     <!-- SUBSCRIPTION PLANS SECTION -->
     <section class="plans-section">
         <h2 class="section-title">Subscription Plans</h2>
         <p class="section-description">Choose the tier that fits your needs. Deep tier gives you the top 25% most confident predictions.</p>
-
         <div class="plan-selector">
             <select id="planSelect" onchange="updateSelectedPlan()">
                 <optgroup label="Normal Tier">
@@ -490,7 +480,6 @@
             </select>
             <div class="current-plan-badge" id="currentPlanDisplay">Deep 30 Days</div>
         </div>
-
         <div class="plans-grid">
             <!-- Normal 4 -->
             <div class="plan-card">
@@ -598,12 +587,10 @@
             </div>
         </div>
     </section>
-
     <!-- PREDICTIONS SECTION -->
     <section id="predictions" class="predictions-section">
         <h2 class="section-title">SKCS Sports Predictions</h2>
         <p class="section-description" id="planDescription">Deep 30 Days: 500 daily predictions (top 25% confidence)</p>
-
         <div class="tabs-container">
             <div class="tabs-header">
                 <button class="tab-button active" data-tab="football"><span class="sport-icon">⚽</span> Football</button>
@@ -619,7 +606,6 @@
                 <button class="tab-button" data-tab="handball"><span class="sport-icon">🤾</span> Handball</button>
                 <button class="tab-button" data-tab="volleyball"><span class="sport-icon">🏐</span> Volleyball</button>
             </div>
-
             <!-- All tab contents -->
             <div id="football" class="tab-content active">
                 <h3 class="tab-title"><span class="sport-icon">⚽</span> Football Predictions</h3>
@@ -708,7 +694,6 @@
         </div>
         <p class="disclaimer">All predictions are for informational purposes only. No guarantees are provided.</p>
     </section>
-
     <!-- Framework Section -->
     <section id="framework" class="framework-section">
         <div class="framework-container">
@@ -777,7 +762,6 @@
             </div>
         </div>
     </section>
-
     <!-- About Section -->
     <section id="about" class="about-section">
         <div class="about-overlay"></div>
@@ -808,7 +792,6 @@
             <div class="mission-statement" style="margin-top:2.5rem;"><p style="font-size:1.2rem; font-style:italic;">At its core, SKCS is about <strong>clarity over noise</strong>, <strong>data over emotion</strong>, and <strong>systems that evolve responsibly</strong> as technology and information improve.</p></div>
         </div>
     </section>
-
     <!-- Contact Section -->
     <section id="contact" class="contact-section">
         <div class="contact-container">
@@ -829,7 +812,6 @@
             </div>
         </div>
     </section>
-
     <!-- Footer -->
     <footer class="footer">
         <div class="footer-content">
@@ -838,33 +820,27 @@
             <p class="copyright">© 2024 SKCS AI. All rights reserved.<br>For analytical purposes only. No guarantees provided.</p>
         </div>
     </footer>
-
     <!-- Scroll to top button -->
     <button id="scrollTopBtn" title="Go to top">⬆️</button>
-
     <!-- ==================== MASTER SCRIPT ==================== -->
     <script>
         // ========== CONFIG ==========
         const API_BASE_URL = 'https://skcsai.onrender.com';
-
         // Plan limits (same as before)
         const planLimits = {
-            normal4:  { total: 50,  deep: false },
-            normal9:  { total: 100, deep: false },
+            normal4: { total: 50, deep: false },
+            normal9: { total: 100, deep: false },
             normal14: { total: 150, deep: false },
             normal30: { total: 300, deep: false },
-            deep4:    { total: 75,  deep: true },
-            deep9:    { total: 150, deep: true },
-            deep14:   { total: 225, deep: true },
-            deep30:   { total: 500, deep: true }
+            deep4: { total: 75, deep: true },
+            deep9: { total: 150, deep: true },
+            deep14: { total: 225, deep: true },
+            deep30: { total: 500, deep: true }
         };
-
         let currentPlan = 'deep30'; // default (will be overridden if user is logged in)
-
         // ========== AUTH STATE ==========
         const token = localStorage.getItem('token');
         const user = JSON.parse(localStorage.getItem('user') || 'null');
-
         // Update navigation link
         const authLink = document.getElementById('authLink');
         if (token && user) {
@@ -891,12 +867,10 @@
             authLink.textContent = 'Login';
             authLink.href = 'login.html';
         }
-
         // ========== FETCH PREDICTIONS FROM BACKEND (protected) ==========
         async function fetchPredictions(tier, date) {
             // If no token, return empty array (will be handled in updateAllTabs)
             if (!token) return [];
-
             try {
                 // Use the protected endpoint
                 const url = `${API_BASE_URL}/api/user/predictions?date=${date}`;
@@ -922,24 +896,19 @@
                 return [];
             }
         }
-
         // ========== RENDER SPORT TAB ==========
         function renderSport(sport, containerId, predictions) {
             const container = document.getElementById(containerId);
             if (!container) return;
             container.innerHTML = '';
-
             const sportPreds = predictions.filter(p => p.sport === sport);
-
             if (sportPreds.length === 0) {
                 container.innerHTML = '<p>No predictions available for this sport.</p>';
                 return;
             }
-
             sportPreds.forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'prediction-card';
-
                 const matchDate = new Date(p.match_date);
                 const formattedDate = matchDate.toLocaleString('en-GB', {
                     weekday: 'short',
@@ -948,9 +917,7 @@
                     hour: '2-digit',
                     minute: '2-digit'
                 });
-
                 const recommendedStr = p.recommended.join(', ');
-
                 card.innerHTML = `
                     <div class="match-info">
                         <div class="teams">${p.home_team_name} vs ${p.away_team_name}</div>
@@ -964,16 +931,13 @@
                 container.appendChild(card);
             });
         }
-
         // ========== UPDATE ALL TABS BASED ON SELECTED PLAN ==========
         async function updateAllTabs() {
             const plan = planLimits[currentPlan];
             const planName = document.querySelector(`#planSelect option[value="${currentPlan}"]`).text;
             document.getElementById('currentPlanDisplay').innerText = planName;
             document.getElementById('planDescription').innerText = `${planName}: ${plan.total} daily predictions ${plan.deep ? '(top 25% confidence)' : ''}`;
-
             const today = new Date().toISOString().split('T')[0];
-
             // If no token, show login message in all prediction grids
             if (!token) {
                 const grids = [
@@ -989,9 +953,7 @@
                 });
                 return;
             }
-
             const predictions = await fetchPredictions(currentPlan, today);
-
             renderSport('football', 'football-matches', predictions);
             renderSport('rugby', 'rugby-matches', predictions);
             renderSport('afl', 'afl-matches', predictions);
@@ -1005,37 +967,31 @@
             renderSport('handball', 'handball-matches', predictions);
             renderSport('volleyball', 'volleyball-matches', predictions);
         }
-
         // ========== PLAN SELECTION HANDLER ==========
         window.updateSelectedPlan = function() {
             const select = document.getElementById('planSelect');
             currentPlan = select.value;
             updateAllTabs();
         };
-
         // ========== TAB SWITCHING ==========
         document.addEventListener('DOMContentLoaded', function() {
             const tabButtons = document.querySelectorAll('.tab-button');
             const tabContents = document.querySelectorAll('.tab-content');
-
             function switchTab(tabId) {
                 tabContents.forEach(c => c.classList.remove('active'));
                 tabButtons.forEach(b => b.classList.remove('active'));
                 document.getElementById(tabId).classList.add('active');
                 document.querySelector(`.tab-button[data-tab="${tabId}"]`).classList.add('active');
             }
-
             tabButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     const tabId = this.getAttribute('data-tab');
                     switchTab(tabId);
                 });
             });
-
             updateAllTabs();
         });
     </script>
-
     <!-- Scroll to top button script -->
     <script>
         const scrollTopBtn = document.getElementById('scrollTopBtn');
