@@ -5,29 +5,25 @@ const url = require('url'); // for parsing query parameters
 const cron = require('node-cron'); // for scheduling
 const SecureStorage = require('./secure-storage');
 const secureStorage = new SecureStorage();
-
 // ========== NEW: Authentication modules ==========
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const config = require('./config');
 const { register, login, authenticateToken } = require('./auth');
-
 // ========== Prediction pipeline modules ==========
 require('dotenv').config(); // ensure .env is loaded
 const PredictionPipeline = require('./predictionPipeline');
 const { APISportsClient, OddsAPIClient } = require('./apiClients');
-
 // Database helper functions – assume they are exported from database.js
-const { 
-    getMatch, 
-    getTeamStats, 
-    getInjuries, 
+const {
+    getMatch,
+    getTeamStats,
+    getInjuries,
     getNewsSentiment,
     getAllUpcomingMatches,
     savePrediction,
-    getPredictionsByTier 
+    getPredictionsByTier
 } = require('./database'); // adjust path if needed
-
 // ========== Scheduled job to generate predictions daily ==========
 cron.schedule('0 2 * * *', async () => { // runs at 2:00 AM every day
     console.log('Running daily prediction generation...');
@@ -52,30 +48,25 @@ cron.schedule('0 2 * * *', async () => { // runs at 2:00 AM every day
         console.error('Error in daily prediction job:', error);
     }
 });
-
 // ========== Create HTTP server ==========
 const server = http.createServer((req, res) => {
     // Set CORS headers for ALL requests
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
     // Handle preflight OPTIONS request
     if (req.method === 'OPTIONS') {
         res.writeHead(204);
         res.end();
         return;
     }
-
     // Log every request
     console.log(`→ New request: ${req.method} ${req.url}`);
-
     // ========================================
     // Parse URL for query parameters (used in API routes)
     // ========================================
     const parsedUrl = url.parse(req.url, true);
     const pathname = parsedUrl.pathname;
-
     // ========================================
     // AUTH ROUTES (public)
     // ========================================
@@ -83,29 +74,24 @@ const server = http.createServer((req, res) => {
         register(req, res);
         return;
     }
-
     if (pathname === '/api/login' && req.method === 'POST') {
         login(req, res);
         return;
     }
-
     // ========================================
     // PROTECTED PREDICTIONS (requires token)
     // ========================================
     if (pathname === '/api/user/predictions' && req.method === 'GET') {
         // Run authentication; if fails, authenticateToken already sent response
         if (!authenticateToken(req, res)) return;
-
         // User is authenticated, proceed
         (async () => {
             try {
                 const user = req.user;
                 const date = parsedUrl.query.date || new Date().toISOString().split('T')[0];
-
                 // Map user subscription type to tier key
                 const tierKey = user.subscription_type === 'deep' ? 'deep30' : 'normal30';
                 const predictions = await getPredictionsByTier(tierKey, date);
-
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({
                     tier: user.subscription_type,
@@ -121,11 +107,9 @@ const server = http.createServer((req, res) => {
         })();
         return;
     }
-
     // ========================================
     // Existing routes (unchanged)
     // ========================================
-
     // Messages page
     if (pathname === '/messages' && req.method === 'GET') {
         try {
@@ -134,7 +118,7 @@ const server = http.createServer((req, res) => {
                 const data = fs.readFileSync('submissions.json', 'utf8');
                 submissions = JSON.parse(data);
             }
-            
+           
             const html = `<!DOCTYPE html>
 <html>
 <head>
@@ -154,8 +138,8 @@ const server = http.createServer((req, res) => {
 </head>
 <body>
     <h1>📨 Contact Messages Received</h1>
-    ${submissions.length === 0 ? 
-        '<div class="no-messages">No messages received yet.</div>' : 
+    ${submissions.length === 0 ?
+        '<div class="no-messages">No messages received yet.</div>' :
         submissions.reverse().map(msg => `
         <div class="message-card">
             <div class="message-header">
@@ -172,7 +156,7 @@ const server = http.createServer((req, res) => {
     <a href="javascript:history.back()" class="back-link">← Back to Website</a>
 </body>
 </html>`;
-            
+           
             res.writeHead(200, { 'Content-Type': 'text/html' });
             res.end(html);
             return;
@@ -183,30 +167,25 @@ const server = http.createServer((req, res) => {
             return;
         }
     }
-
     // Homepage
     if (pathname === '/' && req.method === 'GET') {
         res.writeHead(200, { 'Content-Type': 'text/plain' });
         res.end("Hello! Backend server is alive!\n");
         return;
     }
-
     // Form submission (contact)
     if (pathname === '/submit' && req.method === 'POST') {
         let body = '';
-
         req.on('data', chunk => {
             body += chunk.toString();
         });
-
         req.on('end', () => {
             console.log('Form data received:');
             console.log(body);
-
             try {
                 const lines = body.split('\r\n');
                 let parsedData = { name: '', email: '', message: '' };
-                
+               
                 for (let i = 0; i < lines.length; i++) {
                     if (lines[i].includes('name="name"')) {
                         parsedData.name = lines[i + 2] || '';
@@ -218,24 +197,24 @@ const server = http.createServer((req, res) => {
                         parsedData.message = lines[i + 2] || '';
                     }
                 }
-                
+               
                 console.log('Parsed data:', parsedData);
-                
+               
                 const timestamp = new Date().toLocaleString();
                 const textData = `\n=== New Form Submission ===\nTime: ${timestamp}\nName: ${parsedData.name}\nEmail: ${parsedData.email}\nMessage: ${parsedData.message}\n`;
-                
+               
                 fs.appendFile('form-submissions.txt', textData, (err) => {
                     if (err) console.error('Error saving to file:', err);
                     else console.log('✅ Data saved to form-submissions.txt');
                 });
-                
+               
                 const jsonData = {
                     timestamp: new Date().toISOString(),
                     name: parsedData.name || 'N/A',
                     email: parsedData.email || 'N/A',
                     message: parsedData.message || 'N/A'
                 };
-                
+               
                 let allSubmissions = [];
                 if (fs.existsSync('submissions.json')) {
                     const existing = fs.readFileSync('submissions.json', 'utf8');
@@ -244,33 +223,30 @@ const server = http.createServer((req, res) => {
                 allSubmissions.push(jsonData);
                 fs.writeFileSync('submissions.json', JSON.stringify(allSubmissions, null, 2));
                 console.log('✅ Data saved to submissions.json');
-                
+               
             } catch (error) {
                 console.log('Error parsing/saving data:', error);
             }
-
             res.writeHead(200, { 'Content-Type': 'text/plain' });
             res.end("Thank you! We received your message.");
         });
-
         return;
     }
-
     // Secure subscription endpoint
     if (pathname === '/api/subscribe' && req.method === 'POST') {
         const clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
         const userAgent = req.headers['user-agent'] || 'Unknown';
-        
+       
         secureStorage.logAccess(clientIP, '/api/subscribe', userAgent, 200);
-        
+       
         let body = '';
         req.on('data', chunk => body += chunk.toString());
-        
+       
         req.on('end', async () => {
             try {
                 const rateLimit = await secureStorage.checkRateLimit(clientIP, 5, 15);
                 if (!rateLimit.allowed) {
-                    res.writeHead(429, { 
+                    res.writeHead(429, {
                         'Content-Type': 'application/json',
                         'X-RateLimit-Limit': '5',
                         'X-RateLimit-Remaining': '0',
@@ -283,7 +259,7 @@ const server = http.createServer((req, res) => {
                     }));
                     return;
                 }
-                
+               
                 let data;
                 try {
                     data = JSON.parse(body);
@@ -292,24 +268,24 @@ const server = http.createServer((req, res) => {
                     res.end(JSON.stringify({ error: 'Invalid JSON data' }));
                     return;
                 }
-                
+               
                 const { email, name } = data;
-                
+               
                 if (!email || typeof email !== 'string' || email.length > 254) {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ error: 'Invalid email address' }));
                     return;
                 }
-                
+               
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(email)) {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ error: 'Invalid email format' }));
                     return;
                 }
-                
+               
                 const result = await secureStorage.saveSubscription(email, name, clientIP);
-                
+               
                 res.writeHead(200, {
                     'Content-Type': 'application/json',
                     'Content-Security-Policy': "default-src 'self'",
@@ -319,30 +295,28 @@ const server = http.createServer((req, res) => {
                     'X-RateLimit-Remaining': rateLimit.remaining.toString(),
                     'X-RateLimit-Reset': rateLimit.resetTime
                 });
-                
+               
                 res.end(JSON.stringify({
                     success: true,
                     message: 'Subscription received. Please check your email for verification.',
                     requiresVerification: true,
                     token: result.token
                 }));
-                
+               
                 console.log(`✅ Secure subscription: ${email} from ${clientIP}`);
-                
+               
             } catch (error) {
                 console.error('Subscription error:', error);
                 res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ error: 'Internal server error' }));
             }
         });
-        
+       
         return;
     }
-
     // ========================================
     // Existing Prediction API routes (kept for testing)
     // ========================================
-
     // Get upcoming matches (optional sport filter)
     if (pathname === '/api/matches' && req.method === 'GET') {
         (async () => {
@@ -360,7 +334,6 @@ const server = http.createServer((req, res) => {
         })();
         return;
     }
-
     // Public predictions endpoint (kept for testing)
     if (pathname === '/api/predictions' && req.method === 'GET') {
         (async () => {
@@ -383,7 +356,6 @@ const server = http.createServer((req, res) => {
         })();
         return;
     }
-
     // Generate prediction for a specific match (test endpoint)
     if (pathname.startsWith('/api/generate-prediction/') && req.method === 'GET') {
         (async () => {
@@ -414,14 +386,27 @@ const server = http.createServer((req, res) => {
         })();
         return;
     }
+    // NEW: Get live predictions for any sport (this uses your new runner!)
+    const { runPredictionsForSport } = require('./pipelineRunner');
 
+    if (pathname.startsWith('/api/predictions/') && req.method === 'GET') {
+      const sport = pathname.split('/api/predictions/')[1];
+      try {
+        const predictions = await runPredictionsForSport(sport);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(predictions));
+      } catch (error) {
+        console.error('Pipeline error:', error);
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Something went wrong, but we are fixing it!' }));
+      }
+      return;
+    }
     // If no route matched
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end("Not found");
 });
-
 const PORT = process.env.PORT || 3000;
-
 server.listen(PORT, () => {
     console.log(`Server is running and listening on port ${PORT}`);
     console.log(`Test URL: http://localhost:${PORT}`);
@@ -432,8 +417,8 @@ server.listen(PORT, () => {
     console.log(`Protected Predictions API: http://localhost:${PORT}/api/user/predictions (requires token)`);
     console.log(`Auth routes: /api/register, /api/login`);
     console.log('Form data will be saved to:');
-    console.log('  - form-submissions.txt (text format)');
-    console.log('  - submissions.json (JSON format)');
-    console.log('  - subscriptions.encrypted.dat (secure subscriptions)');
+    console.log(' - form-submissions.txt (text format)');
+    console.log(' - submissions.json (JSON format)');
+    console.log(' - subscriptions.encrypted.dat (secure subscriptions)');
     console.log('Daily prediction generation scheduled at 2:00 AM.');
 });
