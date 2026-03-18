@@ -180,8 +180,16 @@
         <a href="index.html" class="back-link">← Back to home</a>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const API_BASE_URL = 'https://skcsai.onrender.com';
+
+        const SUPABASE_URL = window.SUPABASE_URL || '';
+        const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || '';
+
+        const supabase = SUPABASE_URL && SUPABASE_ANON_KEY
+            ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+            : null;
 
         // Tab switching
         const loginTab = document.getElementById('loginTab');
@@ -216,24 +224,30 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                if (!supabase) {
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = 'Supabase Auth is not configured.';
+                    return;
+                }
+
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
                 });
 
-                const data = await response.json();
-
-                if (response.ok) {
-                    // Store token and user info
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    // Redirect to home
-                    window.location.href = 'index.html';
-                } else {
+                if (error) {
                     messageDiv.className = 'message error';
-                    messageDiv.textContent = data.error || 'Login failed';
+                    messageDiv.textContent = error.message || 'Login failed';
+                    return;
                 }
+
+                if (!data?.session) {
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = 'No session returned. Please verify your email and try again.';
+                    return;
+                }
+
+                window.location.href = 'index.html';
             } catch (error) {
                 messageDiv.className = 'message error';
                 messageDiv.textContent = 'Connection error';
@@ -253,25 +267,32 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                if (!supabase) {
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = 'Supabase Auth is not configured.';
+                    return;
+                }
+
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password
                 });
 
-                const data = await response.json();
-
-                if (response.ok) {
-                    messageDiv.className = 'message success';
-                    messageDiv.textContent = 'Registration successful! You can now log in.';
-                    // Optionally switch to login tab
-                    setTimeout(() => {
-                        loginTab.click();
-                    }, 1500);
-                } else {
+                if (error) {
                     messageDiv.className = 'message error';
-                    messageDiv.textContent = data.error || 'Registration failed';
+                    messageDiv.textContent = error.message || 'Registration failed';
+                    return;
                 }
+
+                const needsEmailVerification = !data?.session;
+                messageDiv.className = 'message success';
+                messageDiv.textContent = needsEmailVerification
+                    ? 'Signup successful. Please verify your email, then log in.'
+                    : 'Signup successful. You can now log in.';
+
+                setTimeout(() => {
+                    loginTab.click();
+                }, 1500);
             } catch (error) {
                 messageDiv.className = 'message error';
                 messageDiv.textContent = 'Connection error';

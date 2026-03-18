@@ -823,9 +823,17 @@
     <!-- Scroll to top button -->
     <button id="scrollTopBtn" title="Go to top">⬆️</button>
     <!-- ==================== MASTER SCRIPT ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         // ========== CONFIG ==========
         const API_BASE_URL = 'https://skcsai.onrender.com';
+
+        const SUPABASE_URL = window.SUPABASE_URL || '';
+        const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || '';
+
+        const supabase = SUPABASE_URL && SUPABASE_ANON_KEY
+            ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+            : null;
         // Plan limits (same as before)
         const planLimits = {
             normal4: { total: 50, deep: false },
@@ -838,34 +846,44 @@
             deep30: { total: 500, deep: true }
         };
         let currentPlan = 'deep30'; // default (will be overridden if user is logged in)
-        // ========== AUTH STATE ==========
-        const token = localStorage.getItem('token');
-        const user = JSON.parse(localStorage.getItem('user') || 'null');
-        // Update navigation link
+        let token = null;
+        let user = null;
+
         const authLink = document.getElementById('authLink');
-        if (token && user) {
-            authLink.textContent = 'Logout';
-            authLink.href = '#';
-            authLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                window.location.reload();
-            });
-            // Set currentPlan based on user tier
-            if (user.subscription_type === 'deep') {
-                currentPlan = 'deep30';
+
+        async function loadAuthState() {
+            if (!supabase) {
+                token = null;
+                user = null;
+                authLink.textContent = 'Login';
+                authLink.href = 'login.html';
+                return;
+            }
+
+            const { data } = await supabase.auth.getSession();
+            const session = data?.session || null;
+            token = session?.access_token || null;
+            user = session?.user || null;
+
+            if (token && user) {
+                authLink.textContent = 'Logout';
+                authLink.href = '#';
+                authLink.onclick = async (e) => {
+                    e.preventDefault();
+                    await supabase.auth.signOut();
+                    window.location.reload();
+                };
             } else {
-                currentPlan = 'normal30';
+                authLink.textContent = 'Login';
+                authLink.href = 'login.html';
             }
-            // Update the plan selector to reflect user's tier
-            const select = document.getElementById('planSelect');
-            if (select) {
-                select.value = currentPlan;
-            }
-        } else {
-            authLink.textContent = 'Login';
-            authLink.href = 'login.html';
+        }
+
+        if (supabase) {
+            supabase.auth.onAuthStateChange((_event, session) => {
+                token = session?.access_token || null;
+                user = session?.user || null;
+            });
         }
         // ========== FETCH PREDICTIONS FROM BACKEND (protected) ==========
         async function fetchPredictions(tier, date) {
@@ -880,11 +898,13 @@
                     }
                 });
                 if (!response.ok) {
-                    if (response.status === 401 || response.status === 403) {
-                        // Token invalid/expired – clear storage and redirect to login
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('user');
+                    if (response.status === 401) {
                         window.location.href = 'login.html';
+                        return [];
+                    }
+
+                    if (response.status === 403) {
+                        window.location.href = 'subscription.html';
                         return [];
                     }
                     throw new Error(`HTTP error ${response.status}`);
@@ -989,7 +1009,10 @@
                     switchTab(tabId);
                 });
             });
-            updateAllTabs();
+            (async () => {
+                await loadAuthState();
+                updateAllTabs();
+            })();
         });
     </script>
     <!-- Scroll to top button script -->
