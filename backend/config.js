@@ -2,6 +2,7 @@
 require('dotenv').config();
 
 module.exports = {
+    DATA_MODE: process.env.DATA_MODE || 'test',
     database: {
         url: process.env.DATABASE_URL,
     },

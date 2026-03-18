@@ -6,6 +6,9 @@ const cron = require('node-cron'); // for scheduling
 const SecureStorage = require('./secure-storage');
 const secureStorage = new SecureStorage();
 
+console.log('FATAL: server.js disabled');
+process.exit(1);
+
 // ========== NEW: Authentication modules ==========
 const config = require('./config');
 const { register, login, authenticateToken } = require('./auth');

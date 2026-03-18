@@ -83,7 +83,6 @@ async function login(req, res) {
             await upsertProfile({
                 id: userId,
                 email,
-                subscription_type: 'normal',
                 subscription_status: 'inactive'
             });
         }
@@ -94,7 +93,6 @@ async function login(req, res) {
             user: {
                 id: userId,
                 email,
-                subscription_type: profile?.subscription_type || 'normal',
                 subscription_status: profile?.subscription_status || 'inactive',
                 is_test_user: profile?.is_test_user || false
             }
@@ -132,11 +130,18 @@ async function authenticateToken(req, res) {
         }
 
         const supaUser = data.user;
-        const profile = await getProfileById(supaUser.id);
+        let profile = await getProfileById(supaUser.id);
+        if (!profile) {
+            profile = await upsertProfile({
+                id: supaUser.id,
+                email: supaUser.email,
+                subscription_status: 'inactive',
+                is_test_user: false
+            });
+        }
         req.user = {
             id: supaUser.id,
             email: supaUser.email,
-            subscription_type: profile?.subscription_type || 'normal',
             subscription_status: profile?.subscription_status || 'inactive',
             is_test_user: profile?.is_test_user || false
         };
