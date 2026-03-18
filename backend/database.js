@@ -180,8 +180,10 @@ async function initializeTables() {
             email TEXT,
             subscription_type TEXT DEFAULT 'normal',
             subscription_status TEXT DEFAULT 'inactive',
+            is_test_user BOOLEAN DEFAULT false,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`);
+        await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_test_user BOOLEAN DEFAULT false`);
 
         // Prediction results table (for accuracy)
         await client.query(`CREATE TABLE IF NOT EXISTS prediction_results (
@@ -425,16 +427,16 @@ async function getProfileById(id) {
     return res.rows[0] || null;
 }
 
-async function upsertProfile({ id, email, subscription_type = 'normal', subscription_status = 'inactive' }) {
+async function upsertProfile({ id, email, subscription_type = 'normal', subscription_status = 'inactive', is_test_user = false }) {
     const ok = await ensureDbInitialized();
     if (!ok) return null;
     const res = await pool.query(
-        `INSERT INTO profiles (id, email, subscription_type, subscription_status)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO profiles (id, email, subscription_type, subscription_status, is_test_user)
+         VALUES ($1, $2, $3, $4, $5)
          ON CONFLICT (id)
          DO UPDATE SET email = EXCLUDED.email
          RETURNING *`,
-        [id, email, subscription_type, subscription_status]
+        [id, email, subscription_type, subscription_status, is_test_user]
     );
     return res.rows[0] || null;
 }

@@ -102,9 +102,9 @@ const server = http.createServer((req, res) => {
             try {
                 const user = req.user;
 
-                if (user.subscription_status !== 'active') {
+                if (user.subscription_status !== 'active' && user.is_test_user !== true) {
                     res.writeHead(403, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ error: 'Payment required' }));
+                    res.end(JSON.stringify({ error: 'Subscription required' }));
                     return;
                 }
 

@@ -31,50 +31,9 @@ function parseJSONBody(req) {
 // Registration handler
 async function register(req, res) {
     try {
-        if (!supabase) {
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Supabase Auth is not configured (missing SUPABASE_URL / SUPABASE_ANON_KEY)' }));
-            return;
-        }
-
-        const body = await parseJSONBody(req);
-        const { email, password } = body;
-        if (!email || !password) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Email and password required' }));
-            return;
-        }
-
-        const { data, error } = await supabase.auth.signUp({
-            email,
-            password
-        });
-
-        if (error) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: error.message }));
-            return;
-        }
-
-        const userId = data?.user?.id || null;
-        if (userId) {
-            await upsertProfile({
-                id: userId,
-                email,
-                subscription_type: 'normal',
-                subscription_status: 'inactive'
-            });
-        }
-
-        // In email-confirm flows, Supabase commonly returns no session until user confirms.
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-            message: 'Signup successful. Please check your email to verify your account before logging in.',
-            user: {
-                id: userId,
-                email
-            }
-        }));
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Registration is disabled' }));
+        return;
     } catch (error) {
         console.error('Registration error:', error);
         res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -136,7 +95,8 @@ async function login(req, res) {
                 id: userId,
                 email,
                 subscription_type: profile?.subscription_type || 'normal',
-                subscription_status: profile?.subscription_status || 'inactive'
+                subscription_status: profile?.subscription_status || 'inactive',
+                is_test_user: profile?.is_test_user || false
             }
         }));
     } catch (error) {
@@ -177,7 +137,8 @@ async function authenticateToken(req, res) {
             id: supaUser.id,
             email: supaUser.email,
             subscription_type: profile?.subscription_type || 'normal',
-            subscription_status: profile?.subscription_status || 'inactive'
+            subscription_status: profile?.subscription_status || 'inactive',
+            is_test_user: profile?.is_test_user || false
         };
         return true; // authenticated
     } catch (err) {
