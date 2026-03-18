@@ -2,25 +2,59 @@ const { Pool } = require('pg');
 const config = require('./config');
 console.log('✅ LOADING database.js (PostgreSQL version)');
 
-// Create a connection pool to Supabase PostgreSQL
-const pool = new Pool({
-    connectionString: config.database.url,
-    ssl: { rejectUnauthorized: false } // Required for Supabase
-});
+const databaseUrl = config?.database?.url;
+const hasDatabaseUrl = typeof databaseUrl === 'string' && databaseUrl.trim().length > 0;
 
-// Test the connection
-pool.connect((err, client, release) => {
-    if (err) {
-        console.error('Error connecting to Supabase:', err.stack);
-    } else {
-        console.log('Connected to Supabase PostgreSQL.');
-        release();
-        initializeTables();
+// Create a connection pool to PostgreSQL only when configured.
+// This keeps local/dev and Render boot clean when DATABASE_URL is not set yet.
+const pool = hasDatabaseUrl
+    ? new Pool({
+        connectionString: databaseUrl,
+        ssl: { rejectUnauthorized: false }
+    })
+    : null;
+
+if (pool) {
+    (async () => {
+        try {
+            const res = await pool.query('SELECT NOW() as now');
+            console.log('✅ Supabase PostgreSQL connection test OK:', res.rows?.[0]?.now);
+        } catch (err) {
+            console.error('❌ Supabase PostgreSQL connection test FAILED:', err?.message || err);
+        }
+    })();
+}
+
+let hasLoggedDbDisabled = false;
+let hasInitializedTables = false;
+
+async function ensureDbInitialized() {
+    if (!pool) {
+        if (!hasLoggedDbDisabled) {
+            hasLoggedDbDisabled = true;
+            console.warn('⚠️ DATABASE_URL not set. Database-backed routes will return empty results.');
+        }
+        return false;
     }
-});
+
+    if (hasInitializedTables) return true;
+
+    try {
+        const client = await pool.connect();
+        client.release();
+        await initializeTables();
+        hasInitializedTables = true;
+        console.log('Connected to PostgreSQL.');
+        return true;
+    } catch (err) {
+        console.error('Error connecting to PostgreSQL:', err.stack || err);
+        return false;
+    }
+}
 
 // Initialize tables if they don't exist
 async function initializeTables() {
+    if (!pool) return;
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
@@ -100,7 +134,7 @@ async function initializeTables() {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`);
 
-        // Predictions table
+        // Predictions table (with safer_pick column)
         await client.query(`CREATE TABLE IF NOT EXISTS predictions (
             id SERIAL PRIMARY KEY,
             match_id INTEGER REFERENCES matches(id),
@@ -116,11 +150,19 @@ async function initializeTables() {
             confidence INTEGER,
             volatility TEXT,
             risk_flags TEXT,
+            safer_pick TEXT,
             normal_tier INTEGER,
             deep_tier INTEGER,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             valid_until TIMESTAMP
         )`);
+
+        // New lightweight prediction storage columns (for Supabase usage)
+        await client.query(`ALTER TABLE predictions ADD COLUMN IF NOT EXISTS prediction JSONB`);
+        await client.query(`ALTER TABLE predictions ADD COLUMN IF NOT EXISTS stage TEXT`);
+        await client.query(`ALTER TABLE predictions ADD COLUMN IF NOT EXISTS is_final BOOLEAN DEFAULT false`);
+        await client.query(`ALTER TABLE predictions ADD COLUMN IF NOT EXISTS home_team TEXT`);
+        await client.query(`ALTER TABLE predictions ADD COLUMN IF NOT EXISTS away_team TEXT`);
 
         // Users table
         await client.query(`CREATE TABLE IF NOT EXISTS users (
@@ -129,6 +171,15 @@ async function initializeTables() {
             password_hash TEXT NOT NULL,
             subscription_type TEXT DEFAULT 'normal',
             subscription_expiry TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`);
+
+        // Profiles table (Supabase Auth)
+        await client.query(`CREATE TABLE IF NOT EXISTS profiles (
+            id UUID PRIMARY KEY,
+            email TEXT,
+            subscription_type TEXT DEFAULT 'normal',
+            subscription_status TEXT DEFAULT 'inactive',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`);
 
@@ -161,33 +212,52 @@ async function initializeTables() {
 
 // Get match by ID
 async function getMatch(matchId) {
-    const res = await pool.query('SELECT * FROM matches WHERE id = $1', [matchId]);
+    const ok = await ensureDbInitialized();
+    if (!ok) return null;
+    const res = await pool.query(
+        `SELECT m.*, 
+                ht.name as home_team,
+                at.name as away_team
+         FROM matches m
+         LEFT JOIN teams ht ON m.home_team_id = ht.id
+         LEFT JOIN teams at ON m.away_team_id = at.id
+         WHERE m.id = $1`,
+        [matchId]
+    );
     return res.rows[0];
 }
 
 // Get team stats for a team (most recent season)
 async function getTeamStats(teamId) {
+    const ok = await ensureDbInitialized();
+    if (!ok) return null;
     const res = await pool.query('SELECT * FROM team_stats WHERE team_id = $1 ORDER BY season DESC LIMIT 1', [teamId]);
     return res.rows[0];
 }
 
 // Get active injuries for a team
 async function getInjuries(teamId) {
+    const ok = await ensureDbInitialized();
+    if (!ok) return [];
     const res = await pool.query('SELECT * FROM injuries WHERE team_id = $1 AND status = $2', [teamId, 'active']);
     return res.rows;
 }
 
 // Get average news sentiment for a team over last 3 days
 async function getNewsSentiment(teamId) {
+    const ok = await ensureDbInitialized();
+    if (!ok) return 0;
     const res = await pool.query(
         'SELECT AVG(sentiment_score) as avgSentiment FROM news_mentions WHERE team_id = $1 AND created_at > NOW() - INTERVAL \'3 days\'',
         [teamId]
     );
-    return res.rows[0]?.avgsentiment || 0;
+    return res.rows[0]?.avgSentiment || 0;
 }
 
 // Get all upcoming matches (within the next `days` days)
 async function getAllUpcomingMatches(days = 7, sport = null) {
+    const ok = await ensureDbInitialized();
+    if (!ok) return [];
     let query = `
         SELECT m.*, l.sport 
         FROM matches m
@@ -205,32 +275,36 @@ async function getAllUpcomingMatches(days = 7, sport = null) {
     return res.rows;
 }
 
-// Save a generated prediction
+// Save a generated prediction (now includes safer_pick)
 async function savePrediction(prediction) {
+    const ok = await ensureDbInitialized();
+    if (!ok) return { id: null };
     const {
         matchId, probHome, probDraw, probAway, bttsProb, over25Prob, under25Prob,
         recommended, avoid, accaSafe, confidence, volatility, riskFlags,
-        normalTier, deepTier, validUntil
+        saferPick, normalTier, deepTier, validUntil
     } = prediction;
 
     const res = await pool.query(
         `INSERT INTO predictions (
             match_id, prob_home, prob_draw, prob_away, btts_prob, over25_prob, under25_prob,
-            recommended, avoid, acca_safe, confidence, volatility, risk_flags,
+            recommended, avoid, acca_safe, confidence, volatility, risk_flags, safer_pick,
             normal_tier, deep_tier, valid_until
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING id`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING id`,
         [
             matchId, probHome, probDraw, probAway, bttsProb, over25Prob, under25Prob,
             JSON.stringify(recommended), JSON.stringify(avoid), accaSafe ? 1 : 0,
-            confidence, volatility, JSON.stringify(riskFlags),
+            confidence, volatility, JSON.stringify(riskFlags), saferPick,
             normalTier ? 1 : 0, deepTier ? 1 : 0, validUntil
         ]
     );
     return { id: res.rows[0].id };
 }
 
-// Get predictions filtered by subscription tier and date
+// Get predictions filtered by subscription tier and date (now includes safer_pick)
 async function getPredictionsByTier(tier, date) {
+    const ok = await ensureDbInitialized();
+    if (!ok) return [];
     const tierConfig = require('./config').tiers[tier];
     if (!tierConfig) throw new Error('Invalid tier');
 
@@ -266,11 +340,63 @@ async function getPredictionsByTier(tier, date) {
     return res.rows;
 }
 
+async function insertFinalPredictionRow({
+    match_id,
+    prediction,
+    confidence,
+    stage,
+    is_final,
+    home_team,
+    away_team
+}) {
+    const ok = await ensureDbInitialized();
+    if (!ok) return { id: null };
+
+    const res = await pool.query(
+        `INSERT INTO predictions (
+            match_id,
+            prediction,
+            confidence,
+            stage,
+            is_final,
+            home_team,
+            away_team
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING id, created_at`,
+        [
+            match_id,
+            prediction,
+            confidence,
+            stage,
+            is_final,
+            home_team,
+            away_team
+        ]
+    );
+
+    return res.rows[0];
+}
+
+async function getLatestPredictions(limit = 50) {
+    const ok = await ensureDbInitialized();
+    if (!ok) return [];
+
+    const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.min(200, limit)) : 50;
+    const res = await pool.query(
+        'SELECT * FROM predictions ORDER BY created_at DESC LIMIT $1',
+        [safeLimit]
+    );
+    return res.rows;
+}
+
 // ========== USER HELPERS ==========
 
 async function createUser(email, passwordHash, subscriptionType = 'normal', expiryDays = 30) {
+    const ok = await ensureDbInitialized();
+    if (!ok) throw new Error('DATABASE_URL not configured');
     const expiry = new Date();
     expiry.setDate(expiry.getDate() + expiryDays);
+
     const res = await pool.query(
         'INSERT INTO users (email, password_hash, subscription_type, subscription_expiry) VALUES ($1, $2, $3, $4) RETURNING id, email, subscription_type',
         [email, passwordHash, subscriptionType, expiry]
@@ -279,13 +405,38 @@ async function createUser(email, passwordHash, subscriptionType = 'normal', expi
 }
 
 async function findUserByEmail(email) {
+    const ok = await ensureDbInitialized();
+    if (!ok) return null;
     const res = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     return res.rows[0];
 }
 
 async function findUserById(id) {
+    const ok = await ensureDbInitialized();
+    if (!ok) return null;
     const res = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
     return res.rows[0];
+}
+
+async function getProfileById(id) {
+    const ok = await ensureDbInitialized();
+    if (!ok) return null;
+    const res = await pool.query('SELECT * FROM profiles WHERE id = $1', [id]);
+    return res.rows[0] || null;
+}
+
+async function upsertProfile({ id, email, subscription_type = 'normal', subscription_status = 'inactive' }) {
+    const ok = await ensureDbInitialized();
+    if (!ok) return null;
+    const res = await pool.query(
+        `INSERT INTO profiles (id, email, subscription_type, subscription_status)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (id)
+         DO UPDATE SET email = EXCLUDED.email
+         RETURNING *`,
+        [id, email, subscription_type, subscription_status]
+    );
+    return res.rows[0] || null;
 }
 
 // ========== ACCURACY HELPERS ==========
@@ -296,6 +447,14 @@ async function updateAccuracyStats() {
 }
 
 async function getAccuracyStats() {
+    const ok = await ensureDbInitialized();
+    if (!ok) {
+        return {
+            overall: { total: 0, wins: 0, winRate: 0 },
+            byTier: [],
+            bySport: []
+        };
+    }
     // Overall stats
     const overall = await pool.query(
         `SELECT COUNT(*) as total, 
@@ -339,9 +498,13 @@ module.exports = {
     getAllUpcomingMatches,
     savePrediction,
     getPredictionsByTier,
+    insertFinalPredictionRow,
+    getLatestPredictions,
     createUser,
     findUserByEmail,
     findUserById,
+    getProfileById,
+    upsertProfile,
     updateAccuracyStats,
     getAccuracyStats
 };

@@ -1,15 +1,21 @@
 // auth.js
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const { createClient } = require('@supabase/supabase-js');
 const config = require('./config');
-const { createUser, findUserByEmail, findUserById } = require('./database');
+const { getProfileById, upsertProfile } = require('./database');
 
-const saltRounds = 10;
+const hasSupabaseConfig =
+    typeof config?.supabase?.url === 'string' && config.supabase.url.trim().length > 0 &&
+    typeof config?.supabase?.anonKey === 'string' && config.supabase.anonKey.trim().length > 0;
+
+const supabase = hasSupabaseConfig
+    ? createClient(config.supabase.url, config.supabase.anonKey)
+    : null;
 
 // Helper to parse JSON body from raw HTTP request
 function parseJSONBody(req) {
     return new Promise((resolve, reject) => {
         let body = '';
+
         req.on('data', chunk => body += chunk.toString());
         req.on('end', () => {
             try {
@@ -25,6 +31,12 @@ function parseJSONBody(req) {
 // Registration handler
 async function register(req, res) {
     try {
+        if (!supabase) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Supabase Auth is not configured (missing SUPABASE_URL / SUPABASE_ANON_KEY)' }));
+            return;
+        }
+
         const body = await parseJSONBody(req);
         const { email, password } = body;
         if (!email || !password) {
@@ -33,34 +45,34 @@ async function register(req, res) {
             return;
         }
 
-        // Check if user already exists
-        const existing = await findUserByEmail(email);
-        if (existing) {
-            res.writeHead(409, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'User already exists' }));
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password
+        });
+
+        if (error) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: error.message }));
             return;
         }
 
-        // Hash password
-        const hash = await bcrypt.hash(password, saltRounds);
+        const userId = data?.user?.id || null;
+        if (userId) {
+            await upsertProfile({
+                id: userId,
+                email,
+                subscription_type: 'normal',
+                subscription_status: 'inactive'
+            });
+        }
 
-        // Create user (default normal tier, 30 days expiry)
-        const user = await createUser(email, hash, 'normal', 30);
-
-        // Generate JWT token
-        const token = jwt.sign(
-            { id: user.id, email: user.email, subscription_type: user.subscription_type },
-            config.jwtSecret,
-            { expiresIn: '7d' }
-        );
-
+        // In email-confirm flows, Supabase commonly returns no session until user confirms.
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
-            token,
+            message: 'Signup successful. Please check your email to verify your account before logging in.',
             user: {
-                id: user.id,
-                email: user.email,
-                subscription_type: user.subscription_type
+                id: userId,
+                email
             }
         }));
     } catch (error) {
@@ -73,6 +85,12 @@ async function register(req, res) {
 // Login handler
 async function login(req, res) {
     try {
+        if (!supabase) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Supabase Auth is not configured (missing SUPABASE_URL / SUPABASE_ANON_KEY)' }));
+            return;
+        }
+
         const body = await parseJSONBody(req);
         const { email, password } = body;
         if (!email || !password) {
@@ -81,33 +99,44 @@ async function login(req, res) {
             return;
         }
 
-        const user = await findUserByEmail(email);
-        if (!user) {
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+        });
+
+        if (error) {
             res.writeHead(401, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Invalid credentials' }));
+            res.end(JSON.stringify({ error: error.message }));
             return;
         }
 
-        const match = await bcrypt.compare(password, user.password_hash);
-        if (!match) {
+        const token = data?.session?.access_token;
+        const userId = data?.user?.id;
+
+        if (!token || !userId) {
             res.writeHead(401, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Invalid credentials' }));
+            res.end(JSON.stringify({ error: 'Login failed (missing session). Ensure email is verified.' }));
             return;
         }
 
-        const token = jwt.sign(
-            { id: user.id, email: user.email, subscription_type: user.subscription_type },
-            config.jwtSecret,
-            { expiresIn: '7d' }
-        );
+        const profile = await getProfileById(userId);
+        if (!profile) {
+            await upsertProfile({
+                id: userId,
+                email,
+                subscription_type: 'normal',
+                subscription_status: 'inactive'
+            });
+        }
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
             token,
             user: {
-                id: user.id,
-                email: user.email,
-                subscription_type: user.subscription_type
+                id: userId,
+                email,
+                subscription_type: profile?.subscription_type || 'normal',
+                subscription_status: profile?.subscription_status || 'inactive'
             }
         }));
     } catch (error) {
@@ -118,7 +147,13 @@ async function login(req, res) {
 }
 
 // Authentication middleware for raw HTTP
-function authenticateToken(req, res, next) {
+async function authenticateToken(req, res) {
+    if (!supabase) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Supabase Auth is not configured (missing SUPABASE_URL / SUPABASE_ANON_KEY)' }));
+        return false;
+    }
+
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
@@ -129,8 +164,21 @@ function authenticateToken(req, res, next) {
     }
 
     try {
-        const user = jwt.verify(token, config.jwtSecret);
-        req.user = user;
+        const { data, error } = await supabase.auth.getUser(token);
+        if (error || !data?.user) {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Invalid or expired token' }));
+            return false;
+        }
+
+        const supaUser = data.user;
+        const profile = await getProfileById(supaUser.id);
+        req.user = {
+            id: supaUser.id,
+            email: supaUser.email,
+            subscription_type: profile?.subscription_type || 'normal',
+            subscription_status: profile?.subscription_status || 'inactive'
+        };
         return true; // authenticated
     } catch (err) {
         res.writeHead(403, { 'Content-Type': 'application/json' });

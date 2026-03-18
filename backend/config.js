@@ -3,13 +3,22 @@ require('dotenv').config();
 
 module.exports = {
     database: {
-        url: process.env.DATABASE_URL || 'sqlite:./database.sqlite',
+        url: process.env.DATABASE_URL,
     },
+    supabase: {
+        url: process.env.SUPABASE_URL,
+        anonKey: process.env.SUPABASE_ANON_KEY,
+    },
+    // Original RapidAPI key – used for other RapidAPI services
     rapidApiKey: process.env.RAPIDAPI_KEY,
+    
+    // Dedicated API‑Sports key – used ONLY for sports data
+    apiSportsKey: process.env.X_APISPORTS_KEY,
+    
     oddsApiKey: process.env.ODDS_API_KEY,
     maxPredictionsPerDay: 500,
     deepTierConfidenceThreshold: 75,
-    jwtSecret: process.env.JWT_SECRET,   // <-- new line
+    jwtSecret: process.env.JWT_SECRET,
     tiers: {
         normal4:  { daily: 50,  deep: false },
         normal9:  { daily: 100, deep: false },
