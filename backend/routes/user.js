@@ -9,15 +9,29 @@ const router = express.Router();
 
 router.get('/predictions', requireSupabaseUser, requireActiveSubscription, async (req, res) => {
     try {
-        const date = req.query.date || new Date().toISOString().split('T')[0];
-        const tierKey = req.query.tier;
-
-        if (!tierKey || typeof tierKey !== 'string' || !config.tiers?.[tierKey]) {
-            res.status(400).json({ error: 'tier is required and must be a valid plan key (e.g. normal30, deep30)' });
+        if (!req.user) {
+            res.status(401).json({ error: 'Access token required' });
             return;
         }
 
-        const predictions = await getPredictionsByTier(tierKey, date);
+        const date = req.query.date || new Date().toISOString().split('T')[0];
+
+        const rawTier = typeof req.query.tier === 'string' ? req.query.tier : '';
+        const normalizedTier = rawTier.toLowerCase().includes('deep') ? 'deep' : 'normal';
+        const tierKey = normalizedTier === 'deep' ? 'deep30' : 'normal30';
+
+        if (!config.tiers?.[tierKey]) {
+            res.status(200).json({
+                tier: tierKey,
+                date,
+                count: 0,
+                predictions: []
+            });
+            return;
+        }
+
+        const dbPredictions = await getPredictionsByTier(tierKey, date);
+        const predictions = Array.isArray(dbPredictions) ? dbPredictions : [];
 
         res.status(200).json({
             tier: tierKey,
@@ -25,8 +39,8 @@ router.get('/predictions', requireSupabaseUser, requireActiveSubscription, async
             count: predictions.length,
             predictions
         });
-    } catch (err) {
-        console.error('[user] predictions error:', err);
+    } catch (error) {
+        console.error('PREDICTIONS ERROR:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
