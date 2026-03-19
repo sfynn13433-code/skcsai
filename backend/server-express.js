@@ -10,6 +10,7 @@ const morgan = require('morgan');
 const { requireRole } = require('./utils/auth');
 const { upsertProfile } = require('./database');
 const { getPlan } = require('./config/subscriptionPlans');
+const { requireSupabaseUser } = require('./middleware/supabaseJwt');
 
 function warnEnv(name) {
     if (!process.env[name] || String(process.env[name]).trim().length === 0) {
@@ -56,14 +57,15 @@ app.use((req, _res, next) => {
 
 // Subscription endpoint (stores chosen plan into profiles.plan_id)
 // This is needed so `/api/user/predictions` can map plan -> tierKey for limits.
-app.post('/api/subscribe', async (req, res) => {
+app.post('/api/subscribe', requireSupabaseUser, async (req, res) => {
     try {
-        const { userId, planId, email } = req.body || {};
-
-        if (!userId || typeof userId !== 'string') {
-            res.status(400).json({ error: 'userId is required' });
+        if (!req.user || !req.user.id) {
+            res.status(401).json({ error: 'Access token required' });
             return;
         }
+
+        const userId = req.user.id;
+        const { planId, email } = req.body || {};
 
         if (!planId || typeof planId !== 'string') {
             res.status(400).json({ error: 'planId is required' });
