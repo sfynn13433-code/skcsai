@@ -183,6 +183,9 @@ async function initializeTables() {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`);
         await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_test_user BOOLEAN DEFAULT false`);
+        await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan_id TEXT`);
+        await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan_tier TEXT`);
+        await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan_expires_at TIMESTAMP`);
 
         // Prediction results table (for accuracy)
         await client.query(`CREATE TABLE IF NOT EXISTS prediction_results (
@@ -426,16 +429,22 @@ async function getProfileById(id) {
     return res.rows[0] || null;
 }
 
-async function upsertProfile({ id, email, subscription_status = 'inactive', is_test_user = false }) {
+async function upsertProfile({ id, email, subscription_status = 'inactive', is_test_user = false, plan_id = null, plan_tier = null, plan_expires_at = null }) {
     const ok = await ensureDbInitialized();
     if (!ok) return null;
     const res = await pool.query(
-        `INSERT INTO profiles (id, email, subscription_status, is_test_user)
-         VALUES ($1, $2, $3, $4)
+        `INSERT INTO profiles (id, email, subscription_status, is_test_user, plan_id, plan_tier, plan_expires_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          ON CONFLICT (id)
-         DO UPDATE SET email = EXCLUDED.email
+         DO UPDATE SET
+            email = COALESCE(EXCLUDED.email, profiles.email),
+            subscription_status = EXCLUDED.subscription_status,
+            is_test_user = EXCLUDED.is_test_user,
+            plan_id = COALESCE(EXCLUDED.plan_id, profiles.plan_id),
+            plan_tier = COALESCE(EXCLUDED.plan_tier, profiles.plan_tier),
+            plan_expires_at = COALESCE(EXCLUDED.plan_expires_at, profiles.plan_expires_at)
          RETURNING *`,
-        [id, email, subscription_status, is_test_user]
+        [id, email, subscription_status, is_test_user, plan_id, plan_tier, plan_expires_at]
     );
     return res.rows[0] || null;
 }

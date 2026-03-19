@@ -2,10 +2,15 @@
 
 const { withTransaction } = require('../db');
 const { detectConflicts } = require('../utils/conflictResolver');
+const { isValidCombination } = require('./conflictEngine');
 
 function normalizeTier(tier) {
     if (tier === 'normal' || tier === 'deep') return tier;
     throw new Error(`Invalid tier: ${tier}`);
+}
+
+function clamp(n, min, max) {
+    return Math.max(min, Math.min(max, n));
 }
 
 function computeTotalConfidence(predictions) {
@@ -18,6 +23,147 @@ function riskLevelFromConfidence(avgConfidence) {
     if (avgConfidence >= 80) return 'safe';
     if (avgConfidence >= 70) return 'medium';
     return 'medium';
+}
+
+function toLeg(p) {
+    return {
+        match_id: p.match_id,
+        sport: p.sport,
+        market: p.market,
+        pick: p.prediction,
+        confidence: p.confidence,
+        volatility: p.volatility,
+        odds: p.odds,
+        metadata: p.metadata
+    };
+}
+
+function isSmartCombo(p) {
+    return p && p.type === 'SMART_COMBO' && Array.isArray(p.legs);
+}
+
+function getKickoffTimeFromMetadata(p) {
+    // Optional: allow upstream to place kickoff time in metadata without requiring schema changes.
+    const t = p?.metadata?.kickoff || p?.metadata?.kickoff_time || p?.metadata?.match_time || null;
+    if (!t) return null;
+    const d = new Date(t);
+    return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function withinDays(from, to, days) {
+    const ms = days * 24 * 60 * 60 * 1000;
+    return Math.abs(to.getTime() - from.getTime()) <= ms;
+}
+
+function withinHours(from, to, hours) {
+    const ms = hours * 60 * 60 * 1000;
+    return Math.abs(to.getTime() - from.getTime()) <= ms;
+}
+
+function buildAccaV2({ tier, candidates, now = new Date() }) {
+    const t = normalizeTier(tier);
+    const list = Array.isArray(candidates) ? candidates.slice() : [];
+
+    // RULES (Phase 2):
+    // - 4–6 matches (legs)
+    // - Each leg ≥ 70%
+    // - Allow max 1 Smart Combo
+    // - No duplicate matches
+    // - No conflicts
+    // - Tier time windows:
+    //   - NORMAL: allow multi-day (≤5 days)
+    //   - DEEP: same day + kickoff window ≤ 2 hours
+
+    const minLegConfidence = 70;
+    const minSize = 4;
+    const maxSize = 6;
+
+    // Flatten smart combos into a single "selection" with multiple legs,
+    // but count it as ONE combo for the max-1 rule.
+    const scored = list
+        .map((p) => {
+            if (isSmartCombo(p)) {
+                const legs = p.legs.map((l) => ({
+                    ...l,
+                    market: l.market,
+                    pick: l.pick,
+                    confidence: l.confidence
+                }));
+                const confidence = typeof p.confidence === 'number' ? p.confidence : computeTotalConfidence(legs);
+                return { kind: 'smart_combo', confidence, legs };
+            }
+            return { kind: 'single', confidence: p.confidence, legs: [toLeg(p)] };
+        })
+        .filter((x) => typeof x.confidence === 'number' && x.confidence >= minLegConfidence)
+        .sort((a, b) => b.confidence - a.confidence);
+
+    const picked = [];
+    const usedMatchIds = new Set();
+    let smartComboCount = 0;
+
+    for (const item of scored) {
+        if (picked.length >= maxSize) break;
+        if (item.kind === 'smart_combo') {
+            if (smartComboCount >= 1) continue;
+        }
+
+        const itemMatchIds = item.legs.map((l) => String(l.match_id || '').trim()).filter(Boolean);
+        if (itemMatchIds.length !== item.legs.length) continue;
+        if (itemMatchIds.some((id) => usedMatchIds.has(id))) continue;
+
+        // Deep tier: enforce same day + kickoff window (if kickoff available)
+        if (t === 'deep') {
+            const kickoffs = item.legs.map(getKickoffTimeFromMetadata).filter(Boolean);
+            if (kickoffs.length) {
+                for (const k of kickoffs) {
+                    const sameDay = k.toISOString().slice(0, 10) === now.toISOString().slice(0, 10);
+                    if (!sameDay) {
+                        // Deep must be same day
+                        continue;
+                    }
+                    if (!withinHours(now, k, 2)) {
+                        continue;
+                    }
+                }
+            }
+        } else {
+            // Normal tier: allow within 5 days if kickoff available
+            const kickoffs = item.legs.map(getKickoffTimeFromMetadata).filter(Boolean);
+            if (kickoffs.length) {
+                if (kickoffs.some((k) => !withinDays(now, k, 5))) continue;
+            }
+        }
+
+        // Conflicts: validate within item + against already picked
+        if (!isValidCombination(item.legs)) continue;
+        const prospectiveLegs = picked.flatMap((x) => x.legs).concat(item.legs);
+        if (!isValidCombination(prospectiveLegs)) continue;
+
+        // Avoid using two markets from same match inside a single ACCA
+        // (the "no duplicate matches" rule)
+        for (const id of itemMatchIds) usedMatchIds.add(id);
+        picked.push(item);
+        if (item.kind === 'smart_combo') smartComboCount++;
+    }
+
+    if (picked.length < minSize) {
+        return {
+            ok: false,
+            reason: 'not_enough_legs',
+            legs: [],
+            confidence: 0
+        };
+    }
+
+    const legs = picked.flatMap((x) => x.legs).slice(0, maxSize);
+    const confidence = clamp(computeTotalConfidence(legs), 0, 100);
+
+    return {
+        ok: true,
+        legs,
+        confidence,
+        smartComboCount
+    };
 }
 
 function combinations(arr, k) {
@@ -218,5 +364,6 @@ async function buildFinalForTier(tier) {
 }
 
 module.exports = {
-    buildFinalForTier
+    buildFinalForTier,
+    buildAccaV2
 };

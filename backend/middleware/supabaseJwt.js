@@ -49,7 +49,10 @@ async function requireSupabaseUser(req, res, next) {
             id: supaUser.id,
             email: supaUser.email,
             subscription_status: profile?.subscription_status || 'inactive',
-            is_test_user: profile?.is_test_user || false
+            is_test_user: profile?.is_test_user || false,
+            plan_id: profile?.plan_id || null,
+            plan_tier: profile?.plan_tier || null,
+            plan_expires_at: profile?.plan_expires_at || null
         };
 
         next();

@@ -4,6 +4,7 @@ const express = require('express');
 const { getPredictionsByTier } = require('../database');
 const { requireSupabaseUser, requireActiveSubscription } = require('../middleware/supabaseJwt');
 const config = require('../config');
+const { getTierKeyForPlan } = require('../config/subscriptionPlans');
 
 const router = express.Router();
 
@@ -14,19 +15,31 @@ router.get('/predictions', requireSupabaseUser, requireActiveSubscription, async
             return;
         }
 
+        // Strict plan enforcement: no plan_id -> no predictions
+        if (!req.user.plan_id) {
+            res.status(403).json({ error: 'No active subscription' });
+            return;
+        }
+
+        // Enforce expiry (prevents revenue leak after subscription end)
+        const now = new Date();
+        if (!req.user.plan_expires_at || new Date(req.user.plan_expires_at) < now) {
+            res.status(403).json({ error: 'Subscription expired' });
+            return;
+        }
+
+        console.log('PLAN DEBUG:', {
+            user: req.user.id,
+            plan_id: req.user.plan_id,
+            tier: req.user.plan_tier,
+            expires: req.user.plan_expires_at
+        });
+
         const date = req.query.date || new Date().toISOString().split('T')[0];
 
-        const rawTier = typeof req.query.tier === 'string' ? req.query.tier : '';
-        const normalizedTier = rawTier.toLowerCase().includes('deep') ? 'deep' : 'normal';
-        const tierKey = normalizedTier === 'deep' ? 'deep30' : 'normal30';
-
-        if (!config.tiers?.[tierKey]) {
-            res.status(200).json({
-                tier: tierKey,
-                date,
-                count: 0,
-                predictions: []
-            });
+        const tierKey = getTierKeyForPlan(req.user.plan_id);
+        if (!tierKey || !config.tiers?.[tierKey]) {
+            res.status(403).json({ error: 'Invalid or unsupported subscription plan' });
             return;
         }
 

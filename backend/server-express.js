@@ -8,6 +8,8 @@ const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const morgan = require('morgan');
 const { requireRole } = require('./utils/auth');
+const { upsertProfile } = require('./database');
+const { getPlan } = require('./config/subscriptionPlans');
 
 function warnEnv(name) {
     if (!process.env[name] || String(process.env[name]).trim().length === 0) {
@@ -50,6 +52,53 @@ app.use(express.json({ limit: '1mb', strict: true }));
 app.use((req, _res, next) => {
     console.log(`[ROUTE HIT] ${req.method} ${req.url}`);
     next();
+});
+
+// Subscription endpoint (stores chosen plan into profiles.plan_id)
+// This is needed so `/api/user/predictions` can map plan -> tierKey for limits.
+app.post('/api/subscribe', async (req, res) => {
+    try {
+        const { userId, planId, email } = req.body || {};
+
+        if (!userId || typeof userId !== 'string') {
+            res.status(400).json({ error: 'userId is required' });
+            return;
+        }
+
+        if (!planId || typeof planId !== 'string') {
+            res.status(400).json({ error: 'planId is required' });
+            return;
+        }
+
+        const plan = getPlan(planId);
+        if (!plan) {
+            res.status(400).json({ error: 'Invalid plan selected' });
+            return;
+        }
+
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + plan.days);
+
+        await upsertProfile({
+            id: userId,
+            email: typeof email === 'string' ? email : null,
+            subscription_status: 'active',
+            is_test_user: false,
+            plan_id: planId,
+            plan_tier: plan.tier,
+            plan_expires_at: expiresAt
+        });
+
+        res.status(200).json({
+            success: true,
+            planId,
+            tier: plan.tier,
+            expiresAt
+        });
+    } catch (error) {
+        console.error('SUBSCRIBE ERROR:', error);
+        res.status(500).json({ error: 'Subscription failed' });
+    }
 });
 
 app.get('/', (_req, res) => {
