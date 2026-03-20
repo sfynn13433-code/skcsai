@@ -1,116 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>SKCS Subscriptions</title>
-  <style>
-    body { font-family: Arial; background:#0f172a; color:white; }
-    .container { max-width:1200px; margin:auto; padding:20px; }
-    h1 { text-align:center; margin-bottom:30px; }
-    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap:20px; }
-    .card {
-      background:#1e293b;
-      padding:20px;
-      border-radius:12px;
-      border:1px solid #334155;
-    }
-    .core { border-left:5px solid #22c55e; }
-    .elite { border-left:5px solid #3b82f6; }
-    h2 { margin:0; }
-    .price { font-size:24px; margin:10px 0; }
-    ul { padding-left:20px; }
-    button {
-      width:100%;
-      padding:10px;
-      margin-top:15px;
-      background:#22c55e;
-      border:none;
-      border-radius:6px;
-      cursor:pointer;
-      font-weight:bold;
-    }
-    .elite button { background:#3b82f6; }
-  </style>
+<meta charset="UTF-8">
+<title>SKCS Pricing</title>
+
+<style>
+body { font-family: Arial; background:#0f172a; color:white; }
+.container { max-width:1200px; margin:auto; padding:20px; }
+
+.tabs {
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:30px;
+}
+
+.tab {
+  padding:10px 20px;
+  cursor:pointer;
+  border-radius:6px;
+  background:#1e293b;
+}
+
+.active-core { background:#22c55e; }
+.active-elite { background:#3b82f6; }
+
+.grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px,1fr));
+  gap:20px;
+}
+
+.card {
+  background:#1e293b;
+  padding:20px;
+  border-radius:10px;
+}
+
+button {
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.core-btn { background:#22c55e; }
+.elite-btn { background:#3b82f6; }
+</style>
 </head>
+
 <body>
 
 <div class="container">
-  <h1>SKCS Subscriptions</h1>
 
-  <div class="grid">
+<h1 style="text-align:center;">Choose Your Plan</h1>
 
-    <!-- CORE 30 -->
-    <div class="card core">
-      <h2>🟢 SKCS Core</h2>
-      <p>30 Days Access</p>
-      <div class="price">£34.99</div>
+<div class="tabs">
+  <div class="tab active-core" onclick="showCore()">🟢 SKCS Core</div>
+  <div class="tab" onclick="showElite()">🔵 SKCS Elite</div>
+</div>
 
-      <ul>
-        <li><strong>Football Predictions (Daily)</strong></li>
-        <li>Mon–Thu: 8–12 | Fri: 12–18 | Sat: 18–25 | Sun: 12–18</li>
+<!-- CORE -->
+<div id="corePlans" class="grid">
 
-        <li><strong>Multi Bets</strong></li>
-        <li>Mon–Thu: 2–3/day | Fri: 3–4 | Sat: 5–6 | Sun: 3–4</li>
+<div class="card">
+<h3>4-Day Sprint</h3>
+<p>£3.99</p>
+<ul>
+<li>AI-weighted daily predictions</li>
+<li>Multi bets & same match bets</li>
+<li>Structured ACCAs</li>
+<li>Multi-sport coverage</li>
+</ul>
+<button class="core-btn" onclick="subscribe('core_4')">Select Plan</button>
+</div>
 
-        <li><strong>Same Match Bets</strong></li>
-        <li>Mon–Thu: 2/day | Fri–Sun: 2–3/day</li>
+<div class="card">
+<h3>9-Day Run ⭐</h3>
+<p>£7.99</p>
+<ul>
+<li>Increased daily predictions</li>
+<li>More multi & same match bets</li>
+<li>Enhanced ACCA system</li>
+<li>Multi-sport included</li>
+</ul>
+<button class="core-btn" onclick="subscribe('core_9')">Select Plan</button>
+</div>
 
-        <li><strong>ACCAs</strong></li>
-        <li>Mon–Thu: 6 | Fri: 3 | Sat: 6–7 | Sun: 3–4</li>
+<div class="card">
+<h3>14-Day Pro</h3>
+<p>£11.99</p>
+<ul>
+<li>Higher daily output</li>
+<li>Stronger ACCA coverage</li>
+<li>Expanded multi-sport predictions</li>
+</ul>
+<button class="core-btn" onclick="subscribe('core_14')">Select Plan</button>
+</div>
 
-        <li><strong>Multi-Sport Coverage</strong></li>
-        <li>10+ sports | 3 predictions per sport</li>
-      </ul>
+<div class="card">
+<h3>30-Day Limitless</h3>
+<p>£34.99</p>
+<ul>
+<li>Maximum daily predictions</li>
+<li>Full betting coverage</li>
+<li>All sports included</li>
+</ul>
+<button class="core-btn" onclick="subscribe('core_30')">Select Plan</button>
+</div>
 
-      <button onclick="subscribe('core_30')">Select Plan</button>
-    </div>
+</div>
 
-    <!-- ELITE 30 -->
-    <div class="card elite">
-      <h2>🔵 SKCS Elite</h2>
-      <p>30 Days Access</p>
-      <div class="price">£59.99</div>
+<!-- ELITE -->
+<div id="elitePlans" class="grid" style="display:none;">
 
-      <ul>
-        <li><strong>Top 20–25% Predictions Only</strong></li>
+<div class="card">
+<h3>4-Day Deep Dive</h3>
+<p>£7.99</p>
+<ul>
+<li>Top 25% confidence picks</li>
+<li>Optimized multi & same bets</li>
+<li>Structured ACCAs</li>
+<li>AI insights</li>
+</ul>
+<button class="elite-btn" onclick="subscribe('elite_4')">Select Plan</button>
+</div>
 
-        <li><strong>Football (Dynamic AI)</strong></li>
-        <li>Mon–Thu: 6–10 | Fri: 12–20 | Sat: 20–40 | Sun: 12–20</li>
+<div class="card">
+<h3>9-Day Deep Strike ⭐</h3>
+<p>£11.99</p>
+<ul>
+<li>High-confidence predictions</li>
+<li>Advanced ACCA system</li>
+<li>Multi-sport intelligence</li>
+<li>AI assistant access</li>
+</ul>
+<button class="elite-btn" onclick="subscribe('elite_9')">Select Plan</button>
+</div>
 
-        <li><strong>Multi Bets</strong></li>
-        <li>Mon–Thu: 2–3 | Fri: 4–6 | Sat: 8–12 | Sun: 4–6</li>
+<div class="card">
+<h3>14-Day Deep Pro</h3>
+<p>£15.99</p>
+<ul>
+<li>Expanded high-confidence output</li>
+<li>Enhanced market selection</li>
+<li>AI-assisted decisions</li>
+</ul>
+<button class="elite-btn" onclick="subscribe('elite_14')">Select Plan</button>
+</div>
 
-        <li><strong>Same Match Bets</strong></li>
-        <li>Mon–Thu: 2 | Fri–Sun: 3–5</li>
+<div class="card">
+<h3>30-Day Deep VIP</h3>
+<p>£59.99</p>
+<ul>
+<li>Maximum high-confidence predictions</li>
+<li>Full AI optimization</li>
+<li>All ACCA systems unlocked</li>
+<li>AI Match Assistant (30 queries)</li>
+</ul>
+<button class="elite-btn" onclick="subscribe('elite_30')">Select Plan</button>
+</div>
 
-        <li><strong>ACCAs (Structured)</strong></li>
-        <li>Mon–Thu: 6 | Fri: 4 | Sat: 6–8 | Sun: 4</li>
+</div>
 
-        <li><strong>ACCA Types</strong></li>
-        <li>4 Football | 1 Multi-Sport | 2 Hybrid</li>
-
-        <li><strong>Multi-Sport</strong></li>
-        <li>12+ sports | 3 high-confidence picks</li>
-
-        <li><strong>AI Match Assistant</strong></li>
-        <li>30 queries/month</li>
-      </ul>
-
-      <button onclick="subscribe('elite_30')">Select Plan</button>
-    </div>
-
-  </div>
 </div>
 
 <script>
-async function subscribe(planId) {
+function showCore(){
+  document.getElementById('corePlans').style.display='grid';
+  document.getElementById('elitePlans').style.display='none';
+}
+
+function showElite(){
+  document.getElementById('corePlans').style.display='none';
+  document.getElementById('elitePlans').style.display='grid';
+}
+
+async function subscribe(planId){
   const token = localStorage.getItem("token");
 
   const res = await fetch("https://skcsai.onrender.com/api/subscribe", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer " + token
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json",
+      "Authorization":"Bearer "+token
     },
     body: JSON.stringify({ planId })
   });
