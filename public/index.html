@@ -778,51 +778,38 @@
     <!-- ==================== MASTER SCRIPT ==================== -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // ========== CONFIG ==========
-        const API_BASE_URL = 'https://skcsai.onrender.com';
+        const SUPABASE_URL = "https://ghzjntdvaptuxfpvhybb.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdoempudGR2YXB0dXhmcHZoeWJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDAzNzIsImV4cCI6MjA4NzgxNjM3Mn0.nWxOY0lDIDDvexELk9De2aEfPfM5iJjoaW91tbL7YQk";
 
-        const SUPABASE_URL = window.SUPABASE_URL || '';
-        const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || '';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-            console.error('Supabase config missing: window.SUPABASE_URL / window.SUPABASE_ANON_KEY must be set.');
-        }
-
-        const supabase = SUPABASE_URL && SUPABASE_ANON_KEY
-            ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-            : null;
-        // Plan limits (same as before)
-        const planLimits = {
-            normal4: { total: 50, deep: false },
-            normal9: { total: 100, deep: false },
-            normal14: { total: 150, deep: false },
-            normal30: { total: 300, deep: false },
-            deep4: { total: 75, deep: true },
-            deep9: { total: 150, deep: true },
-            deep14: { total: 225, deep: true },
-            deep30: { total: 500, deep: true }
-        };
-        let currentPlan = 'deep30'; // default (will be overridden if user is logged in)
+        // ========== GLOBAL STATE ==========
+        let skcsMatches = []; 
+        let matchesLoaded = false;
+        let userTier = "normal"; // default
         let token = null;
         let user = null;
 
-        const authLink = document.getElementById('authLink');
-
-        async function loadAuthState() {
-            if (!supabase) {
-                token = null;
-                user = null;
-                authLink.textContent = 'Login';
-                authLink.href = 'login.html';
-                return;
+        // ========== AUTH & SESSION ==========
+        async function checkSession() { 
+            const { data } = await supabase.auth.getSession(); 
+            if (!data?.session) { 
+                console.log("No active session");
+                userTier = "normal";
+            } else { 
+                console.log("User logged in:", data.session.user.email);
+                user = data.session.user;
+                token = data.session.access_token;
+                // In a real app, you'd fetch the tier from a 'profiles' table.
+                // For now, we'll stick with the logic provided.
+                userTier = user.user_metadata?.tier || "normal";
             }
+            updateAuthUI();
+        } 
 
-            const { data } = await supabase.auth.getSession();
-            const session = data?.session || null;
-            token = session?.access_token || null;
-            user = session?.user || null;
-
-            if (token && user) {
+        function updateAuthUI() {
+            const authLink = document.getElementById('authLink');
+            if (user) {
                 authLink.textContent = 'Logout';
                 authLink.href = '#';
                 authLink.onclick = async (e) => {
@@ -833,47 +820,161 @@
             } else {
                 authLink.textContent = 'Login';
                 authLink.href = 'login.html';
+                authLink.onclick = null;
             }
         }
 
-        if (supabase) {
-            supabase.auth.onAuthStateChange((_event, session) => {
-                token = session?.access_token || null;
-                user = session?.user || null;
-            });
+        async function loginUser(email, password) { 
+            const { data, error } = await supabase.auth.signInWithPassword({ 
+                email: email, 
+                password: password 
+            }); 
+            if (error) { 
+                alert("Login failed: " + error.message); 
+                return null; 
+            } 
+            return data.user; 
         }
-        // ========== FETCH PREDICTIONS FROM BACKEND (protected) ==========
-        async function fetchPredictions(tier, date) {
-            // If no token, return empty array (will be handled in updateAllTabs)
-            if (!token) return [];
-            try {
-                // Use the protected endpoint
-                const url = `${API_BASE_URL}/api/user/predictions?date=${encodeURIComponent(date)}&tier=${encodeURIComponent(tier)}`;
-                const response = await fetch(url, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        window.location.href = 'login.html';
-                        return [];
-                    }
 
-                    if (response.status === 403) {
-                        window.location.href = 'subscription.html';
-                        return [];
-                    }
-                    throw new Error(`HTTP error ${response.status}`);
-                }
-                const data = await response.json();
-                return data.predictions;
-            } catch (error) {
-                console.error('Error fetching predictions:', error);
-                return [];
-            }
+        // ========== DATA LOADING ==========
+        async function loadMatches() { 
+            const { data, error } = await supabase 
+                .from("matches") 
+                .select("id, home_team, away_team, match_name, sport"); 
+            
+            if (error) { 
+                console.error("Error loading matches:", error); 
+                return; 
+            } 
+            
+            skcsMatches = data; 
+            matchesLoaded = true;
+            console.log("Matches loaded:", skcsMatches);
+            updateAllTabs(); // Refresh UI with loaded matches
         }
-        // ========== RENDER SPORT TAB ==========
+
+        // ========== PREDICTION LOGIC ==========
+        async function getTierRules() { 
+            const { data, error } = await supabase 
+                .from("tier_rules") 
+                .select("*") 
+                .eq("tier", userTier) 
+                .single(); 
+            
+            if (error) {
+                console.error("Error fetching tier rules:", error);
+                return { min_confidence: 70, allowed_markets: ["all"] }; // fallback
+            }
+            return data; 
+        } 
+
+        async function getPrediction(matchId) { 
+            const tier = await getTierRules(); 
+            
+            const { data, error } = await supabase 
+                .from("predictions_final") 
+                .select("*") 
+                .eq("match_id", matchId); 
+            
+            if (error || !data || data.length === 0) {
+                console.error("No prediction data");
+                return null;
+            }
+            
+            const allowedMarkets = Array.isArray(tier.allowed_markets) 
+                ? tier.allowed_markets 
+                : JSON.parse(tier.allowed_markets || "[]"); 
+
+            const allowed = allowedMarkets.map(m => m.toLowerCase()); 
+            
+            const filtered = data.filter(p => { 
+                const market = (p.type || "").toLowerCase().replace(/\s+/g, "_"); 
+                return (
+                    p.total_confidence >= tier.min_confidence &&
+                    (allowed.includes("all") || allowed.includes(market))
+                );
+            }); 
+            
+            if (!filtered.length) return null; 
+            
+            const bestPrediction = filtered.sort((a, b) => b.total_confidence - a.total_confidence)[0];
+            console.log("Best prediction found:", bestPrediction);
+            return bestPrediction;
+        } 
+
+        // ========== CHATBOT ==========
+        let requestCount = 0; 
+        const requestLimit = 5; 
+        
+        function findMatch(userInput) { 
+            const input = userInput.toLowerCase(); 
+            return skcsMatches.find(m => 
+                input.includes(m.home_team.toLowerCase()) || 
+                input.includes(m.away_team.toLowerCase()) || 
+                input.includes((m.match_name || "").toLowerCase()) 
+            ); 
+        } 
+        
+        async function sendMessage() { 
+            if (!matchesLoaded) { 
+                addMessage("⚠️ System loading data. Please wait a moment."); 
+                return; 
+            }
+
+            const inputField = document.getElementById("chat-input"); 
+            const msg = inputField.value.trim(); 
+            if (!msg) return;
+            
+            inputField.value = ""; 
+        
+            if (requestCount >= requestLimit) { 
+                addMessage("⚠️ Daily limit reached. Upgrade to continue.", "error"); 
+                return; 
+            } 
+        
+            requestCount++; 
+            addMessage(msg, "user"); 
+        
+            const matchObj = findMatch(msg); 
+        
+            if (!matchObj) { 
+                addMessage("❌ This match is not currently available in the SKCS system.", "bot"); 
+                return; 
+            } 
+        
+            const prediction = await getPrediction(matchObj.id);
+            console.log("Prediction for match:", prediction);
+        
+            if (prediction) { 
+                addMessage(`📊 ${matchObj.sport.toUpperCase()} Analysis 
+  
+ Match: ${matchObj.home_team} vs ${matchObj.away_team} 
+  
+ 🎯 Type: 
+ ${prediction.type} 
+  
+ 📊 Confidence: ${prediction.total_confidence}% 
+ ⚠️ Risk: ${prediction.risk_level} 
+  
+ This output is generated from Stage 4 of the SKCS pipeline.`); 
+            } else { 
+                addMessage( 
+                    "This outcome is not available under your current subscription tier. Upgrade to access higher-confidence or additional markets.", 
+                    "bot" 
+                ); 
+            } 
+        } 
+        
+        function addMessage(text, type = "bot") { 
+            const box = document.getElementById("chat-messages"); 
+            const div = document.createElement("div"); 
+            div.classList.add(type); 
+            div.innerText = text; 
+            box.appendChild(div); 
+            box.scrollTop = box.scrollHeight; 
+        } 
+
+        // ========== UI RENDERING ==========
         function renderSport(sport, containerId, predictions) {
             const container = document.getElementById(containerId);
             if (!container) return;
@@ -886,235 +987,74 @@
             sportPreds.forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'prediction-card';
-                const matchDate = new Date(p.match_date);
-                const formattedDate = matchDate.toLocaleString('en-GB', {
-                    weekday: 'short',
-                    day: 'numeric',
-                    month: 'short',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-                const recommendedStr = p.recommended.join(', ');
+                const recommendedStr = Array.isArray(p.recommended) ? p.recommended.join(', ') : p.recommended;
                 card.innerHTML = `
                     <div class="match-info">
-                        <div class="teams">${p.home_team_name} vs ${p.away_team_name}</div>
-                        <div class="match-date">${formattedDate}</div>
+                        <div class="teams">${p.home_team} vs ${p.away_team}</div>
+                        <div class="match-date">${p.sport.toUpperCase()}</div>
                     </div>
                     <div class="prediction-details">
                         <div class="prediction">${recommendedStr}</div>
-                        <div class="confidence">${p.confidence}%</div>
+                        <div class="confidence">${p.total_confidence}%</div>
                     </div>
                 `;
                 container.appendChild(card);
             });
         }
-        // ========== UPDATE ALL TABS BASED ON SELECTED PLAN ==========
+
         async function updateAllTabs() {
-            const plan = planLimits[currentPlan];
-            const planName = document.querySelector(`#planSelect option[value="${currentPlan}"]`).text;
-            document.getElementById('currentPlanDisplay').innerText = planName;
-            document.getElementById('planDescription').innerText = `${planName}: ${plan.total} daily predictions ${plan.deep ? '(top 25% confidence)' : ''}`;
-            const today = new Date().toISOString().split('T')[0];
-            // If no token, show login message in all prediction grids
-            if (!token) {
-                const grids = [
-                    'football-matches', 'rugby-matches', 'afl-matches', 'baseball-matches',
-                    'basketball-matches', 'formula1-matches', 'cricket-matches', 'nfl-matches',
-                    'hockey-matches', 'mma-matches', 'handball-matches', 'volleyball-matches'
-                ];
-                grids.forEach(id => {
-                    const container = document.getElementById(id);
-                    if (container) {
-                        container.innerHTML = '<div class="auth-message">Please <a href="login.html">login</a> to view predictions.</div>';
-                    }
-                });
+            if (!matchesLoaded) return;
+            
+            // For the landing page, we show a subset or specific predictions
+            // In this implementation, we'll fetch all available predictions and filter by sport
+            const { data: predictions, error } = await supabase
+                .from("predictions_final")
+                .select("*");
+
+            if (error) {
+                console.error("Error fetching predictions for tabs:", error);
                 return;
             }
-            const predictions = await fetchPredictions(currentPlan, today);
-            renderSport('football', 'football-matches', predictions);
-            renderSport('rugby', 'rugby-matches', predictions);
-            renderSport('afl', 'afl-matches', predictions);
-            renderSport('baseball', 'baseball-matches', predictions);
-            renderSport('basketball', 'basketball-matches', predictions);
-            renderSport('formula1', 'formula1-matches', predictions);
-            renderSport('cricket', 'cricket-matches', predictions);
-            renderSport('nfl', 'nfl-matches', predictions);
-            renderSport('hockey', 'hockey-matches', predictions);
-            renderSport('mma', 'mma-matches', predictions);
-            renderSport('handball', 'handball-matches', predictions);
-            renderSport('volleyball', 'volleyball-matches', predictions);
+
+            const sports = [
+                'football', 'rugby', 'afl', 'baseball', 'basketball', 
+                'formula1', 'cricket', 'nfl', 'hockey', 'mma', 'handball', 'volleyball'
+            ];
+
+            sports.forEach(sport => {
+                renderSport(sport, `${sport}-matches`, predictions || []);
+            });
         }
-        // ========== PLAN SELECTION HANDLER ==========
-        window.updateSelectedPlan = function() {
-            const select = document.getElementById('planSelect');
-            currentPlan = select.value;
-            updateAllTabs();
-        };
-        // ========== TAB SWITCHING ==========
+
+        // ========== INITIALIZATION ==========
         document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching logic
             const tabButtons = document.querySelectorAll('.tab-button');
             const tabContents = document.querySelectorAll('.tab-content');
-            function switchTab(tabId) {
-                tabContents.forEach(c => c.classList.remove('active'));
-                tabButtons.forEach(b => b.classList.remove('active'));
-                document.getElementById(tabId).classList.add('active');
-                document.querySelector(`.tab-button[data-tab="${tabId}"]`).classList.add('active');
-            }
             tabButtons.forEach(button => {
                 button.addEventListener('click', function() {
                     const tabId = this.getAttribute('data-tab');
-                    switchTab(tabId);
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    tabButtons.forEach(b => b.classList.remove('active'));
+                    document.getElementById(tabId).classList.add('active');
+                    this.classList.add('active');
                 });
             });
-            (async () => {
-                await loadAuthState();
-                updateAllTabs();
-            })();
+
+            // Initialize app
+            checkSession();
+            loadMatches();
         });
-    </script>
-    <!-- Scroll to top button script -->
-    <script>
+
+        // Scroll to top
         const scrollTopBtn = document.getElementById('scrollTopBtn');
         window.addEventListener('scroll', function() {
-            if (window.scrollY > 300) {
-                scrollTopBtn.classList.add('show');
-            } else {
-                scrollTopBtn.classList.remove('show');
-            }
+            if (window.scrollY > 300) scrollTopBtn.classList.add('show');
+            else scrollTopBtn.classList.remove('show');
         });
         scrollTopBtn.addEventListener('click', function() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script> 
-    const supabase = window.supabase.createClient( 
-      "https://ghzjntdvaptuxfpvhybb.supabase.co", 
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdoempudGR2YXB0dXhmcHZoeWJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDAzNzIsImV4cCI6MjA4NzgxNjM3Mn0.nWxOY0lDIDDvexELk9De2aEfPfM5iJjoaW91tbL7YQk" 
-    ); 
-    
-    let skcsMatches = []; 
-    
-    async function loadMatches() { 
-      const { data, error } = await supabase 
-        .from("matches") 
-        .select("id, home_team, away_team, match_name, sport"); 
-      
-      if (error) { 
-        console.error(error); 
-        return; 
-      } 
-      
-      skcsMatches = data; 
-    } 
-    
-    loadMatches(); 
-    
-    const userTier = "normal"; // temporary hardcode, will be dynamic later
-
-    async function getTierRules() { 
-      const { data } = await supabase 
-        .from("tier_rules") 
-        .select("*") 
-        .eq("tier", userTier) 
-        .single(); 
-      
-      return data; 
-    } 
-
-    async function getPrediction(matchId) { 
-  const tier = await getTierRules(); 
-  
-  const { data, error } = await supabase 
-    .from("predictions_final") 
-    .select("*") 
-    .eq("match_id", matchId) 
-    .gte("confidence", tier.min_confidence); 
-  
-  if (error || !data || data.length === 0) return null; 
-  
-  // SAFE parsing of allowed_markets 
-  const allowedMarkets = Array.isArray(tier.allowed_markets) 
-    ? tier.allowed_markets 
-    : JSON.parse(tier.allowed_markets || "[]"); 
-
-  const allowed = allowedMarkets.map(m => m.toLowerCase()); 
-  
-  // SAFE market matching 
-  const filtered = data.filter(p => { 
-    const market = (p.market_type || "").toLowerCase().replace(/\s+/g, "_"); 
-    return allowed.includes("all") || allowed.includes(market); 
-  }); 
-  
-  if (!filtered.length) return null; 
-  
-  // pick highest confidence result 
-  const best = filtered.sort((a, b) => b.confidence - a.confidence); 
-  
-  return best[0]; 
-} 
-
-function findMatch(userInput) { 
-  const input = userInput.toLowerCase(); 
-  
-  return skcsMatches.find(m => 
-    input.includes(m.home_team.toLowerCase()) || 
-    input.includes(m.away_team.toLowerCase()) || 
-    input.includes((m.match_name || "").toLowerCase()) 
-  ); 
-} 
-    
-    async function sendMessage() { 
-      const input = document.getElementById("chat-input"); 
-      const msg = input.value.toLowerCase(); 
-      input.value = ""; 
-    
-      if (requestCount >= requestLimit) { 
-        addMessage("⚠️ Daily limit reached. Upgrade to continue.", "error"); 
-        return; 
-      } 
-    
-      requestCount++; 
-      addMessage("👤 " + msg, "user"); 
-    
-      const matchObj = findMatch(msg); 
-    
-      if (!matchObj) { 
-        addMessage("❌ This match is not currently available in the SKCS system.", "error"); 
-        return; 
-      } 
-    
-      const tierRules = await getTierRules();
-      const prediction = await getPrediction(matchObj.id);
-    
-      if (prediction) { 
-        addMessage(`📊 ${matchObj.sport.toUpperCase()} Analysis 
-    
-    Match: ${matchObj.home_team} vs ${matchObj.away_team} 
-    
-    🎯 Recommended: 
-    ${prediction.recommended} 
-    
-    📊 Confidence: ${prediction.confidence}% 
-    ⚠️ Volatility: ${prediction.volatility} 
-    
-    This output is generated from Stage 4 of the SKCS pipeline.`); 
-      } else { 
-        addMessage( 
-          "This outcome is not available under your current subscription tier. Upgrade to access higher-confidence or additional markets.", 
-          "error" 
-        ); 
-      } 
-    } 
-    
-    function addMessage(text, type = "bot") { 
-      const box = document.getElementById("chat-messages"); 
-      const div = document.createElement("div"); 
-      div.classList.add(type); 
-      div.innerText = text; 
-      box.appendChild(div); 
-      box.scrollTop = box.scrollHeight; 
-    } 
-    </script> 
 </body>
 </html>

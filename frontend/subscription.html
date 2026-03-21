@@ -446,10 +446,10 @@ button:hover { opacity: 0.9; }
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const supabase = window.supabase.createClient( 
-  "https://ghzjntdvaptuxfpvhybb.supabase.co", 
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdoempudGR2YXB0dXhmcHZoeWJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDAzNzIsImV4cCI6MjA4NzgxNjM3Mn0.nWxOY0lDIDDvexELk9De2aEfPfM5iJjoaW91tbL7YQk" 
-); 
+const SUPABASE_URL = "https://ghzjntdvaptuxfpvhybb.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdoempudGR2YXB0dXhmcHZoeWJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDAzNzIsImV4cCI6MjA4NzgxNjM3Mn0.nWxOY0lDIDDvexELk9De2aEfPfM5iJjoaW91tbL7YQk";
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 function showCore(){
   document.getElementById('corePlans').style.display='grid';
@@ -466,7 +466,14 @@ function showElite(){
 }
 
 async function subscribe(planId){
-  const token = localStorage.getItem("token");
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+
+  if (!token) {
+    alert("Please log in to subscribe.");
+    window.location.href = "login.html";
+    return;
+  }
 
   try {
     const res = await fetch("https://skcsai.onrender.com/api/subscribe", {
@@ -493,9 +500,10 @@ async function subscribe(planId){
 
 // ========== CHATBOT ENGINE ==========
 let requestCount = 0;
-const requestLimit = 2; // Default, will be updated by tier later
-
+let requestLimit = 5; 
 let skcsMatches = []; 
+let matchesLoaded = false;
+let userTier = "normal";
 
 async function loadMatches() { 
   const { data, error } = await supabase 
@@ -503,24 +511,49 @@ async function loadMatches() {
     .select("id, home_team, away_team, match_name, sport"); 
 
   if (error) { 
-    console.error(error); 
+    console.error("Error loading matches:", error); 
     return; 
   } 
 
   skcsMatches = data; 
+  matchesLoaded = true;
+  console.log("Matches loaded:", skcsMatches);
 } 
 
-loadMatches(); 
+async function checkSession() { 
+  const { data } = await supabase.auth.getSession(); 
+  if (!data?.session) { 
+    console.log("No active session");
+    userTier = "normal";
+  } else { 
+    console.log("User logged in:", data.session.user.email);
+    userTier = data.session.user.user_metadata?.tier || "normal";
+  } 
+} 
 
-const userTier = "normal"; // temporary hardcode, will be dynamic later
+async function loginUser(email, password) { 
+  const { data, error } = await supabase.auth.signInWithPassword({ 
+    email: email, 
+    password: password 
+  }); 
+  if (error) { 
+    alert("Login failed: " + error.message); 
+    return null; 
+  } 
+  return data.user; 
+}
 
 async function getTierRules() { 
-  const { data } = await supabase 
+  const { data, error } = await supabase 
     .from("tier_rules") 
     .select("*") 
     .eq("tier", userTier) 
     .single(); 
 
+  if (error) {
+    console.error("Error fetching tier rules:", error);
+    return { min_confidence: 70, allowed_markets: ["all"] };
+  }
   return data; 
 } 
 
@@ -530,35 +563,36 @@ async function getPrediction(matchId) {
   const { data, error } = await supabase 
     .from("predictions_final") 
     .select("*") 
-    .eq("match_id", matchId) 
-    .gte("confidence", tier.min_confidence); 
+    .eq("match_id", matchId); 
 
-  if (error || !data || data.length === 0) return null; 
+  if (error || !data || data.length === 0) {
+    console.error("No prediction data");
+    return null;
+  }
 
-  // SAFE parsing of allowed_markets 
   const allowedMarkets = Array.isArray(tier.allowed_markets) 
     ? tier.allowed_markets 
     : JSON.parse(tier.allowed_markets || "[]"); 
 
   const allowed = allowedMarkets.map(m => m.toLowerCase()); 
 
-  // SAFE market matching 
   const filtered = data.filter(p => { 
-    const market = (p.market_type || "").toLowerCase().replace(/\s+/g, "_"); 
-    return allowed.includes("all") || allowed.includes(market); 
+    const market = (p.type || "").toLowerCase().replace(/\s+/g, "_"); 
+    return (
+      p.total_confidence >= tier.min_confidence &&
+      (allowed.includes("all") || allowed.includes(market))
+    );
   }); 
 
   if (!filtered.length) return null; 
 
-  // pick highest confidence result 
-  const best = filtered.sort((a, b) => b.confidence - a.confidence); 
-
-  return best[0]; 
+  const bestPrediction = filtered.sort((a, b) => b.total_confidence - a.total_confidence)[0];
+  console.log("Best prediction found:", bestPrediction);
+  return bestPrediction;
 } 
 
 function findMatch(userInput) { 
   const input = userInput.toLowerCase(); 
-
   return skcsMatches.find(m => 
     input.includes(m.home_team.toLowerCase()) || 
     input.includes(m.away_team.toLowerCase()) || 
@@ -567,61 +601,70 @@ function findMatch(userInput) {
 } 
 
 async function sendMessage() { 
-  const input = document.getElementById("chat-input"); 
-  const msg = input.value.toLowerCase(); 
+  if (!matchesLoaded) { 
+    addMessage("⚠️ System loading data. Please wait a moment."); 
+    return; 
+  }
+
+  const inputField = document.getElementById("chat-input"); 
+  const msg = inputField.value.trim(); 
   if (!msg) return;
-  input.value = ""; 
+  inputField.value = ""; 
 
   if (requestCount >= requestLimit) { 
-    addMessage("⚠️ Daily limit reached. Upgrade to continue.", "error"); 
+    addMessage("⚠️ Daily limit reached. Upgrade to continue.", "bot"); 
     return; 
   } 
 
   requestCount++; 
-  addMessage("👤 " + msg, "user"); 
+  addMessage(msg, "user"); 
 
-  // 🔍 MATCH CHECK 
   const matchObj = findMatch(msg); 
 
   if (!matchObj) { 
-    addMessage("❌ This match is not currently available in the SKCS system.", "error"); 
+    addMessage("❌ This match is not currently available in the SKCS system.", "bot"); 
     return; 
   } 
 
   const prediction = await getPrediction(matchObj.id);
+  console.log("Prediction for match:", prediction);
 
   if (prediction) { 
-    addMessage(`� ${matchObj.sport.toUpperCase()} Analysis 
+    addMessage(`📊 ${matchObj.sport.toUpperCase()} Analysis 
 
 Match: ${matchObj.home_team} vs ${matchObj.away_team} 
 
-🎯 Recommended: 
-${prediction.recommended} 
+🎯 Type: 
+${prediction.type} 
 
-📊 Confidence: ${prediction.confidence}% 
-⚠️ Volatility: ${prediction.volatility} 
+📊 Confidence: ${prediction.total_confidence}% 
+⚠️ Risk: ${prediction.risk_level} 
 
 This output is generated from Stage 4 of the SKCS pipeline.`); 
   } else { 
     addMessage( 
       "This outcome is not available under your current subscription tier. Upgrade to access higher-confidence or additional markets.", 
-      "error" 
+      "bot" 
     ); 
   } 
 } 
 
-function addMessage(text) { 
+function addMessage(text, type = "bot") { 
   const box = document.getElementById("chat-messages"); 
   const div = document.createElement("div"); 
+  div.classList.add(type); 
   div.innerText = text; 
   box.appendChild(div); 
   box.scrollTop = box.scrollHeight; 
 } 
 
-// Enter key support for chat
 document.getElementById("chat-input").addEventListener("keypress", function(e) {
   if (e.key === "Enter") sendMessage();
 });
+
+// Initialize
+checkSession();
+loadMatches();
 </script>
 
 </body>
