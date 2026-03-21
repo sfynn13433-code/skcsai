@@ -837,20 +837,11 @@
         }
 
         // ========== DATA LOADING ==========
+        // ========== DATA LOADING ==========
         async function loadMatches() { 
-            const { data, error } = await supabase 
-                .from("matches") 
-                .select("id, home_team, away_team, match_name, sport"); 
-            
-            if (error) { 
-                console.error("Error loading matches:", error); 
-                return; 
-            } 
-            
-            skcsMatches = data; 
-            matchesLoaded = true;
-            console.log("Matches loaded:", skcsMatches);
-            updateAllTabs(); // Refresh UI with loaded matches
+            // We now fetch everything via the predictions API
+            console.log("[loadMatches] Transitioned to unified API sync.");
+            await updateAllTabs();
         }
 
         // ========== PREDICTION LOGIC ==========
@@ -979,19 +970,50 @@
             const container = document.getElementById(containerId);
             if (!container) return;
             container.innerHTML = '';
-            const sportPreds = predictions.filter(p => p.sport === sport);
+            
+            // Filter predictions by sport (any match in the prediction matches the sport)
+            const sportPreds = predictions.filter(p => 
+                p.matches && p.matches.some(m => m.sport.toLowerCase() === sport.toLowerCase())
+            );
+
             if (sportPreds.length === 0) {
                 container.innerHTML = '<p>No predictions available for this sport.</p>';
                 return;
             }
+
             sportPreds.forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'prediction-card';
-                const recommendedStr = Array.isArray(p.recommended) ? p.recommended.join(', ') : p.recommended;
+                
+                // If it's an ACCA (more than 1 match), show a badge
+                const isAcca = p.matches.length > 1;
+                const accaBadge = isAcca ? `<span style="background:#ffc107; color:black; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold; margin-bottom:5px; display:inline-block;">ACCUMULATOR (${p.matches.length} Legs)</span>` : '';
+
+                // Build match info summary
+                let matchInfoHtml = '';
+                if (isAcca) {
+                    matchInfoHtml = `<div class="teams" style="font-size:0.9rem;">${p.matches.map(m => `${m.home_team} vs ${m.away_team}`).join('<br>')}</div>`;
+                } else {
+                    const m = p.matches[0];
+                    matchInfoHtml = `<div class="teams">${m.home_team} vs ${m.away_team}</div>`;
+                }
+
+                // Format recommended text
+                let recommendedStr = '';
+                if (isAcca) {
+                    recommendedStr = "Combined Outcome";
+                } else {
+                    const m = p.matches[0];
+                    const marketMap = { '1X2': 'Match Winner', 'over_2_5': 'Over 2.5 Goals', 'btts_yes': 'Both Teams to Score', 'double_chance': 'Double Chance' };
+                    const predMap = { 'home_win': 'Home Win', 'draw': 'Draw', 'away_win': 'Away Win', 'over_2_5': 'Over 2.5', 'btts_yes': 'Yes', 'home_or_draw': 'Home or Draw' };
+                    recommendedStr = `${marketMap[m.market] || m.market}: ${predMap[m.prediction] || m.prediction}`;
+                }
+
                 card.innerHTML = `
+                    ${accaBadge}
                     <div class="match-info">
-                        <div class="teams">${p.home_team} vs ${p.away_team}</div>
-                        <div class="match-date">${p.sport.toUpperCase()}</div>
+                        ${matchInfoHtml}
+                        <div class="match-date">${sport.toUpperCase()}</div>
                     </div>
                     <div class="prediction-details">
                         <div class="prediction">${recommendedStr}</div>
@@ -1003,27 +1025,41 @@
         }
 
         async function updateAllTabs() {
-            if (!matchesLoaded) return;
-            
-            // For the landing page, we show a subset or specific predictions
-            // In this implementation, we'll fetch all available predictions and filter by sport
-            const { data: predictions, error } = await supabase
-                .from("predictions_final")
-                .select("*");
+            try {
+                console.log("[updateAllTabs] Fetching predictions from backend...");
+                const response = await fetch('http://localhost:3000/api/predictions?tier=normal', {
+                    headers: {
+                        'x-api-key': 'skcs_user_12345'
+                    }
+                });
+                
+                if (!response.ok) throw new Error(`API error: ${response.status}`);
+                
+                const data = await response.json();
+                const predictions = data.predictions || [];
+                console.log(`[updateAllTabs] Received ${predictions.length} predictions.`);
 
-            if (error) {
+                const sports = [
+                    'football', 'rugby', 'afl', 'baseball', 'basketball', 
+                    'formula1', 'cricket', 'nfl', 'hockey', 'mma', 'handball', 'volleyball'
+                ];
+
+                sports.forEach(sport => {
+                    renderSport(sport, `${sport}-matches`, predictions);
+                });
+
+                matchesLoaded = true; // For chatbot
+                skcsMatches = predictions.flatMap(p => p.matches); // Flatten for chatbot lookup
+                
+            } catch (error) {
                 console.error("Error fetching predictions for tabs:", error);
-                return;
+                // Set placeholders to error state
+                const sports = ['football', 'rugby', 'afl', 'baseball', 'basketball', 'formula1', 'cricket', 'nfl', 'hockey', 'mma', 'handball', 'volleyball'];
+                sports.forEach(sport => {
+                    const container = document.getElementById(`${sport}-matches`);
+                    if (container) container.innerHTML = `<p style="color:red;">Error loading predictions. Please ensure the backend is running.</p>`;
+                });
             }
-
-            const sports = [
-                'football', 'rugby', 'afl', 'baseball', 'basketball', 
-                'formula1', 'cricket', 'nfl', 'hockey', 'mma', 'handball', 'volleyball'
-            ];
-
-            sports.forEach(sport => {
-                renderSport(sport, `${sport}-matches`, predictions || []);
-            });
         }
 
         // ========== INITIALIZATION ==========
