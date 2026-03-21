@@ -264,6 +264,77 @@
         #scrollTopBtn:hover {
             background-color: #0b5ed7;
         }
+        /* ===== CHATBOT CSS ===== */
+        #skcs-chatbot { 
+        width: 100%; 
+        max-width: 600px; 
+        margin: 40px auto; 
+        background: #020617; 
+        border: 1px solid rgba(96,165,250,0.4); 
+        border-radius: 10px; 
+        box-shadow: 0 0 15px rgba(96,165,250,0.3); 
+        display: flex; 
+        flex-direction: column; 
+        font-family: Arial; 
+        } 
+        
+        .chat-header { 
+        padding: 12px; 
+        background: #1e3a8a; 
+        color: #fff; 
+        font-weight: bold; 
+        text-align: center; 
+        } 
+        
+        #chat-messages { 
+        height: 300px; 
+        overflow-y: auto; 
+        padding: 12px; 
+        font-size: 14px; 
+        } 
+        
+        #chat-messages div { 
+        margin-bottom: 10px; 
+        padding: 8px 10px; 
+        border-radius: 6px; 
+        line-height: 1.4; 
+        } 
+        
+        #chat-messages div.user { 
+        background: #1e293b; 
+        color: #e2e8f0; 
+        text-align: right; 
+        } 
+        
+        #chat-messages div.bot { 
+        background: #020617; 
+        color: #f8fafc; 
+        border: 1px solid rgba(96,165,250,0.2); 
+        } 
+        
+        #chat-messages div.error { 
+        color: #f87171; 
+        } 
+        
+        .chat-input { 
+        display: flex; 
+        } 
+        
+        .chat-input input { 
+        flex: 1; 
+        padding: 10px; 
+        border: none; 
+        background: #000; 
+        color: #fff; 
+        } 
+        
+        .chat-input button { 
+        padding: 10px; 
+        background: #1e3a8a; 
+        color: #fff; 
+        border: none; 
+        cursor: pointer; 
+        } 
         /* ===== AUTH MESSAGE ===== */
         .auth-message {
             text-align: center;
@@ -459,138 +530,20 @@
             </div>
         </div>
     </section>
-    <!-- SUBSCRIPTION PLANS SECTION -->
-    <section class="plans-section">
-        <h2 class="section-title">Subscription Plans</h2>
-        <p class="section-description">Choose the tier that fits your needs. Deep tier gives you the top 25% most confident predictions.</p>
-        <div class="plan-selector">
-            <select id="planSelect" onchange="updateSelectedPlan()">
-                <optgroup label="Normal Tier">
-                    <option value="normal4">Normal 4 Days (£3.99)</option>
-                    <option value="normal9">Normal 9 Days (£7.99)</option>
-                    <option value="normal14">Normal 14 Days (£11.99)</option>
-                    <option value="normal30">Normal 30 Days (£34.99)</option>
-                </optgroup>
-                <optgroup label="Deep Tier">
-                    <option value="deep4">Deep 4 Days (£9.99)</option>
-                    <option value="deep9">Deep 9 Days (£17.99)</option>
-                    <option value="deep14">Deep 14 Days (£24.99)</option>
-                    <option value="deep30" selected>Deep 30 Days (£59.99)</option>
-                </optgroup>
-            </select>
-            <div class="current-plan-badge" id="currentPlanDisplay">Deep 30 Days</div>
-        </div>
-        <div class="plans-grid">
-            <!-- Normal 4 -->
-            <div class="plan-card">
-                <span class="plan-tier">NORMAL</span>
-                <div class="plan-name">4 Days</div>
-                <div class="plan-price">£3.99</div>
-                <ul class="plan-features">
-                    <li>50 Daily Predictions</li>
-                    <li>5 Daily Multi Bets</li>
-                    <li>5 Daily Same Bets</li>
-                    <li>ACCAs: Mon-2, Tue-2, Wed-2, Thu-2, Fri-4, Sat-12, Sun-8</li>
-                </ul>
-            </div>
-            <!-- Normal 9 -->
-            <div class="plan-card">
-                <span class="plan-tier">NORMAL</span>
-                <div class="plan-name">9 Days</div>
-                <div class="plan-price">£7.99</div>
-                <ul class="plan-features">
-                    <li>100 Daily Predictions</li>
-                    <li>10 Daily Multi Bets</li>
-                    <li>10 Daily Same Bets</li>
-                    <li>ACCAs: Mon-4, Tue-4, Wed-4, Thu-4, Fri-8, Sat-24, Sun-16</li>
-                </ul>
-            </div>
-            <!-- Normal 14 -->
-            <div class="plan-card">
-                <span class="plan-tier">NORMAL</span>
-                <div class="plan-name">14 Days</div>
-                <div class="plan-price">£11.99</div>
-                <ul class="plan-features">
-                    <li>150 Daily Predictions</li>
-                    <li>15 Daily Multi Bets</li>
-                    <li>15 Daily Same Bets</li>
-                    <li>ACCAs: Mon-5, Tue-5, Wed-5, Thu-5, Fri-10, Sat-30, Sun-20</li>
-                </ul>
-            </div>
-            <!-- Normal 30 -->
-            <div class="plan-card">
-                <span class="plan-tier">NORMAL</span>
-                <div class="plan-name">30 Days</div>
-                <div class="plan-price">£34.99</div>
-                <ul class="plan-features">
-                    <li>300 Daily Predictions</li>
-                    <li>25 Daily Multi Bets</li>
-                    <li>25 Daily Same Bets</li>
-                    <li>ACCAs: Mon-10, Tue-10, Wed-10, Thu-10, Fri-20, Sat-60, Sun-40</li>
-                </ul>
-            </div>
-            <!-- Deep 4 -->
-            <div class="plan-card">
-                <span class="plan-tier">DEEP</span>
-                <div class="plan-name">4 Days</div>
-                <div class="plan-price">£9.99</div>
-                <ul class="plan-features">
-                    <li>75 Daily Predictions (Top 25%)</li>
-                    <li>8 Daily Multi Bets</li>
-                    <li>8 Daily Same Bets</li>
-                    <li>ACCAs: Mon-3, Tue-3, Wed-3, Thu-3, Fri-6, Sat-18, Sun-12</li>
-                    <li>Advanced Markets & Filters</li>
-                    <li>Priority Support</li>
-                </ul>
-            </div>
-            <!-- Deep 9 -->
-            <div class="plan-card">
-                <span class="plan-tier">DEEP</span>
-                <div class="plan-name">9 Days</div>
-                <div class="plan-price">£17.99</div>
-                <ul class="plan-features">
-                    <li>150 Daily Predictions (Top 25%)</li>
-                    <li>15 Daily Multi Bets</li>
-                    <li>15 Daily Same Bets</li>
-                    <li>ACCAs: Mon-6, Tue-6, Wed-6, Thu-6, Fri-12, Sat-36, Sun-24</li>
-                    <li>Advanced Markets & Filters</li>
-                    <li>Priority Support</li>
-                </ul>
-            </div>
-            <!-- Deep 14 -->
-            <div class="plan-card">
-                <span class="plan-tier">DEEP</span>
-                <div class="plan-name">14 Days</div>
-                <div class="plan-price">£24.99</div>
-                <ul class="plan-features">
-                    <li>225 Daily Predictions (Top 25%)</li>
-                    <li>20 Daily Multi Bets</li>
-                    <li>20 Daily Same Bets</li>
-                    <li>ACCAs: Mon-8, Tue-8, Wed-8, Thu-8, Fri-16, Sat-48, Sun-32</li>
-                    <li>Advanced Markets & Filters</li>
-                    <li>Priority Support</li>
-                </ul>
-            </div>
-            <!-- Deep 30 -->
-            <div class="plan-card">
-                <span class="plan-tier">DEEP</span>
-                <div class="plan-name">30 Days</div>
-                <div class="plan-price">£59.99</div>
-                <ul class="plan-features">
-                    <li>500 Daily Predictions (Top 25%)</li>
-                    <li>40 Daily Multi Bets</li>
-                    <li>40 Daily Same Bets</li>
-                    <li>ACCAs: Mon-15, Tue-15, Wed-15, Thu-15, Fri-30, Sat-90, Sun-60</li>
-                    <li>Advanced Markets & Filters</li>
-                    <li>Priority Support</li>
-                </ul>
-            </div>
-        </div>
-    </section>
+    
+    <div id="skcs-chatbot"> 
+      <div class="chat-header">SKCS AI</div> 
+      <div id="chat-messages"></div> 
+      <div class="chat-input"> 
+        <input type="text" id="chat-input" placeholder="Ask about today’s matches..." /> 
+        <button onclick="sendMessage()">Send</button> 
+      </div> 
+    </div> 
+
     <!-- PREDICTIONS SECTION -->
     <section id="predictions" class="predictions-section">
         <h2 class="section-title">SKCS Sports Predictions</h2>
-        <p class="section-description" id="planDescription">Deep 30 Days: 500 daily predictions (top 25% confidence)</p>
+        <p class="section-description" id="planDescription"></p>
         <div class="tabs-container">
             <div class="tabs-header">
                 <button class="tab-button active" data-tab="football"><span class="sport-icon">⚽</span> Football</button>
@@ -823,9 +776,21 @@
     <!-- Scroll to top button -->
     <button id="scrollTopBtn" title="Go to top">⬆️</button>
     <!-- ==================== MASTER SCRIPT ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         // ========== CONFIG ==========
         const API_BASE_URL = 'https://skcsai.onrender.com';
+
+        const SUPABASE_URL = window.SUPABASE_URL || '';
+        const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || '';
+
+        if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+            console.error('Supabase config missing: window.SUPABASE_URL / window.SUPABASE_ANON_KEY must be set.');
+        }
+
+        const supabase = SUPABASE_URL && SUPABASE_ANON_KEY
+            ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+            : null;
         // Plan limits (same as before)
         const planLimits = {
             normal4: { total: 50, deep: false },
@@ -838,34 +803,44 @@
             deep30: { total: 500, deep: true }
         };
         let currentPlan = 'deep30'; // default (will be overridden if user is logged in)
-        // ========== AUTH STATE ==========
-        const token = localStorage.getItem('token');
-        const user = JSON.parse(localStorage.getItem('user') || 'null');
-        // Update navigation link
+        let token = null;
+        let user = null;
+
         const authLink = document.getElementById('authLink');
-        if (token && user) {
-            authLink.textContent = 'Logout';
-            authLink.href = '#';
-            authLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                window.location.reload();
-            });
-            // Set currentPlan based on user tier
-            if (user.subscription_type === 'deep') {
-                currentPlan = 'deep30';
+
+        async function loadAuthState() {
+            if (!supabase) {
+                token = null;
+                user = null;
+                authLink.textContent = 'Login';
+                authLink.href = 'login.html';
+                return;
+            }
+
+            const { data } = await supabase.auth.getSession();
+            const session = data?.session || null;
+            token = session?.access_token || null;
+            user = session?.user || null;
+
+            if (token && user) {
+                authLink.textContent = 'Logout';
+                authLink.href = '#';
+                authLink.onclick = async (e) => {
+                    e.preventDefault();
+                    await supabase.auth.signOut();
+                    window.location.reload();
+                };
             } else {
-                currentPlan = 'normal30';
+                authLink.textContent = 'Login';
+                authLink.href = 'login.html';
             }
-            // Update the plan selector to reflect user's tier
-            const select = document.getElementById('planSelect');
-            if (select) {
-                select.value = currentPlan;
-            }
-        } else {
-            authLink.textContent = 'Login';
-            authLink.href = 'login.html';
+        }
+
+        if (supabase) {
+            supabase.auth.onAuthStateChange((_event, session) => {
+                token = session?.access_token || null;
+                user = session?.user || null;
+            });
         }
         // ========== FETCH PREDICTIONS FROM BACKEND (protected) ==========
         async function fetchPredictions(tier, date) {
@@ -873,18 +848,20 @@
             if (!token) return [];
             try {
                 // Use the protected endpoint
-                const url = `${API_BASE_URL}/api/user/predictions?date=${date}`;
+                const url = `${API_BASE_URL}/api/user/predictions?date=${encodeURIComponent(date)}&tier=${encodeURIComponent(tier)}`;
                 const response = await fetch(url, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
                 if (!response.ok) {
-                    if (response.status === 401 || response.status === 403) {
-                        // Token invalid/expired – clear storage and redirect to login
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('user');
+                    if (response.status === 401) {
                         window.location.href = 'login.html';
+                        return [];
+                    }
+
+                    if (response.status === 403) {
+                        window.location.href = 'subscription.html';
                         return [];
                     }
                     throw new Error(`HTTP error ${response.status}`);
@@ -989,7 +966,10 @@
                     switchTab(tabId);
                 });
             });
-            updateAllTabs();
+            (async () => {
+                await loadAuthState();
+                updateAllTabs();
+            })();
         });
     </script>
     <!-- Scroll to top button script -->
@@ -1006,5 +986,135 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script> 
+    const supabase = window.supabase.createClient( 
+      "https://ghzjntdvaptuxfpvhybb.supabase.co", 
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdoempudGR2YXB0dXhmcHZoeWJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDAzNzIsImV4cCI6MjA4NzgxNjM3Mn0.nWxOY0lDIDDvexELk9De2aEfPfM5iJjoaW91tbL7YQk" 
+    ); 
+    
+    let skcsMatches = []; 
+    
+    async function loadMatches() { 
+      const { data, error } = await supabase 
+        .from("matches") 
+        .select("id, home_team, away_team, match_name, sport"); 
+      
+      if (error) { 
+        console.error(error); 
+        return; 
+      } 
+      
+      skcsMatches = data; 
+    } 
+    
+    loadMatches(); 
+    
+    const userTier = "normal"; // temporary hardcode, will be dynamic later
+
+    async function getTierRules() { 
+      const { data } = await supabase 
+        .from("tier_rules") 
+        .select("*") 
+        .eq("tier", userTier) 
+        .single(); 
+      
+      return data; 
+    } 
+
+    async function getPrediction(matchId) { 
+  const tier = await getTierRules(); 
+  
+  const { data, error } = await supabase 
+    .from("predictions_final") 
+    .select("*") 
+    .eq("match_id", matchId) 
+    .gte("confidence", tier.min_confidence); 
+  
+  if (error || !data || data.length === 0) return null; 
+  
+  // SAFE parsing of allowed_markets 
+  const allowedMarkets = Array.isArray(tier.allowed_markets) 
+    ? tier.allowed_markets 
+    : JSON.parse(tier.allowed_markets || "[]"); 
+
+  const allowed = allowedMarkets.map(m => m.toLowerCase()); 
+  
+  // SAFE market matching 
+  const filtered = data.filter(p => { 
+    const market = (p.market_type || "").toLowerCase().replace(/\s+/g, "_"); 
+    return allowed.includes("all") || allowed.includes(market); 
+  }); 
+  
+  if (!filtered.length) return null; 
+  
+  // pick highest confidence result 
+  const best = filtered.sort((a, b) => b.confidence - a.confidence); 
+  
+  return best[0]; 
+} 
+
+function findMatch(userInput) { 
+  const input = userInput.toLowerCase(); 
+  
+  return skcsMatches.find(m => 
+    input.includes(m.home_team.toLowerCase()) || 
+    input.includes(m.away_team.toLowerCase()) || 
+    input.includes((m.match_name || "").toLowerCase()) 
+  ); 
+} 
+    
+    async function sendMessage() { 
+      const input = document.getElementById("chat-input"); 
+      const msg = input.value.toLowerCase(); 
+      input.value = ""; 
+    
+      if (requestCount >= requestLimit) { 
+        addMessage("⚠️ Daily limit reached. Upgrade to continue.", "error"); 
+        return; 
+      } 
+    
+      requestCount++; 
+      addMessage("👤 " + msg, "user"); 
+    
+      const matchObj = findMatch(msg); 
+    
+      if (!matchObj) { 
+        addMessage("❌ This match is not currently available in the SKCS system.", "error"); 
+        return; 
+      } 
+    
+      const tierRules = await getTierRules();
+      const prediction = await getPrediction(matchObj.id);
+    
+      if (prediction) { 
+        addMessage(`📊 ${matchObj.sport.toUpperCase()} Analysis 
+    
+    Match: ${matchObj.home_team} vs ${matchObj.away_team} 
+    
+    🎯 Recommended: 
+    ${prediction.recommended} 
+    
+    📊 Confidence: ${prediction.confidence}% 
+    ⚠️ Volatility: ${prediction.volatility} 
+    
+    This output is generated from Stage 4 of the SKCS pipeline.`); 
+      } else { 
+        addMessage( 
+          "This outcome is not available under your current subscription tier. Upgrade to access higher-confidence or additional markets.", 
+          "error" 
+        ); 
+      } 
+    } 
+    
+    function addMessage(text, type = "bot") { 
+      const box = document.getElementById("chat-messages"); 
+      const div = document.createElement("div"); 
+      div.classList.add(type); 
+      div.innerText = text; 
+      box.appendChild(div); 
+      box.scrollTop = box.scrollHeight; 
+    } 
+    </script> 
 </body>
 </html>

@@ -1,426 +1,628 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Subscription Pricing</title>
-        <link rel="stylesheet" href="style.css" />
-    </head>
-    <body>
-        <div class="pricing-container">
-            <!-- 4-Day Sprint (Core) -->
-            <div class="pricing-card core-tier">
-                <div class="card-header">
-                    <h3>4-Day Sprint</h3>
-                    <p class="price">£3.99</p>
-                </div>
-                <div class="card-section">
-                    <h4>Prediction Volume</h4>
-                    <ul>
-                        <li>Mon–Thu: 3–5/day</li>
-                        <li>Fri: 5–6</li>
-                        <li>Sat: 6–8</li>
-                        <li>Sun: 5–7</li>
-                    </ul>
-                </div>
-                <div class="card-section">
-                    <h4>Markets Included</h4>
-                    <p>Various Markets</p>
-                </div>
-                <div class="card-section">
-                    <h4>ACCA System</h4>
-                    <p>2–3 selections</p>
-                </div>
-                <div class="card-section">
-                    <h4>Same Bet / Multi Bets</h4>
-                    <p>limited</p>
-                </div>
-                <div class="card-section">
-                    <h4>Sports Coverage</h4>
-                    <p>Major Sports Leagues</p>
-                </div>
-                <div class="card-section">
-                    <h4>AI Level</h4>
-                    <p>standard</p>
-                </div>
-                <div class="card-section">
-                    <h4>Update Frequency</h4>
-                    <p>once daily</p>
-                </div>
-                <div class="card-section">
-                    <h4>Access Level</h4>
-                    <p>Stage 1 only</p>
-                </div>
-                <button class="select-plan-btn">Select Plan</button>
-            </div>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SKCS Pricing</title>
 
-            <!-- 9-Day Run (Core) - Recommended -->
-            <div class="pricing-card core-tier recommended-tier">
-                <div class="card-header">
-                    <h3>9-Day Run</h3>
-                    <p class="price">£7.99</p>
-                </div>
-                <div class="card-section">
-                    <h4>Prediction Volume</h4>
-                    <ul>
-                        <li>Mon–Thu: 4–6/day</li>
-                        <li>Fri: 6–8</li>
-                        <li>Sat: 8–10</li>
-                        <li>Sun: 7–9</li>
-                    </ul>
-                </div>
-                <div class="card-section">
-                    <h4>Markets Included</h4>
-                    <p>Various Markets</p>
-                </div>
-                <div class="card-section">
-                    <h4>ACCA System</h4>
-                    <p>2–4</p>
-                </div>
-                <div class="card-section">
-                    <h4>Same Bet / Multi Bets</h4>
-                    <p>expanded</p>
-                </div>
-                <div class="card-section">
-                    <h4>Sports Coverage</h4>
-                    <p>Major Sports Leagues</p>
-                </div>
-                <div class="card-section">
-                    <h4>AI Level</h4>
-                    <p>improved</p>
-                </div>
-                <div class="card-section">
-                    <h4>Update Frequency</h4>
-                    <p>once daily</p>
-                </div>
-                <div class="card-section">
-                    <h4>Access Level</h4>
-                    <p>Stage 1 only</p>
-                </div>
-                <button class="select-plan-btn">Select Plan</button>
-            </div>
+<style>
+body { font-family: Arial, sans-serif; background:#0f172a; color:white; margin:0; padding:0; }
+.container { max-width:1200px; margin:auto; padding:20px; }
 
-            <!-- 14-Day Pro (Core) -->
-            <div class="pricing-card core-tier">
-                <div class="card-header">
-                    <h3>14-Day Pro</h3>
-                    <p class="price">£11.99</p>
-                </div>
-                <div class="card-section">
-                    <h4>Prediction Volume</h4>
-                    <ul>
-                        <li>Mon–Thu: 5–7/day</li>
-                        <li>Fri: 8–10</li>
-                        <li>Sat: 10–12</li>
-                        <li>Sun: 9–11</li>
-                    </ul>
-                </div>
-                <div class="card-section">
-                    <h4>Markets Included</h4>
-                    <p>Various Markets</p>
-                </div>
-                <div class="card-section">
-                    <h4>ACCA System</h4>
-                    <p>3–5</p>
-                </div>
-                <div class="card-section">
-                    <h4>Same Bet / Multi Bets</h4>
-                    <p>consistent</p>
-                </div>
-                <div class="card-section">
-                    <h4>Sports Coverage</h4>
-                    <p>Major Sports Leagues</p>
-                </div>
-                <div class="card-section">
-                    <h4>AI Level</h4>
-                    <p>strong</p>
-                </div>
-                <div class="card-section">
-                    <h4>Update Frequency</h4>
-                    <p>once daily</p>
-                </div>
-                <div class="card-section">
-                    <h4>Access Level</h4>
-                    <p>Stage 1 only</p>
-                </div>
-                <button class="select-plan-btn">Select Plan</button>
-            </div>
+h1 { text-align:center; color:#fff; margin-bottom:30px; font-weight: bold; }
 
-            <!-- 30-Day Limitless (Core) -->
-            <div class="pricing-card core-tier">
-                <div class="card-header">
-                    <h3>30-Day Limitless</h3>
-                    <p class="price">£34.99</p>
-                </div>
-                <div class="card-section">
-                    <h4>Prediction Volume</h4>
-                    <ul>
-                        <li>Mon–Thu: 6–8/day</li>
-                        <li>Fri: 10–12</li>
-                        <li>Sat: 12–15</li>
-                        <li>Sun: 10–13</li>
-                    </ul>
-                </div>
-                <div class="card-section">
-                    <h4>Markets Included</h4>
-                    <p>Various Markets</p>
-                </div>
-                <div class="card-section">
-                    <h4>ACCA System</h4>
-                    <p>3–6</p>
-                </div>
-                <div class="card-section">
-                    <h4>Same Bet / Multi Bets</h4>
-                    <p>full</p>
-                </div>
-                <div class="card-section">
-                    <h4>Sports Coverage</h4>
-                    <p>Major Sports Leagues</p>
-                </div>
-                <div class="card-section">
-                    <h4>AI Level</h4>
-                    <p>max core</p>
-                </div>
-                <div class="card-section">
-                    <h4>Update Frequency</h4>
-                    <p>once daily</p>
-                </div>
-                <div class="card-section">
-                    <h4>Access Level</h4>
-                    <p>Stage 1 only</p>
-                </div>
-                <button class="select-plan-btn">Select Plan</button>
-            </div>
+.tabs {
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:30px;
+}
 
-            <!-- 4-Day Deep Dive (Elite) -->
-            <div class="pricing-card elite-tier">
-                <div class="elite-badge">Elite</div>
-                <div class="card-header">
-                    <h3>4-Day Deep Dive</h3>
-                    <p class="price">£7.99</p>
-                </div>
-                <div class="card-section">
-                    <h4>Prediction Volume</h4>
-                    <ul>
-                        <li>Mon–Thu: 2–3/day</li>
-                        <li>Fri: 3–4</li>
-                        <li>Sat: 4–5</li>
-                        <li>Sun: 3–4</li>
-                    </ul>
-                </div>
-                <div class="card-section">
-                    <h4>Markets Included</h4>
-                    <p>Various Markets</p>
-                </div>
-                <div class="card-section">
-                    <h4>ACCA System</h4>
-                    <p>2–3 optimized</p>
-                </div>
-                <div class="card-section">
-                    <h4>Same Bet / Multi Bets</h4>
-                    <p>optimized only</p>
-                </div>
-                <div class="card-section">
-                    <h4>Sports Coverage</h4>
-                    <p>Major Sports Leagues</p>
-                </div>
-                <div class="card-section">
-                    <h4>AI Level</h4>
-                    <p>advanced filtering</p>
-                </div>
-                <div class="card-section">
-                    <h4>Update Frequency</h4>
-                    <p>Stage 1 + 2</p>
-                </div>
-                <div class="card-section">
-                    <h4>Access Level</h4>
-                    <p>partial pipeline</p>
-                </div>
-                <button class="select-plan-btn">Select Plan</button>
-            </div>
+.tab {
+  padding:12px 24px;
+  cursor:pointer;
+  border-radius:6px;
+  background:#1e293b;
+  transition: all 0.3s ease;
+  font-weight: bold;
+}
 
-            <!-- 9-Day Deep Strike (Elite) - Recommended -->
-            <div class="pricing-card elite-tier recommended-tier">
-                <div class="elite-badge">Elite</div>
-                <div class="card-header">
-                    <h3>9-Day Deep Strike</h3>
-                    <p class="price">£11.99</p>
-                </div>
-                <div class="card-section">
-                    <h4>Prediction Volume</h4>
-                    <ul>
-                        <li>Mon–Thu: 3–4/day</li>
-                        <li>Fri: 4–5</li>
-                        <li>Sat: 5–6</li>
-                        <li>Sun: 4–5</li>
-                    </ul>
-                </div>
-                <div class="card-section">
-                    <h4>Markets Included</h4>
-                    <p>Various Markets</p>
-                </div>
-                <div class="card-section">
-                    <h4>ACCA System</h4>
-                    <p>2–4 optimized</p>
-                </div>
-                <div class="card-section">
-                    <h4>Same Bet / Multi Bets</h4>
-                    <p>smart combos</p>
-                </div>
-                <div class="card-section">
-                    <h4>Sports Coverage</h4>
-                    <p>Major Sports Leagues</p>
-                </div>
-                <div class="card-section">
-                    <h4>AI Level</h4>
-                    <p>advanced scoring</p>
-                </div>
-                <div class="card-section">
-                    <h4>Update Frequency</h4>
-                    <p>Stage 1 + 2 + limited Stage 3</p>
-                </div>
-                <div class="card-section">
-                    <h4>Access Level</h4>
-                    <p>near full</p>
-                </div>
-                <button class="select-plan-btn">Select Plan</button>
-            </div>
+.tab.active-core { background:#22c55e; box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); }
+.tab.active-elite { background:#3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
 
-            <!-- 14-Day Deep Pro (Elite) -->
-            <div class="pricing-card elite-tier">
-                <div class="elite-badge">Elite</div>
-                <div class="card-header">
-                    <h3>14-Day Deep Pro</h3>
-                    <p class="price">£15.99</p>
-                </div>
-                <div class="card-section">
-                    <h4>Prediction Volume</h4>
-                    <ul>
-                        <li>Mon–Thu: 4–5/day</li>
-                        <li>Fri: 5–6</li>
-                        <li>Sat: 6–7</li>
-                        <li>Sun: 5–6</li>
-                    </ul>
-                </div>
-                <div class="card-section">
-                    <h4>Markets Included</h4>
-                    <p>Various Markets</p>
-                </div>
-                <div class="card-section">
-                    <h4>ACCA System</h4>
-                    <p>3–5 optimized</p>
-                </div>
-                <div class="card-section">
-                    <h4>Same Bet / Multi Bets</h4>
-                    <p>advanced</p>
-                </div>
-                <div class="card-section">
-                    <h4>Sports Coverage</h4>
-                    <p>Major Sports Leagues</p>
-                </div>
-                <div class="card-section">
-                    <h4>AI Level</h4>
-                    <p>full advanced</p>
-                </div>
-                <div class="card-section">
-                    <h4>Update Frequency</h4>
-                    <p>full 3-stage</p>
-                </div>
-                <div class="card-section">
-                    <h4>Access Level</h4>
-                    <p>full</p>
-                </div>
-                <button class="select-plan-btn">Select Plan</button>
-            </div>
+.grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap:20px;
+}
 
-            <!-- 30-Day Deep VIP (Elite) -->
-            <div class="pricing-card elite-tier">
-                <div class="elite-badge">Elite</div>
-                <div class="card-header">
-                    <h3>30-Day Deep VIP</h3>
-                    <p class="price">£59.99</p>
-                </div>
-                <div class="card-section">
-                    <h4>Prediction Volume</h4>
-                    <ul>
-                        <li>Mon–Thu: 5–6/day</li>
-                        <li>Fri: 6–7</li>
-                        <li>Sat: 7–9</li>
-                        <li>Sun: 6–8</li>
-                    </ul>
-                </div>
-                <div class="card-section">
-                    <h4>Markets Included</h4>
-                    <p>Various Markets</p>
-                </div>
-                <div class="card-section">
-                    <h4>ACCA System</h4>
-                    <p>3–6 elite</p>
-                </div>
-                <div class="card-section">
-                    <h4>Same Bet / Multi Bets</h4>
-                    <p>maximum optimization</p>
-                </div>
-                <div class="card-section">
-                    <h4>Sports Coverage</h4>
-                    <p>Major Sports Leagues</p>
-                </div>
-                <div class="card-section">
-                    <h4>AI Level</h4>
-                    <p>maximum + assistant</p>
-                </div>
-                <div class="card-section">
-                    <h4>Update Frequency</h4>
-                    <p>includes final 6-hour updates</p>
-                </div>
-                <div class="card-section">
-                    <h4>Access Level</h4>
-                    <p>full + priority</p>
-                </div>
-                <button class="select-plan-btn">Select Plan</button>
-            </div>
-        </div>
-    </body>
+.card {
+  background:#1e293b;
+  padding:20px;
+  border-radius:10px;
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+.card h3 { margin-top:0; font-size:1.4rem; color:#fff; }
+.card .price { font-size:2.2rem; font-weight:bold; color:#fff; margin:10px 0; }
+
+.skcs-list {
+  list-style:none;
+  padding:0;
+  margin:0 0 20px;
+  flex-grow: 1;
+}
+.skcs-list li {
+  padding:10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.skcs-list li:last-child { border-bottom: none; }
+.skcs-list li strong { color: #94a3b8; display: block; margin-bottom: 4px; }
+
+button {
+  width:100%;
+  padding:12px;
+  margin-top:auto;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  transition: opacity 0.3s;
+}
+button:hover { opacity: 0.9; }
+
+.core-btn { background:#22c55e; color: white; }
+.elite-btn { background:#3b82f6; color: white; }
+
+.skcs-chatbot {
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #94a3b8;
+  text-align: center;
+  padding: 8px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 4px;
+}
+
+/* CATEGORY COLORS */ 
+.skcs-direct { color: #60a5fa; font-weight: bold; } 
+.skcs-secondary { color: #fbbf24; font-weight: bold; } 
+.skcs-multi { color: #c084fc; font-weight: bold; } 
+.skcs-same { color: #34d399; font-weight: bold; } 
+.skcs-acca { color: #f87171; font-weight: bold; } 
+
+/* TOOLTIP */ 
+.skcs-tooltip { 
+  position: relative; 
+  cursor: help; 
+} 
+
+.skcs-tooltip:hover::after { 
+  content: attr(data-tip); 
+  position: absolute; 
+  bottom: 120%; 
+  left: 50%; 
+  transform: translateX(-50%); 
+  background: #020617; 
+  color: #fff; 
+  padding: 8px 10px; 
+  font-size: 12px; 
+  border-radius: 6px; 
+  white-space: nowrap; 
+  border: 1px solid rgba(255,255,255,0.2); 
+  z-index: 10; 
+  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+} 
+
+/* TODAY FOCUS BAR */ 
+.skcs-focus-bar { 
+  max-width: 1200px; 
+  margin: 0 auto 25px auto; 
+  padding: 12px; 
+  text-align: center; 
+  background: linear-gradient(90deg, #1e3a8a, #020617); 
+  border: 1px solid rgba(96,165,250,0.4); 
+  border-radius: 8px; 
+  font-weight: bold; 
+  color: #e0f2fe; 
+  box-shadow: 0 0 10px rgba(96,165,250,0.3); 
+} 
+
+/* CHATBOT UI */
+.skcs-chatbot-ui {
+  margin-top: 50px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 30px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.chat-messages {
+  height: 300px;
+  overflow-y: auto;
+  background: rgba(0,0,0,0.2);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.chat-messages div {
+  margin-bottom: 10px;
+  padding: 10px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.03);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+.chat-input-wrap {
+  display: flex;
+  gap: 10px;
+}
+.chat-input-wrap input {
+  flex-grow: 1;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: #1e293b;
+  color: #fff;
+  outline: none;
+}
+.chat-input-wrap input:focus {
+  border-color: #3b82f6;
+}
+.chat-send-btn {
+  width: auto;
+  padding: 0 25px;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Choose Your Plan</h1>
+
+<div class="tabs">
+  <div id="tabCore" class="tab active-core" onclick="showCore()">🟢 SKCS Core</div>
+  <div id="tabElite" class="tab" onclick="showElite()">🔵 SKCS Elite</div>
+</div>
+
+<div class="skcs-focus-bar"> 
+  🔥 TODAY'S FOCUS: Full Global Coverage — Maximum volume across all sports 
+</div> 
+
+<!-- CORE -->
+<div id="corePlans" class="grid">
+
+  <!-- Core 4-Day -->
+  <div class="card">
+    <h3>4-Day Sprint</h3>
+    <div class="price">£3.99</div>
+    <ul class="skcs-list">
+      <li><strong>Mon (Soccer Focus):</strong>
+        <span class="skcs-direct skcs-tooltip" data-tip="1X2 match outcomes">⚽ 6 Direct</span> | 
+        <span class="skcs-secondary skcs-tooltip" data-tip="Over/Under, BTTS, etc">📊 4 Secondary</span> | 
+        <span class="skcs-multi skcs-tooltip" data-tip="Combined outcome selections">🔀 2 Multi</span> | 
+        <span class="skcs-same skcs-tooltip" data-tip="Same match structured bets">🎯 2 Same Match</span> | 
+        <span class="skcs-acca skcs-tooltip" data-tip="6-match accumulator">🔥 1 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Tue (Soccer Focus):</strong>
+        <span class="skcs-direct">⚽ 6 Direct</span> | <span class="skcs-secondary">📊 4 Secondary</span> | <span class="skcs-multi">🔀 2 Multi</span> | <span class="skcs-same">🎯 2 Same Match</span> | <span class="skcs-acca">🔥 1 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Wed (Soccer + 5 Sports):</strong>
+        <span class="skcs-direct">⚽ 8 Direct</span> | <span class="skcs-secondary">📊 5 Secondary</span> | <span class="skcs-multi">🔀 3 Multi</span> | <span class="skcs-same">🎯 2 Same Match</span> | <span class="skcs-acca">🔥 1 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Thu (Soccer + 5 Sports):</strong>
+        <span class="skcs-direct">⚽ 8 Direct</span> | <span class="skcs-secondary">📊 5 Secondary</span> | <span class="skcs-multi">🔀 3 Multi</span> | <span class="skcs-same">🎯 2 Same Match</span> | <span class="skcs-acca">🔥 1 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Fri (Multi-Sport Mix):</strong>
+        <span class="skcs-direct">⚽ 10 Direct</span> | <span class="skcs-secondary">📊 6 Secondary</span> | <span class="skcs-multi">🔀 3 Multi</span> | <span class="skcs-same">🎯 3 Same Match</span> | <span class="skcs-acca">🔥 2 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sat (Full Global Coverage):</strong>
+        <span class="skcs-direct">⚽ 15 Direct</span> | <span class="skcs-secondary">📊 8 Secondary</span> | <span class="skcs-multi">🔀 5 Multi</span> | <span class="skcs-same">🎯 5 Same Match</span> | <span class="skcs-acca">🔥 3 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sun (Balanced Coverage):</strong>
+        <span class="skcs-direct">⚽ 12 Direct</span> | <span class="skcs-secondary">📊 7 Secondary</span> | <span class="skcs-multi">🔀 4 Multi</span> | <span class="skcs-same">🎯 4 Same Match</span> | <span class="skcs-acca">🔥 2 x 6-Match ACCA</span>
+      </li>
+    </ul>
+    <div class="skcs-chatbot">Chatbot Access: 2 Requests / Day</div>
+    <button class="core-btn" onclick="subscribe('core_4')">Select Plan</button>
+  </div>
+
+  <!-- Core 9-Day -->
+  <div class="card" style="border: 2px solid #22c55e;">
+    <h3>9-Day Run ⭐</h3>
+    <div class="price">£7.99</div>
+    <ul class="skcs-list">
+      <li><strong>Mon-Tue (Enhanced Focus):</strong>
+        <span class="skcs-direct">⚽ 8 Direct</span> | <span class="skcs-secondary">📊 5 Secondary</span> | <span class="skcs-multi">🔀 3 Multi</span> | <span class="skcs-same">🎯 3 Same Match</span> | <span class="skcs-acca">🔥 1 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Wed-Thu (Deep Coverage):</strong>
+        <span class="skcs-direct">⚽ 10 Direct</span> | <span class="skcs-secondary">📊 6 Secondary</span> | <span class="skcs-multi">🔀 4 Multi</span> | <span class="skcs-same">🎯 3 Same Match</span> | <span class="skcs-acca">🔥 2 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Fri (Pro Mix):</strong>
+        <span class="skcs-direct">⚽ 12 Direct</span> | <span class="skcs-secondary">📊 8 Secondary</span> | <span class="skcs-multi">🔀 4 Multi</span> | <span class="skcs-same">🎯 4 Same Match</span> | <span class="skcs-acca">🔥 2 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sat (Max Volume):</strong>
+        <span class="skcs-direct">⚽ 18 Direct</span> | <span class="skcs-secondary">📊 10 Secondary</span> | <span class="skcs-multi">🔀 6 Multi</span> | <span class="skcs-same">🎯 6 Same Match</span> | <span class="skcs-acca">🔥 4 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sun (Elite Balanced):</strong>
+        <span class="skcs-direct">⚽ 14 Direct</span> | <span class="skcs-secondary">📊 9 Secondary</span> | <span class="skcs-multi">🔀 5 Multi</span> | <span class="skcs-same">🎯 5 Same Match</span> | <span class="skcs-acca">🔥 3 x 6-Match ACCA</span>
+      </li>
+    </ul>
+    <div class="skcs-chatbot">Chatbot Access: 5 Requests / Day</div>
+    <button class="core-btn" onclick="subscribe('core_9')">Select Plan</button>
+  </div>
+
+  <!-- Core 14-Day -->
+  <div class="card">
+    <h3>14-Day Pro</h3>
+    <div class="price">£11.99</div>
+    <ul class="skcs-list">
+      <li><strong>Mon-Tue (Pro Volume):</strong>
+        <span class="skcs-direct">⚽ 9 Direct</span> | <span class="skcs-secondary">📊 6 Secondary</span> | <span class="skcs-multi">🔀 4 Multi</span> | <span class="skcs-same">🎯 4 Same Match</span> | <span class="skcs-acca">🔥 2 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Wed-Thu (Midweek Max):</strong>
+        <span class="skcs-direct">⚽ 12 Direct</span> | <span class="skcs-secondary">📊 8 Secondary</span> | <span class="skcs-multi">🔀 5 Multi</span> | <span class="skcs-same">🎯 4 Same Match</span> | <span class="skcs-acca">🔥 2 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Fri (Expert Selection):</strong>
+        <span class="skcs-direct">⚽ 15 Direct</span> | <span class="skcs-secondary">📊 10 Secondary</span> | <span class="skcs-multi">🔀 5 Multi</span> | <span class="skcs-same">🎯 5 Same Match</span> | <span class="skcs-acca">🔥 3 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sat (Global Coverage):</strong>
+        <span class="skcs-direct">⚽ 22 Direct</span> | <span class="skcs-secondary">📊 12 Secondary</span> | <span class="skcs-multi">🔀 8 Multi</span> | <span class="skcs-same">🎯 8 Same Match</span> | <span class="skcs-acca">🔥 5 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sun (Pro Finish):</strong>
+        <span class="skcs-direct">⚽ 18 Direct</span> | <span class="skcs-secondary">📊 11 Secondary</span> | <span class="skcs-multi">🔀 6 Multi</span> | <span class="skcs-same">🎯 6 Same Match</span> | <span class="skcs-acca">🔥 4 x 6-Match ACCA</span>
+      </li>
+    </ul>
+    <div class="skcs-chatbot">Chatbot Access: 10 Requests / Day</div>
+    <button class="core-btn" onclick="subscribe('core_14')">Select Plan</button>
+  </div>
+
+  <!-- Core 30-Day -->
+  <div class="card">
+    <h3>30-Day Limitless</h3>
+    <div class="price">£34.99</div>
+    <ul class="skcs-list">
+      <li><strong>Mon-Tue (Max Core):</strong>
+        <span class="skcs-direct">⚽ 10 Direct</span> | <span class="skcs-secondary">📊 8 Secondary</span> | <span class="skcs-multi">🔀 5 Multi</span> | <span class="skcs-same">🎯 5 Same Match</span> | <span class="skcs-acca">🔥 3 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Wed-Thu (Midweek Elite):</strong>
+        <span class="skcs-direct">⚽ 15 Direct</span> | <span class="skcs-secondary">📊 10 Secondary</span> | <span class="skcs-multi">🔀 7 Multi</span> | <span class="skcs-same">🎯 6 Same Match</span> | <span class="skcs-acca">🔥 4 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Fri (Limitless Mix):</strong>
+        <span class="skcs-direct">⚽ 20 Direct</span> | <span class="skcs-secondary">📊 12 Secondary</span> | <span class="skcs-multi">🔀 8 Multi</span> | <span class="skcs-same">🎯 8 Same Match</span> | <span class="skcs-acca">🔥 5 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sat (Absolute Max):</strong>
+        <span class="skcs-direct">⚽ 30 Direct</span> | <span class="skcs-secondary">📊 15 Secondary</span> | <span class="skcs-multi">🔀 10 Multi</span> | <span class="skcs-same">🎯 10 Same Match</span> | <span class="skcs-acca">🔥 8 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sun (Full Coverage):</strong>
+        <span class="skcs-direct">⚽ 25 Direct</span> | <span class="skcs-secondary">📊 14 Secondary</span> | <span class="skcs-multi">🔀 9 Multi</span> | <span class="skcs-same">🎯 9 Same Match</span> | <span class="skcs-acca">🔥 6 x 6-Match ACCA</span>
+      </li>
+    </ul>
+    <div class="skcs-chatbot">Chatbot Access: 20 Requests / Day</div>
+    <button class="core-btn" onclick="subscribe('core_30')">Select Plan</button>
+  </div>
+
+</div>
+
+<!-- ELITE -->
+<div id="elitePlans" class="grid" style="display:none;">
+
+  <!-- Elite 4-Day -->
+  <div class="card">
+    <h3>4-Day Deep Dive</h3>
+    <div class="price">£7.99</div>
+    <ul class="skcs-list">
+      <li><strong>Mon-Tue (Deep Analysis):</strong>
+        <span class="skcs-direct">⚽ 8 Direct</span> | <span class="skcs-secondary">📊 5 Secondary</span> | <span class="skcs-multi">🔀 3 Multi</span> | <span class="skcs-same">🎯 3 Same Match</span> | <span class="skcs-acca">🔥 1 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Wed-Thu (Elite Focus):</strong>
+        <span class="skcs-direct">⚽ 10 Direct</span> | <span class="skcs-secondary">📊 7 Secondary</span> | <span class="skcs-multi">🔀 4 Multi</span> | <span class="skcs-same">🎯 3 Same Match</span> | <span class="skcs-acca">🔥 2 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Fri (Deep Strike):</strong>
+        <span class="skcs-direct">⚽ 14 Direct</span> | <span class="skcs-secondary">📊 8 Secondary</span> | <span class="skcs-multi">🔀 5 Multi</span> | <span class="skcs-same">🎯 5 Same Match</span> | <span class="skcs-acca">🔥 3 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sat (Max Confidence):</strong>
+        <span class="skcs-direct">⚽ 20 Direct</span> | <span class="skcs-secondary">📊 12 Secondary</span> | <span class="skcs-multi">🔀 8 Multi</span> | <span class="skcs-same">🎯 8 Same Match</span> | <span class="skcs-acca">🔥 5 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sun (Deep Balance):</strong>
+        <span class="skcs-direct">⚽ 16 Direct</span> | <span class="skcs-secondary">📊 10 Secondary</span> | <span class="skcs-multi">🔀 6 Multi</span> | <span class="skcs-same">🎯 6 Same Match</span> | <span class="skcs-acca">🔥 4 x 6-Match ACCA</span>
+      </li>
+    </ul>
+    <div class="skcs-chatbot">Chatbot: 10 Requests / Day</div>
+    <button class="elite-btn" onclick="subscribe('elite_4')">Select Plan</button>
+  </div>
+
+  <!-- Elite 9-Day -->
+  <div class="card" style="border: 2px solid #3b82f6;">
+    <h3>9-Day Deep Strike ⭐</h3>
+    <div class="price">£11.99</div>
+    <ul class="skcs-list">
+      <li><strong>Mon-Tue (Strike Volume):</strong>
+        <span class="skcs-direct">⚽ 10 Direct</span> | <span class="skcs-secondary">📊 7 Secondary</span> | <span class="skcs-multi">🔀 4 Multi</span> | <span class="skcs-same">🎯 4 Same Match</span> | <span class="skcs-acca">🔥 2 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Wed-Thu (Deep Intelligence):</strong>
+        <span class="skcs-direct">⚽ 14 Direct</span> | <span class="skcs-secondary">📊 9 Secondary</span> | <span class="skcs-multi">🔀 6 Multi</span> | <span class="skcs-same">🎯 5 Same Match</span> | <span class="skcs-acca">🔥 3 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Fri (Expert Strike):</strong>
+        <span class="skcs-direct">⚽ 18 Direct</span> | <span class="skcs-secondary">📊 11 Secondary</span> | <span class="skcs-multi">🔀 7 Multi</span> | <span class="skcs-same">🎯 7 Same Match</span> | <span class="skcs-acca">🔥 4 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sat (Strike Max):</strong>
+        <span class="skcs-direct">⚽ 28 Direct</span> | <span class="skcs-secondary">📊 15 Secondary</span> | <span class="skcs-multi">🔀 10 Multi</span> | <span class="skcs-same">🎯 10 Same Match</span> | <span class="skcs-acca">🔥 7 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sun (Elite Finish):</strong>
+        <span class="skcs-direct">⚽ 22 Direct</span> | <span class="skcs-secondary">📊 13 Secondary</span> | <span class="skcs-multi">🔀 8 Multi</span> | <span class="skcs-same">🎯 8 Same Match</span> | <span class="skcs-acca">🔥 5 x 6-Match ACCA</span>
+      </li>
+    </ul>
+    <div class="skcs-chatbot">Chatbot: 25 Requests / Day</div>
+    <button class="elite-btn" onclick="subscribe('elite_9')">Select Plan</button>
+  </div>
+
+  <!-- Elite 14-Day -->
+  <div class="card">
+    <h3>14-Day Deep Pro</h3>
+    <div class="price">£15.99</div>
+    <ul class="skcs-list">
+      <li><strong>Mon-Tue (Pro Intelligence):</strong>
+        <span class="skcs-direct">⚽ 12 Direct</span> | <span class="skcs-secondary">📊 9 Secondary</span> | <span class="skcs-multi">🔀 6 Multi</span> | <span class="skcs-same">🎯 6 Same Match</span> | <span class="skcs-acca">🔥 3 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Wed-Thu (Deep Coverage):</strong>
+        <span class="skcs-direct">⚽ 18 Direct</span> | <span class="skcs-secondary">📊 12 Secondary</span> | <span class="skcs-multi">🔀 8 Multi</span> | <span class="skcs-same">🎯 7 Same Match</span> | <span class="skcs-acca">🔥 4 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Fri (Elite Pro):</strong>
+        <span class="skcs-direct">⚽ 22 Direct</span> | <span class="skcs-secondary">📊 15 Secondary</span> | <span class="skcs-multi">🔀 10 Multi</span> | <span class="skcs-same">🎯 10 Same Match</span> | <span class="skcs-acca">🔥 6 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sat (Deep Pro Max):</strong>
+        <span class="skcs-direct">⚽ 35 Direct</span> | <span class="skcs-secondary">📊 20 Secondary</span> | <span class="skcs-multi">🔀 14 Multi</span> | <span class="skcs-same">🎯 14 Same Match</span> | <span class="skcs-acca">🔥 10 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sun (Ultimate Finish):</strong>
+        <span class="skcs-direct">⚽ 28 Direct</span> | <span class="skcs-secondary">📊 18 Secondary</span> | <span class="skcs-multi">🔀 12 Multi</span> | <span class="skcs-same">🎯 12 Same Match</span> | <span class="skcs-acca">🔥 8 x 6-Match ACCA</span>
+      </li>
+    </ul>
+    <div class="skcs-chatbot">Chatbot: 50 Requests / Day</div>
+    <button class="elite-btn" onclick="subscribe('elite_14')">Select Plan</button>
+  </div>
+
+  <!-- Elite 30-Day -->
+  <div class="card">
+    <h3>30-Day Deep VIP</h3>
+    <div class="price">£59.99</div>
+    <ul class="skcs-list">
+      <li><strong>Mon-Tue (VIP Status):</strong>
+        <span class="skcs-direct">⚽ 15 Direct</span> | <span class="skcs-secondary">📊 12 Secondary</span> | <span class="skcs-multi">🔀 8 Multi</span> | <span class="skcs-same">🎯 8 Same Match</span> | <span class="skcs-acca">🔥 5 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Wed-Thu (Deep VIP):</strong>
+        <span class="skcs-direct">⚽ 22 Direct</span> | <span class="skcs-secondary">📊 15 Secondary</span> | <span class="skcs-multi">🔀 10 Multi</span> | <span class="skcs-same">🎯 10 Same Match</span> | <span class="skcs-acca">🔥 7 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Fri (Ultimate VIP):</strong>
+        <span class="skcs-direct">⚽ 30 Direct</span> | <span class="skcs-secondary">📊 18 Secondary</span> | <span class="skcs-multi">🔀 12 Multi</span> | <span class="skcs-same">🎯 12 Same Match</span> | <span class="skcs-acca">🔥 10 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sat (VIP Absolute Max):</strong>
+        <span class="skcs-direct">⚽ 45 Direct</span> | <span class="skcs-secondary">📊 25 Secondary</span> | <span class="skcs-multi">🔀 18 Multi</span> | <span class="skcs-same">🎯 18 Same Match</span> | <span class="skcs-acca">🔥 15 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sun (VIP Full Coverage):</strong>
+        <span class="skcs-direct">⚽ 35 Direct</span> | <span class="skcs-secondary">📊 22 Secondary</span> | <span class="skcs-multi">🔀 15 Multi</span> | <span class="skcs-same">🎯 15 Same Match</span> | <span class="skcs-acca">🔥 12 x 6-Match ACCA</span>
+      </li>
+    </ul>
+    <div class="skcs-chatbot">Chatbot: 150 Requests / Day</div>
+    <button class="elite-btn" onclick="subscribe('elite_30')">Select Plan</button>
+  </div>
+
+</div>
+
+  <!-- CHATBOT SECTION -->
+  <div class="skcs-chatbot-ui">
+    <h2 style="text-align: center; color: #fff; margin-bottom: 20px;">SKCS Query Engine</h2>
+    <div id="chat-messages" class="chat-messages">
+      <div>Welcome to the Global SKCS Query Engine. Ask about any match in our daily dataset.</div>
+    </div>
+    <div class="chat-input-wrap">
+      <input type="text" id="chat-input" placeholder="Ask about a match (e.g., 'man city vs chelsea acca')...">
+      <button onclick="sendMessage()" class="chat-send-btn">Send</button>
+    </div>
+  </div>
+
+</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const supabase = window.supabase.createClient( 
+  "https://ghzjntdvaptuxfpvhybb.supabase.co", 
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdoempudGR2YXB0dXhmcHZoeWJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDAzNzIsImV4cCI6MjA4NzgxNjM3Mn0.nWxOY0lDIDDvexELk9De2aEfPfM5iJjoaW91tbL7YQk" 
+); 
+
+function showCore(){
+  document.getElementById('corePlans').style.display='grid';
+  document.getElementById('elitePlans').style.display='none';
+  document.getElementById('tabCore').classList.add('active-core');
+  document.getElementById('tabElite').classList.remove('active-elite');
+}
+
+function showElite(){
+  document.getElementById('corePlans').style.display='none';
+  document.getElementById('elitePlans').style.display='grid';
+  document.getElementById('tabCore').classList.remove('active-core');
+  document.getElementById('tabElite').classList.add('active-elite');
+}
+
+async function subscribe(planId){
+  const token = localStorage.getItem("token");
+
+  try {
+    const res = await fetch("https://skcsai.onrender.com/api/subscribe", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "Authorization":"Bearer "+token
+      },
+      body: JSON.stringify({ planId })
+    });
+
+    const data = await res.json();
+    if (data.success) {
+        alert("Subscription successful! Plan: " + data.planId);
+        window.location.href = "/index.html";
+    } else {
+        alert(data.error || "Subscription failed. Please log in.");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("An error occurred. Please try again.");
+  }
+}
+
+// ========== CHATBOT ENGINE ==========
+let requestCount = 0;
+const requestLimit = 2; // Default, will be updated by tier later
+
+let skcsMatches = []; 
+
+async function loadMatches() { 
+  const { data, error } = await supabase 
+    .from("matches") 
+    .select("id, home_team, away_team, match_name, sport"); 
+
+  if (error) { 
+    console.error(error); 
+    return; 
+  } 
+
+  skcsMatches = data; 
+} 
+
+loadMatches(); 
+
+const userTier = "normal"; // temporary hardcode, will be dynamic later
+
+async function getTierRules() { 
+  const { data } = await supabase 
+    .from("tier_rules") 
+    .select("*") 
+    .eq("tier", userTier) 
+    .single(); 
+
+  return data; 
+} 
+
+async function getPrediction(matchId) { 
+  const tier = await getTierRules(); 
+
+  const { data, error } = await supabase 
+    .from("predictions_final") 
+    .select("*") 
+    .eq("match_id", matchId) 
+    .gte("confidence", tier.min_confidence); 
+
+  if (error || !data || data.length === 0) return null; 
+
+  // SAFE parsing of allowed_markets 
+  const allowedMarkets = Array.isArray(tier.allowed_markets) 
+    ? tier.allowed_markets 
+    : JSON.parse(tier.allowed_markets || "[]"); 
+
+  const allowed = allowedMarkets.map(m => m.toLowerCase()); 
+
+  // SAFE market matching 
+  const filtered = data.filter(p => { 
+    const market = (p.market_type || "").toLowerCase().replace(/\s+/g, "_"); 
+    return allowed.includes("all") || allowed.includes(market); 
+  }); 
+
+  if (!filtered.length) return null; 
+
+  // pick highest confidence result 
+  const best = filtered.sort((a, b) => b.confidence - a.confidence); 
+
+  return best[0]; 
+} 
+
+function findMatch(userInput) { 
+  const input = userInput.toLowerCase(); 
+
+  return skcsMatches.find(m => 
+    input.includes(m.home_team.toLowerCase()) || 
+    input.includes(m.away_team.toLowerCase()) || 
+    input.includes((m.match_name || "").toLowerCase()) 
+  ); 
+} 
+
+async function sendMessage() { 
+  const input = document.getElementById("chat-input"); 
+  const msg = input.value.toLowerCase(); 
+  if (!msg) return;
+  input.value = ""; 
+
+  if (requestCount >= requestLimit) { 
+    addMessage("⚠️ Daily limit reached. Upgrade to continue.", "error"); 
+    return; 
+  } 
+
+  requestCount++; 
+  addMessage("👤 " + msg, "user"); 
+
+  // 🔍 MATCH CHECK 
+  const matchObj = findMatch(msg); 
+
+  if (!matchObj) { 
+    addMessage("❌ This match is not currently available in the SKCS system.", "error"); 
+    return; 
+  } 
+
+  const prediction = await getPrediction(matchObj.id);
+
+  if (prediction) { 
+    addMessage(`� ${matchObj.sport.toUpperCase()} Analysis 
+
+Match: ${matchObj.home_team} vs ${matchObj.away_team} 
+
+🎯 Recommended: 
+${prediction.recommended} 
+
+📊 Confidence: ${prediction.confidence}% 
+⚠️ Volatility: ${prediction.volatility} 
+
+This output is generated from Stage 4 of the SKCS pipeline.`); 
+  } else { 
+    addMessage( 
+      "This outcome is not available under your current subscription tier. Upgrade to access higher-confidence or additional markets.", 
+      "error" 
+    ); 
+  } 
+} 
+
+function addMessage(text) { 
+  const box = document.getElementById("chat-messages"); 
+  const div = document.createElement("div"); 
+  div.innerText = text; 
+  box.appendChild(div); 
+  box.scrollTop = box.scrollHeight; 
+} 
+
+// Enter key support for chat
+document.getElementById("chat-input").addEventListener("keypress", function(e) {
+  if (e.key === "Enter") sendMessage();
+});
+</script>
+
+</body>
 </html>
-``` I have now overwritten the `C:/Users/skcsa/OneDrive/Desktop/SKCS
-Things/SKCS-test/public/subscription.html` file with the provided HTML code. Now
-I will create the `style.css` file in the same `public` directory. ```css body {
-font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding:
-20px; display: flex; justify-content: center; align-items: center; min-height:
-100vh; box-sizing: border-box; } .pricing-container { display: grid;
-grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;
-max-width: 1400px; /* Adjust as needed */ width: 100%; align-items: stretch; /*
-Ensures all grid items (cards) have equal height */ } .pricing-card {
-background-color: #fff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0,
-0.1); padding: 20px; display: flex; flex-direction: column; justify-content:
-space-between; /* Pushes button to bottom */ position: relative; overflow:
-hidden; /* For badge positioning */ } .card-header { text-align: center;
-margin-bottom: 20px; } .card-header h3 { font-size: 1.8em; margin: 0 0 10px;
-color: #333; } .card-header .price { font-size: 2.5em; font-weight: bold; color:
-#007bff; /* Primary color for price */ } .core-tier .card-header .price { color:
-#28a745; /* Green for core */ } .elite-tier .card-header .price { color:
-#007bff; /* Blue for elite */ } .card-section { margin-bottom: 15px;
-padding-bottom: 10px; border-bottom: 1px solid #eee; }
-.card-section:last-of-type { border-bottom: none; margin-bottom: 20px; }
-.card-section h4 { font-size: 1.1em; margin: 0 0 8px; color: #555; }
-.card-section p, .card-section ul { font-size: 0.95em; color: #666; line-height:
-1.5; margin: 0; padding: 0; list-style: none; /* Remove default list styling */
-} .card-section ul li { margin-bottom: 5px; } .select-plan-btn {
-background-color: #007bff; color: #fff; padding: 12px 20px; border: none;
-border-radius: 5px; font-size: 1.1em; cursor: pointer; transition:
-background-color 0.3s ease; width: 100%; margin-top: auto; /* Pushes button to
-the bottom */ } .select-plan-btn:hover { background-color: #0056b3; } /* Elite
-tier specific styling */ .elite-tier { border: 2px solid #007bff; /* Blue border
-for Elite */ } .elite-badge { position: absolute; top: 0px; right: 0px;
-background-color: #007bff; /* Blue badge for Elite */ color: white; padding: 5px
-15px; font-size: 0.8em; font-weight: bold; border-bottom-left-radius: 8px;
-z-index: 10; } /* Recommended tier specific styling */ .recommended-tier {
-border: 2px solid #ffc107; /* Orange border for recommended */ box-shadow: 0 0
-15px rgba(255, 193, 7, 0.5); /* Glowing effect */ } .recommended-tier
-.select-plan-btn { background-color: #ffc107; /* Orange button for recommended
-*/ } .recommended-tier .select-plan-btn:hover { background-color: #e0a800; } /*
-Responsive adjustments */ @media (max-width: 768px) { .pricing-container {
-grid-template-columns: 1fr; /* Single column on smaller screens */ padding:
-15px; } body { padding: 15px; } } ``` I have now created the
-`C:/Users/skcsa/OneDrive/Desktop/SKCS Things/SKCS-test/public/style.css` file
-with the provided CSS code.
