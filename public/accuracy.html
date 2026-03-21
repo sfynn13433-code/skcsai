@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKCS Accuracy Center</title>
+    <style>
+        /* Base styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #0b0f19;
+            color: #fff;
+            line-height: 1.6;
+        }
+        .navbar {
+            background-color: #0d6efd;
+            padding: 1rem 2rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 100;
+        }
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo { color: white; font-size: 1.5rem; font-weight: bold; text-decoration: none; }
+        .nav-links { display: flex; gap: 2rem; }
+        .nav-links a { color: white; text-decoration: none; font-weight: 500; transition: color 0.3s; }
+        .nav-links a:hover { color: #cfe2ff; }
+
+        /* Hero with brighter image (lighter overlay) */
+        .accuracy-hero {
+            position: relative;
+            height: 500px;
+            background: url('windrawwin.jpg') center/cover no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            margin-top: 70px;
+        }
+        .hero-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 100%);
+            backdrop-filter: blur(2px);
+        }
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            padding: 2rem;
+        }
+        .hero-content h1 { font-size: 3rem; margin-bottom: 1rem; text-shadow: 2px 2px 8px rgba(0,0,0,0.5); }
+        .hero-content p { font-size: 1.3rem; margin-bottom: 2rem; opacity: 0.9; }
+
+        /* Stats cards */
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 2rem; max-width: 1200px; margin: 4rem auto; padding: 0 1rem;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 2rem;
+            text-align: center; color: white; box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .stat-card h3 { font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; margin-bottom: 1rem; }
+        .stat-number { font-size: 3rem; font-weight: bold; color: #0d6efd; margin: 0.5rem 0; }
+        .stat-card small { opacity: 0.7; font-size: 0.9rem; }
+
+        /* Weekly table */
+        .weekly-section, .reasons-section, .by-sport {
+            max-width: 1200px; margin: 4rem auto; padding: 0 1rem;
+        }
+        .weekly-section h2, .reasons-section h2, .by-sport h2 {
+            font-size: 2rem; color: #0d6efd; margin-bottom: 2rem; border-left: 4px solid #0d6efd; padding-left: 1rem;
+        }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.02); border-radius: 12px; overflow: hidden; }
+        th { background: #0d6efd; color: white; padding: 1rem; text-align: left; }
+        td { padding: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        tr:hover { background: rgba(255,255,255,0.05); }
+
+        /* Reasons cards */
+        .reasons-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;
+        }
+        .reason-card {
+            background: rgba(255,255,255,0.03); border-radius: 12px; padding: 1.5rem;
+            border-left: 4px solid #dc3545; transition: transform 0.2s;
+        }
+        .reason-card:hover { transform: translateY(-4px); background: rgba(255,255,255,0.06); }
+        .reason-card .match { font-weight: bold; font-size: 1.2rem; color: #0d6efd; }
+        .reason-card .prediction { display: block; margin: 0.5rem 0; color: #e0e0e0; }
+        .reason-card .result { font-weight: bold; color: #dc3545; }
+        .reason-card .reason { margin-top: 0.8rem; font-style: italic; color: #aaa; }
+
+        /* Sport bars */
+        .sport-item { display: flex; align-items: center; margin-bottom: 1rem; }
+        .sport-item span { width: 120px; font-weight: bold; }
+        .bar-container { flex: 1; height: 30px; background: rgba(255,255,255,0.1); border-radius: 15px; overflow: hidden; }
+        .bar { height: 100%; background: #0d6efd; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; color: white; font-weight: bold; font-size: 0.9rem; }
+        .note { margin-top: 2rem; font-size: 0.9rem; color: #888; text-align: center; }
+
+        .footer { background: #0d6efd; padding: 2rem; text-align: center; color: white; margin-top: 4rem; }
+    </style>
+</head>
+<body>
+    <!-- Navigation with Back and Weekly Report links -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">SKCS AI</a>
+            <div class="nav-links">
+                <a href="index.html">← Back</a>
+                <a href="#weekly">View Weekly Report →</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero (brighter background) -->
+    <section class="accuracy-hero">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1>📊 SKCS Accuracy Center</h1>
+            <p>We track every prediction transparently.<br>Wins, losses, and the reasons behind them.</p>
+        </div>
+    </section>
+
+    <!-- Main Stats -->
+    <section class="stats-grid" id="statsGrid">
+        <!-- Dynamically filled -->
+    </section>
+
+    <!-- Weekly Breakdown -->
+    <section id="weekly" class="weekly-section">
+        <h2>📆 Weekly Performance</h2>
+        <div class="table-container">
+            <table id="weeklyTable">
+                <thead>
+                    <tr>
+                        <th>Week</th>
+                        <th>Wins</th>
+                        <th>Losses</th>
+                        <th>Accuracy</th>
+                        <th>Cumulative Record</th>
+                        <th>Loss Reasons</th>
+                    </tr>
+                </thead>
+                <tbody id="weeklyBody">
+                    <!-- filled by JS -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Why Predictions Missed -->
+    <section class="reasons-section">
+        <h2>🔍 Why Some Predictions Missed</h2>
+        <div class="reasons-grid" id="reasonsGrid">
+            <!-- filled by JS -->
+        </div>
+        <p class="note">* We manually review and update reasons every Wednesday</p>
+    </section>
+
+    <!-- Accuracy by Sport -->
+    <section class="by-sport">
+        <h2>⚽ Accuracy by Sport</h2>
+        <div id="sportBars">
+            <!-- filled by JS -->
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>SKCS AI Sports Predictions – Transparency you can trust</p>
+    </footer>
+
+    <script>
+        // ========== SAMPLE DATA GENERATOR ==========
+        const allSports = [
+            'football', 'rugby', 'afl', 'baseball', 'basketball',
+            'formula1', 'cricket', 'nfl', 'hockey', 'mma',
+            'handball', 'volleyball', 'tennis'
+        ];
+
+        function generateSampleStats() {
+            const overall = { total: 1250, wins: 843, winRate: 67.4 };
+            const byTier = [
+                { tier: 'Normal', total: 950, wins: 618, winRate: 65.1 },
+                { tier: 'Deep', total: 300, wins: 225, winRate: 75.0 }
+            ];
+            const bySport = allSports.map((sport, index) => {
+                const baseRate = 55 + (index * 2.2);
+                const winRate = Math.min(82, Math.round(baseRate * 10) / 10);
+                const total = 80 + Math.floor(Math.random() * 70);
+                const wins = Math.round(total * winRate / 100);
+                return { sport, total, wins, winRate };
+            });
+            return { overall, byTier, bySport };
+        }
+
+        async function loadAccuracyStats() {
+            let data;
+            try {
+                const API_BASE_URL = 'http://localhost:3000'; // Replace when deploying
+                const res = await fetch(`${API_BASE_URL}/api/accuracy`);
+                if (!res.ok) throw new Error('Failed to fetch');
+                data = await res.json();
+            } catch (error) {
+                console.warn('Using sample data (backend not reachable)');
+                data = generateSampleStats();
+            }
+
+            document.getElementById('statsGrid').innerHTML = `
+                <div class="stat-card">
+                    <h3>Overall Accuracy</h3>
+                    <div class="stat-number">${data.overall.winRate || 0}%</div>
+                    <small>${data.overall.wins} Wins / ${data.overall.total} Total</small>
+                </div>
+                ${data.byTier.map(t => `
+                    <div class="stat-card">
+                        <h3>${t.tier} System</h3>
+                        <div class="stat-number">${t.winRate || 0}%</div>
+                        <small>${t.wins} Wins / ${t.total} Total</small>
+                    </div>
+                `).join('')}
+            `;
+
+            const weeklyBody = document.getElementById('weeklyBody');
+            const weeklyData = [
+                { week: 'Mar 5 – Mar 11', wins: 42, losses: 18, cumWins: 42, cumLosses: 18, reasons: 'Red card (2x), Weather (1x), Injury (1x)' },
+                { week: 'Feb 26 – Mar 4', wins: 38, losses: 22, cumWins: 80, cumLosses: 40, reasons: 'VAR (3x), Late goal (2x), Team unrest (1x)' },
+                { week: 'Feb 19 – Feb 25', wins: 45, losses: 15, cumWins: 125, cumLosses: 55, reasons: 'Penalty miss (2x), Injury (2x), Referee error (1x)' },
+            ];
+            weeklyBody.innerHTML = weeklyData.map(row => `
+                <tr>
+                    <td>${row.week}</td>
+                    <td>${row.wins}</td>
+                    <td>${row.losses}</td>
+                    <td>${Math.round(row.wins / (row.wins + row.losses) * 100)}%</td>
+                    <td>${row.cumWins}–${row.cumLosses}</td>
+                    <td>${row.reasons}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('reasonsGrid').innerHTML = `
+                <div class="reason-card">
+                    <span class="match">Arsenal vs Newcastle (Football)</span>
+                    <span class="prediction">Home Win (72% confidence)</span>
+                    <span class="result">❌ Loss</span>
+                    <p class="reason">Red card to key defender (minute 32)</p>
+                </div>
+                <div class="reason-card">
+                    <span class="match">Lakers vs Celtics (Basketball)</span>
+                    <span class="prediction">Lakers Win (68% confidence)</span>
+                    <span class="result">❌ Loss</span>
+                    <p class="reason">LeBron rested – late scratch</p>
+                </div>
+                <div class="reason-card">
+                    <span class="match">Verstappen vs Hamilton (F1)</span>
+                    <span class="prediction">Verstappen Win (81% confidence)</span>
+                    <span class="result">❌ Loss</span>
+                    <p class="reason">Safety car changed strategy</p>
+                </div>
+                <div class="reason-card">
+                    <span class="match">India vs Australia (Cricket)</span>
+                    <span class="prediction">India Win (64% confidence)</span>
+                    <span class="result">❌ Loss</span>
+                    <p class="reason">Rain interruption (DLS method)</p>
+                </div>
+                <div class="reason-card">
+                    <span class="match">Chiefs vs 49ers (NFL)</span>
+                    <span class="prediction">Chiefs Win (70% confidence)</span>
+                    <span class="result">❌ Loss</span>
+                    <p class="reason">Key receiver injured in warm-up</p>
+                </div>
+            `;
+
+            const sportBars = document.getElementById('sportBars');
+            sportBars.innerHTML = data.bySport.map(s => `
+                <div class="sport-item">
+                    <span>${s.sport.charAt(0).toUpperCase() + s.sport.slice(1)}</span>
+                    <div class="bar-container">
+                        <div class="bar" style="width: ${s.winRate}%">${s.winRate}%</div>
+                    </div>
+                    <span style="margin-left: 1rem;">${s.wins}/${s.total}</span>
+                </div>
+            `).join('');
+        }
+
+        loadAccuracyStats();
+    </script>
+</body>
+</html>

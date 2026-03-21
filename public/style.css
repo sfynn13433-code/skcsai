@@ -1,0 +1,149 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.pricing-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    max-width: 1400px; /* Adjust as needed */
+    width: 100%;
+    align-items: stretch; /* Ensures all grid items (cards) have equal height */
+}
+
+.pricing-card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Pushes button to bottom */
+    position: relative;
+    overflow: hidden; /* For badge positioning */
+}
+
+.card-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.card-header h3 {
+    font-size: 1.8em;
+    margin: 0 0 10px;
+    color: #333;
+}
+
+.card-header .price {
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #007bff; /* Primary color for price */
+}
+
+.core-tier .card-header .price {
+    color: #28a745; /* Green for core */
+}
+
+.elite-tier .card-header .price {
+    color: #007bff; /* Blue for elite */
+}
+
+.card-section {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.card-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 20px;
+}
+
+.card-section h4 {
+    font-size: 1.1em;
+    margin: 0 0 8px;
+    color: #555;
+}
+
+.card-section p,
+.card-section ul {
+    font-size: 0.95em;
+    color: #666;
+    line-height: 1.5;
+    margin: 0;
+    padding: 0;
+    list-style: none; /* Remove default list styling */
+}
+
+.card-section ul li {
+    margin-bottom: 5px;
+}
+
+.select-plan-btn {
+    background-color: #007bff;
+    color: #fff;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 100%;
+    margin-top: auto; /* Pushes button to the bottom */
+}
+
+.select-plan-btn:hover {
+    background-color: #0056b3;
+}
+
+/* Elite tier specific styling */
+.elite-tier {
+    border: 2px solid #007bff; /* Blue border for Elite */
+}
+
+.elite-badge {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    background-color: #007bff; /* Blue badge for Elite */
+    color: white;
+    padding: 5px 15px;
+    font-size: 0.8em;
+    font-weight: bold;
+    border-bottom-left-radius: 8px;
+    z-index: 10;
+}
+
+/* Recommended tier specific styling */
+.recommended-tier {
+    border: 2px solid #ffc107; /* Orange border for recommended */
+    box-shadow: 0 0 15px rgba(255, 193, 7, 0.5); /* Glowing effect */
+}
+
+.recommended-tier .select-plan-btn {
+    background-color: #ffc107; /* Orange button for recommended */
+}
+
+.recommended-tier .select-plan-btn:hover {
+    background-color: #e0a800;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .pricing-container {
+        grid-template-columns: 1fr; /* Single column on smaller screens */
+        padding: 15px;
+    }
+
+    body {
+        padding: 15px;
+    }
+}
