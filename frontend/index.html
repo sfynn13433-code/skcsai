@@ -780,30 +780,13 @@
     <script>
         const SUPABASE_URL = "https://ghzjntdvaptuxfpvhybb.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdoempudGR2YXB0dXhmcHZoeWJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDAzNzIsImV4cCI6MjA4NzgxNjM3Mn0.nWxOY0lDIDDvexELk9De2aEfPfM5iJjoaW91tbL7YQk";
-
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // ========== GLOBAL STATE ==========
-        let skcsMatches = []; 
-        let matchesLoaded = false;
-        let userTier = "normal"; // default
-        let token = null;
-        let user = null;
+        let skcsMatches = []; let matchesLoaded = false; let userTier = "normal"; let user = null; let activeSport = 'football';
 
-        // ========== AUTH & SESSION ==========
         async function checkSession() { 
             const { data } = await supabase.auth.getSession(); 
-            if (!data?.session) { 
-                console.log("No active session");
-                userTier = "normal";
-            } else { 
-                console.log("User logged in:", data.session.user.email);
-                user = data.session.user;
-                token = data.session.access_token;
-                // In a real app, you'd fetch the tier from a 'profiles' table.
-                // For now, we'll stick with the logic provided.
-                userTier = user.user_metadata?.tier || "normal";
-            }
+            if (data?.session) { user = data.session.user; userTier = user.user_metadata?.tier || "normal"; }
             updateAuthUI();
         } 
 
@@ -811,286 +794,90 @@
             const authLink = document.getElementById('authLink');
             if (user) {
                 authLink.textContent = 'Logout';
-                authLink.href = '#';
-                authLink.onclick = async (e) => {
-                    e.preventDefault();
-                    await supabase.auth.signOut();
-                    window.location.reload();
-                };
-            } else {
-                authLink.textContent = 'Login';
-                authLink.href = 'login.html';
-                authLink.onclick = null;
+                authLink.onclick = async (e) => { e.preventDefault(); await supabase.auth.signOut(); window.location.reload(); };
+            } else { authLink.textContent = 'Login'; authLink.href = 'login.html'; }
+        }
+
+        async function loadMatches() { await fetchPredictions(activeSport); }
+
+        async function fetchPredictions(sport) {
+            const container = document.getElementById(sport + '-matches');
+            if (container) container.innerHTML = '<p style="text-align:center;color:#94a3b8;">Loading predictions...</p>';
+
+            try {
+                const response = await fetch('http://localhost:3000/api/predictions?tier=' + userTier + '&sport=' + sport, {
+                    headers: { 'x-api-key': 'skcs_user_12345' }
+                });
+                if (!response.ok) throw new Error('API Error');
+                const data = await response.json();
+                renderSport(sport, sport + '-matches', data.predictions || []);
+                matchesLoaded = true;
+                skcsMatches = [...skcsMatches, ...(data.predictions || []).flatMap(p => p.matches)];
+            } catch (error) {
+                console.error("Fetch error:", error);
+                if (container) container.innerHTML = '<p style="color:#f87171;text-align:center;">Connection Error: Ensure backend is running.</p>';
             }
         }
 
-        async function loginUser(email, password) { 
-            const { data, error } = await supabase.auth.signInWithPassword({ 
-                email: email, 
-                password: password 
-            }); 
-            if (error) { 
-                alert("Login failed: " + error.message); 
-                return null; 
-            } 
-            return data.user; 
-        }
-
-        // ========== DATA LOADING ==========
-        // ========== DATA LOADING ==========
-        async function loadMatches() { 
-            // We now fetch everything via the predictions API
-            console.log("[loadMatches] Transitioned to unified API sync.");
-            await updateAllTabs();
-        }
-
-        // ========== PREDICTION LOGIC ==========
-        async function getTierRules() { 
-            const { data, error } = await supabase 
-                .from("tier_rules") 
-                .select("*") 
-                .eq("tier", userTier) 
-                .single(); 
-            
-            if (error) {
-                console.error("Error fetching tier rules:", error);
-                return { min_confidence: 70, allowed_markets: ["all"] }; // fallback
-            }
-            return data; 
-        } 
-
-        async function getPrediction(matchId) { 
-            const tier = await getTierRules(); 
-            
-            const { data, error } = await supabase 
-                .from("predictions_final") 
-                .select("*") 
-                .eq("match_id", matchId); 
-            
-            if (error || !data || data.length === 0) {
-                console.error("No prediction data");
-                return null;
-            }
-            
-            const allowedMarkets = Array.isArray(tier.allowed_markets) 
-                ? tier.allowed_markets 
-                : JSON.parse(tier.allowed_markets || "[]"); 
-
-            const allowed = allowedMarkets.map(m => m.toLowerCase()); 
-            
-            const filtered = data.filter(p => { 
-                const market = (p.type || "").toLowerCase().replace(/\s+/g, "_"); 
-                return (
-                    p.total_confidence >= tier.min_confidence &&
-                    (allowed.includes("all") || allowed.includes(market))
-                );
-            }); 
-            
-            if (!filtered.length) return null; 
-            
-            const bestPrediction = filtered.sort((a, b) => b.total_confidence - a.total_confidence)[0];
-            console.log("Best prediction found:", bestPrediction);
-            return bestPrediction;
-        } 
-
-        // ========== CHATBOT ==========
-        let requestCount = 0; 
-        const requestLimit = 5; 
-        
-        function findMatch(userInput) { 
-            const input = userInput.toLowerCase(); 
-            return skcsMatches.find(m => 
-                input.includes(m.home_team.toLowerCase()) || 
-                input.includes(m.away_team.toLowerCase()) || 
-                input.includes((m.match_name || "").toLowerCase()) 
-            ); 
-        } 
-        
-        async function sendMessage() { 
-            if (!matchesLoaded) { 
-                addMessage("⚠️ System loading data. Please wait a moment."); 
-                return; 
-            }
-
-            const inputField = document.getElementById("chat-input"); 
-            const msg = inputField.value.trim(); 
-            if (!msg) return;
-            
-            inputField.value = ""; 
-        
-            if (requestCount >= requestLimit) { 
-                addMessage("⚠️ Daily limit reached. Upgrade to continue.", "error"); 
-                return; 
-            } 
-        
-            requestCount++; 
-            addMessage(msg, "user"); 
-        
-            const matchObj = findMatch(msg); 
-        
-            if (!matchObj) { 
-                addMessage("❌ This match is not currently available in the SKCS system.", "bot"); 
-                return; 
-            } 
-        
-            const prediction = await getPrediction(matchObj.id);
-            console.log("Prediction for match:", prediction);
-        
-            if (prediction) { 
-                addMessage(`📊 ${matchObj.sport.toUpperCase()} Analysis 
-  
- Match: ${matchObj.home_team} vs ${matchObj.away_team} 
-  
- 🎯 Type: 
- ${prediction.type} 
-  
- 📊 Confidence: ${prediction.total_confidence}% 
- ⚠️ Risk: ${prediction.risk_level} 
-  
- This output is generated from Stage 4 of the SKCS pipeline.`); 
-            } else { 
-                addMessage( 
-                    "This outcome is not available under your current subscription tier. Upgrade to access higher-confidence or additional markets.", 
-                    "bot" 
-                ); 
-            } 
-        } 
-        
-        function addMessage(text, type = "bot") { 
-            const box = document.getElementById("chat-messages"); 
-            const div = document.createElement("div"); 
-            div.classList.add(type); 
-            div.innerText = text; 
-            box.appendChild(div); 
-            box.scrollTop = box.scrollHeight; 
-        } 
-
-        // ========== UI RENDERING ==========
         function renderSport(sport, containerId, predictions) {
             const container = document.getElementById(containerId);
             if (!container) return;
-            container.innerHTML = '';
+            container.innerHTML = predictions.length === 0 ? '<p style="text-align:center;color:#94a3b8;">No predictions available.</p>' : '';
             
-            // Filter predictions by sport (any match in the prediction matches the sport)
-            const sportPreds = predictions.filter(p => 
-                p.matches && p.matches.some(m => m.sport.toLowerCase() === sport.toLowerCase())
-            );
-
-            if (sportPreds.length === 0) {
-                container.innerHTML = '<p>No predictions available for this sport.</p>';
-                return;
-            }
-
-            sportPreds.forEach(p => {
+            predictions.forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'prediction-card';
-                
-                // If it's an ACCA (more than 1 match), show a badge
                 const isAcca = p.matches.length > 1;
-                const accaBadge = isAcca ? `<span style="background:#ffc107; color:black; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold; margin-bottom:5px; display:inline-block;">ACCUMULATOR (${p.matches.length} Legs)</span>` : '';
-
-                // Build match info summary
-                let matchInfoHtml = '';
-                if (isAcca) {
-                    matchInfoHtml = `<div class="teams" style="font-size:0.9rem;">${p.matches.map(m => `${m.home_team} vs ${m.away_team}`).join('<br>')}</div>`;
-                } else {
-                    const m = p.matches[0];
-                    matchInfoHtml = `<div class="teams">${m.home_team} vs ${m.away_team}</div>`;
-                }
-
-                // Format recommended text
-                let recommendedStr = '';
-                if (isAcca) {
-                    recommendedStr = "Combined Outcome";
-                } else {
-                    const m = p.matches[0];
-                    const marketMap = { '1X2': 'Match Winner', 'over_2_5': 'Over 2.5 Goals', 'btts_yes': 'Both Teams to Score', 'double_chance': 'Double Chance' };
-                    const predMap = { 'home_win': 'Home Win', 'draw': 'Draw', 'away_win': 'Away Win', 'over_2_5': 'Over 2.5', 'btts_yes': 'Yes', 'home_or_draw': 'Home or Draw' };
-                    recommendedStr = `${marketMap[m.market] || m.market}: ${predMap[m.prediction] || m.prediction}`;
-                }
-
-                card.innerHTML = `
-                    ${accaBadge}
-                    <div class="match-info">
-                        ${matchInfoHtml}
-                        <div class="match-date">${sport.toUpperCase()}</div>
-                    </div>
-                    <div class="prediction-details">
-                        <div class="prediction">${recommendedStr}</div>
-                        <div class="confidence">${p.total_confidence}%</div>
-                    </div>
-                `;
+                const accaBadge = isAcca ? '<span style="background:#f59e0b;color:white;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:bold;margin-bottom:8px;display:inline-block;">ACCUMULATOR</span>' : '';
+                let matchesHtml = isAcca ? p.matches.map(m => m.home_team + ' vs ' + m.away_team).join('<br>') : p.matches[0].home_team + ' vs ' + p.matches[0].away_team;
+                
+                card.innerHTML = accaBadge + '<div class="match-info"><div class="teams">' + matchesHtml + '</div><div class="match-date">' + sport.toUpperCase() + '</div></div>' +
+                    '<div class="prediction-details"><div class="prediction">' + p.matches[0].prediction.replace('_',' ') + '</div><div class="confidence">' + p.total_confidence + '% Confidence</div></div>';
                 container.appendChild(card);
             });
         }
 
-        async function updateAllTabs() {
+        async function sendMessage() { 
+            const inputField = document.getElementById("chat-input"); 
+            const msg = inputField.value.trim(); 
+            if (!msg) return;
+            inputField.value = ""; 
+            addMessage(msg, "user"); 
             try {
-                console.log("[updateAllTabs] Fetching predictions from backend...");
-                const response = await fetch('http://localhost:3000/api/predictions?tier=normal', {
-                    headers: {
-                        'x-api-key': 'skcs_user_12345'
-                    }
+                const response = await fetch('http://localhost:3000/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-api-key': 'skcs_user_12345' },
+                    body: JSON.stringify({ message: msg })
                 });
-                
-                if (!response.ok) throw new Error(`API error: ${response.status}`);
-                
                 const data = await response.json();
-                const predictions = data.predictions || [];
-                console.log(`[updateAllTabs] Received ${predictions.length} predictions.`);
+                addMessage(data.response || "No response", "bot");
+            } catch (error) { addMessage(" Connection Error.", "error"); }
+        } 
+        
+        function addMessage(text, type = "bot") { 
+            const box = document.getElementById("chat-messages"); 
+            const div = document.createElement("div"); div.className = type; div.innerText = text; 
+            box.appendChild(div); box.scrollTop = box.scrollHeight; 
+        } 
 
-                const sports = [
-                    'football', 'rugby', 'afl', 'baseball', 'basketball', 
-                    'formula1', 'cricket', 'nfl', 'hockey', 'mma', 'handball', 'volleyball'
-                ];
-
-                sports.forEach(sport => {
-                    renderSport(sport, `${sport}-matches`, predictions);
-                });
-
-                matchesLoaded = true; // For chatbot
-                skcsMatches = predictions.flatMap(p => p.matches); // Flatten for chatbot lookup
-                
-            } catch (error) {
-                console.error("Error fetching predictions for tabs:", error);
-                // Set placeholders to error state
-                const sports = ['football', 'rugby', 'afl', 'baseball', 'basketball', 'formula1', 'cricket', 'nfl', 'hockey', 'mma', 'handball', 'volleyball'];
-                sports.forEach(sport => {
-                    const container = document.getElementById(`${sport}-matches`);
-                    if (container) container.innerHTML = `<p style="color:red;">Error loading predictions. Please ensure the backend is running.</p>`;
-                });
-            }
-        }
-
-        // ========== INITIALIZATION ==========
-        document.addEventListener('DOMContentLoaded', function() {
-            // Tab switching logic
-            const tabButtons = document.querySelectorAll('.tab-button');
-            const tabContents = document.querySelectorAll('.tab-content');
-            tabButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const tabId = this.getAttribute('data-tab');
-                    tabContents.forEach(c => c.classList.remove('active'));
-                    tabButtons.forEach(b => b.classList.remove('active'));
-                    document.getElementById(tabId).classList.add('active');
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tid = this.getAttribute('data-tab');
+                    activeSport = tid;
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                    document.getElementById(tid).classList.add('active');
                     this.classList.add('active');
+                    fetchPredictions(activeSport);
                 });
             });
-
-            // Initialize app
-            checkSession();
-            loadMatches();
+            checkSession(); loadMatches();
         });
 
-        // Scroll to top
         const scrollTopBtn = document.getElementById('scrollTopBtn');
-        window.addEventListener('scroll', function() {
-            if (window.scrollY > 300) scrollTopBtn.classList.add('show');
-            else scrollTopBtn.classList.remove('show');
-        });
-        scrollTopBtn.addEventListener('click', function() {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
+        window.addEventListener('scroll', () => { scrollTopBtn.classList.toggle('show', window.scrollY > 300); });
+        scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
     </script>
 </body>
 </html>

@@ -29,11 +29,13 @@ function warnEnv(name) {
 warnEnv('DATABASE_URL');
 warnEnv('ADMIN_API_KEY');
 warnEnv('USER_API_KEY');
+warnEnv('OPENAI_KEY');
 
 const predictionsRouter = require('./routes/predictions');
 const pipelineRouter = require('./routes/pipeline');
 const debugRouter = require('./routes/debug');
 const userRouter = require('./routes/user');
+const chatRouter = require('./routes/chat');
 
 const app = express();
 
@@ -63,8 +65,7 @@ app.use((req, _res, next) => {
     next();
 });
 
-// Subscription endpoint (stores chosen plan into profiles.plan_id)
-// This is needed so `/api/user/predictions` can map plan -> tierKey for limits.
+// Subscription endpoint
 app.post('/api/subscribe', requireSupabaseUser, async (req, res) => {
     try {
         if (!req.user || !req.user.id) {
@@ -118,6 +119,7 @@ app.get('/', (_req, res) => {
 app.use('/api/predictions', predictionsRouter);
 app.use('/api/user', userRouter);
 app.use('/api/pipeline', pipelineRouter);
+app.use('/api/chat', chatRouter);
 
 app.use('/debug', requireRole('admin'), debugRouter);
 
