@@ -134,73 +134,81 @@ async function initializeTables() {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )`);
 
-        // Predictions table (with safer_pick column)
-        await client.query(`CREATE TABLE IF NOT EXISTS predictions (
-            id SERIAL PRIMARY KEY,
-            match_id INTEGER REFERENCES matches(id),
-            prob_home REAL,
-            prob_draw REAL,
-            prob_away REAL,
-            btts_prob REAL,
-            over25_prob REAL,
-            under25_prob REAL,
-            recommended TEXT,
-            avoid TEXT,
-            acca_safe INTEGER,
-            confidence INTEGER,
-            volatility TEXT,
-            risk_flags TEXT,
-            safer_pick TEXT,
-            normal_tier INTEGER,
-            deep_tier INTEGER,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            valid_until TIMESTAMP
+        // Predictions Raw
+        await client.query(`CREATE TABLE IF NOT EXISTS predictions_raw (
+            id BIGSERIAL PRIMARY KEY,
+            match_id TEXT NOT NULL,
+            sport TEXT NOT NULL,
+            market TEXT NOT NULL,
+            prediction TEXT NOT NULL,
+            confidence REAL NOT NULL,
+            volatility TEXT NOT NULL,
+            odds REAL,
+            metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )`);
 
-        // New lightweight prediction storage columns (for Supabase usage)
-        await client.query(`ALTER TABLE predictions ADD COLUMN IF NOT EXISTS prediction JSONB`);
-        await client.query(`ALTER TABLE predictions ADD COLUMN IF NOT EXISTS stage TEXT`);
-        await client.query(`ALTER TABLE predictions ADD COLUMN IF NOT EXISTS is_final BOOLEAN DEFAULT false`);
-        await client.query(`ALTER TABLE predictions ADD COLUMN IF NOT EXISTS home_team TEXT`);
-        await client.query(`ALTER TABLE predictions ADD COLUMN IF NOT EXISTS away_team TEXT`);
-
-        // Users table
-        await client.query(`CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            subscription_type TEXT DEFAULT 'normal',
-            subscription_expiry TIMESTAMP,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        // Predictions Filtered
+        await client.query(`CREATE TABLE IF NOT EXISTS predictions_filtered (
+            id BIGSERIAL PRIMARY KEY,
+            raw_id BIGINT NOT NULL REFERENCES predictions_raw(id) ON DELETE CASCADE,
+            tier TEXT NOT NULL CHECK (tier IN ('normal', 'deep')),
+            is_valid BOOLEAN NOT NULL,
+            reject_reason TEXT,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            UNIQUE (raw_id, tier)
         )`);
 
-        // Profiles table (Supabase Auth)
-        await client.query(`CREATE TABLE IF NOT EXISTS profiles (
-            id UUID PRIMARY KEY,
-            email TEXT,
-            subscription_status TEXT DEFAULT 'inactive',
-            is_test_user BOOLEAN DEFAULT false,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        // Predictions Final
+        await client.query(`CREATE TABLE IF NOT EXISTS predictions_final (
+            id BIGSERIAL PRIMARY KEY,
+            tier TEXT NOT NULL CHECK (tier IN ('normal', 'deep')),
+            type TEXT NOT NULL CHECK (type IN ('single', 'acca')),
+            matches JSONB NOT NULL,
+            total_confidence REAL NOT NULL,
+            risk_level TEXT NOT NULL CHECK (risk_level IN ('safe', 'medium')),
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )`);
-        await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_test_user BOOLEAN DEFAULT false`);
-        await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan_id TEXT`);
-        await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan_tier TEXT`);
-        await client.query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan_expires_at TIMESTAMP`);
 
-        // Prediction results table (for accuracy)
-        await client.query(`CREATE TABLE IF NOT EXISTS prediction_results (
-            id SERIAL PRIMARY KEY,
-            match_id INTEGER REFERENCES matches(id),
-            sport TEXT,
-            league TEXT,
-            prediction_type TEXT,
-            predicted_outcome TEXT,
-            actual_result TEXT,
-            status TEXT,
-            confidence INTEGER,
-            loss_reason TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        // Tier Rules
+        await client.query(`CREATE TABLE IF NOT EXISTS tier_rules (
+            tier TEXT PRIMARY KEY CHECK (tier IN ('normal', 'deep')),
+            min_confidence REAL NOT NULL,
+            allowed_markets JSONB NOT NULL,
+            max_acca_size INTEGER NOT NULL,
+            allowed_volatility JSONB NOT NULL
         )`);
+
+        // Acca Rules
+        await client.query(`CREATE TABLE IF NOT EXISTS acca_rules (
+            id BIGSERIAL PRIMARY KEY,
+            rule_name TEXT NOT NULL UNIQUE,
+            rule_value JSONB NOT NULL
+        )`);
+
+        // Initial Rules Data
+        await client.query(`
+            INSERT INTO tier_rules (tier, min_confidence, allowed_markets, max_acca_size, allowed_volatility)
+            VALUES
+                ('normal', 60, '["1X2","double_chance","over_2_5","btts_yes"]'::JSONB, 3, '["low","medium"]'::JSONB),
+                ('deep', 75, '["ALL"]'::JSONB, 5, '["low"]'::JSONB)
+            ON CONFLICT (tier) DO UPDATE SET
+                min_confidence = EXCLUDED.min_confidence,
+                allowed_markets = EXCLUDED.allowed_markets,
+                max_acca_size = EXCLUDED.max_acca_size,
+                allowed_volatility = EXCLUDED.allowed_volatility;
+        `);
+
+        await client.query(`
+            INSERT INTO acca_rules (rule_name, rule_value)
+            VALUES
+                ('no_same_match', 'true'::JSONB),
+                ('no_conflicting_markets', 'true'::JSONB),
+                ('max_per_match', '1'::JSONB),
+                ('allow_high_volatility', 'false'::JSONB)
+            ON CONFLICT (rule_name) DO UPDATE SET
+                rule_value = EXCLUDED.rule_value;
+        `);
 
         await client.query('COMMIT');
         console.log('Database tables initialized.');
@@ -501,6 +509,7 @@ async function getAccuracyStats() {
 // ========== EXPORTS ==========
 module.exports = {
     pool, // for advanced use
+    ensureDbInitialized,
     getMatch,
     getTeamStats,
     getInjuries,
