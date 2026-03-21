@@ -1,7 +1,7 @@
 'use strict';
 
 const config = require('../config');
-const { APISportsClient } = require('../apiClients');
+const { APISportsClient, OddsAPIClient } = require('../apiClients');
 
 function normalizeMode(mode) {
     if (mode === 'test' || mode === 'live') return mode;
@@ -26,30 +26,52 @@ function buildTestData() {
     }));
 }
 
-async function buildLiveData() {
-    // Live mode: fetch upcoming fixtures from API-Sports.
-    // For now, we simulate predictions (markets/prediction), scoring happens in aiScoring.
-    const sport = (process.env.APISPORTS_SPORT || 'football').toLowerCase();
-    const leagueId = process.env.APISPORTS_LEAGUE_ID;
-    const season = process.env.APISPORTS_SEASON;
+async function fetchOddsData(sportKey) {
+    const client = new OddsAPIClient();
+    const data = await client.getOdds(sportKey);
+    if (!data) return [];
 
+    return data.map(event => ({
+        match_id: `odds-${event.id}`,
+        sport: sportKey,
+        home_team: event.home_team,
+        away_team: event.away_team,
+        market: '1X2', // Default mapping
+        prediction: 'home_win', // Placeholder
+        confidence: null,
+        volatility: null,
+        odds: null // Could parse from bookmakers if needed
+    }));
+}
+
+async function buildLiveData(options = {}) {
+    const requestedSport = options.sport || process.env.APISPORTS_SPORT || 'football';
+    const leagueId = options.leagueId || process.env.APISPORTS_LEAGUE_ID;
+    const season = options.season || process.env.APISPORTS_SEASON;
+
+    // 1. If it's MMA or NFL, use Odds-API
+    if (requestedSport === 'mma_mixed_martial_arts' || requestedSport === 'americanfootball_nfl') {
+        return await fetchOddsData(requestedSport);
+    }
+
+    // 2. Default to API-Sports (Football/Basketball)
     if (!leagueId || !season) {
-        throw new Error('Live mode requires APISPORTS_LEAGUE_ID and APISPORTS_SEASON environment variables');
+        console.warn(`[dataProvider] skipping ${requestedSport} sync: missing league/season`);
+        return [];
     }
 
     const client = new APISportsClient();
-    const data = await client.getFixtures(leagueId, season, {}, sport);
-
+    const data = await client.getFixtures(leagueId, season, {}, requestedSport);
     const fixtures = data?.response || [];
 
-    const out = fixtures.slice(0, 10).map((f) => {
+    const out = fixtures.slice(0, 20).map((f) => {
         const fixtureId = f?.fixture?.id;
         const home = f?.teams?.home?.name;
         const away = f?.teams?.away?.name;
 
         return {
             match_id: fixtureId ? String(fixtureId) : `live-${String(home)}-${String(away)}`,
-            sport,
+            sport: requestedSport,
             home_team: home || null,
             away_team: away || null,
             market: '1X2',
@@ -60,12 +82,11 @@ async function buildLiveData() {
         };
     });
 
-    console.log('[dataProvider] live fixtures fetched=%s returned=%s sport=%s league=%s season=%s', fixtures.length, out.length, sport, leagueId, season);
-
+    console.log('[dataProvider] live fixtures fetched=%s returned=%s sport=%s league=%s season=%s', fixtures.length, out.length, requestedSport, leagueId, season);
     return out;
 }
 
-async function getPredictionInputs() {
+async function getPredictionInputs(options = {}) {
     const mode = normalizeMode(config.DATA_MODE);
 
     if (mode === 'test') {
@@ -74,10 +95,11 @@ async function getPredictionInputs() {
         return { mode, predictions: data };
     }
 
-    const data = await buildLiveData();
+    const data = await buildLiveData(options);
     return { mode, predictions: data };
 }
 
 module.exports = {
-    getPredictionInputs
+    getPredictionInputs,
+    buildLiveData
 };

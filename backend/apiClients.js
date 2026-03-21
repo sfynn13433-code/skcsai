@@ -112,7 +112,7 @@ class OddsAPIClient {
         this.baseUrl = 'https://api.the-odds-api.com/v4';
     }
 
-    async getOdds(sportKey, regions = 'uk', markets = 'h2h') {
+    async getOdds(sportKey, regions = 'us', markets = 'h2h') {
         try {
             const response = await axios.get(`${this.baseUrl}/sports/${sportKey}/odds`, {
                 params: {

@@ -11,6 +11,14 @@ const { requireRole } = require('./utils/auth');
 const { upsertProfile } = require('./database');
 const { getPlan } = require('./config/subscriptionPlans');
 const { requireSupabaseUser } = require('./middleware/supabaseJwt');
+const cron = require('node-cron');
+const { syncAllSports } = require('./services/syncService');
+
+// Schedule master sync every 6 hours
+cron.schedule('0 */6 * * *', () => {
+    console.log('[cron] Triggering master sports sync...');
+    syncAllSports().catch(err => console.error('[cron] Sync failed:', err));
+});
 
 function warnEnv(name) {
     if (!process.env[name] || String(process.env[name]).trim().length === 0) {
