@@ -28,3 +28,8 @@ desktop.ini
 # SQLite databases
 *.sqlite
 *.sqlite3
+
+.firebase/
+firebase.json
+.firebaserc
+node_modules/
