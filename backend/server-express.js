@@ -49,17 +49,36 @@ app.use(helmet({
     crossOriginEmbedderPolicy: false 
 }));
 
+// ========== UPDATED CORS CONFIGURATION ==========
 app.use(cors({
-    origin: [
-        'http://localhost:3000',
-        'http://localhost:5500',
-        'http://127.0.0.1:5500',
-        'https://skcsai.vercel.app',
-        'https://www.skcsaisportspredictions.co.za',
-        'https://skcsaisportspredictions.co.za'
-    ],
-    credentials: true
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        const allowedOrigins = [
+            'http://localhost:3000',
+            'http://localhost:5500',
+            'http://127.0.0.1:5500',
+            'https://skcsai.vercel.app',
+            'https://skcsaisports.vercel.app',  // ← YOUR VERCEL FRONTEND
+            'https://www.skcsaisportspredictions.co.za',
+            'https://skcsaisportspredictions.co.za'
+        ];
+        
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            console.log('CORS blocked for origin:', origin);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'X-Requested-With'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
+
+// Handle preflight requests explicitly
+app.options('*', cors());
 
 app.use(morgan('combined'));
 
