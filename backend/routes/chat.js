@@ -2,65 +2,66 @@
 
 const express = require('express');
 const axios = require('axios');
-const { query } = require('../db');
+const { createClient } = require('@supabase/supabase-js');
 const { requireRole } = require('../utils/auth');
 
 const router = express.Router();
 
-const OPENAI_KEY = process.env.OPENAI_KEY;
+// Initialize Supabase using the backend environment variables
+const SUPABASE_URL = process.env.SUPABASE_URL;
+// the .env contained SUPABASE_ANON_KEY, so we use that or fallback if needed
+const SUPABASE_KEY = process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY; 
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 router.post('/', requireRole('user'), async (req, res) => {
+    // Note: The frontend sends { message: "..." }, not userMessage
+    const { message } = req.body;
+
+    if (!message) {
+        return res.status(400).json({ error: 'Message is required' });
+    }
+
     try {
-        const { message } = req.body;
-        if (!message) {
-            return res.status(400).json({ error: 'Message is required' });
-        }
+        // 1. Fetch the latest 5 records from predictions_final
+        const { data: predictions, error } = await supabase
+            .from('predictions_final')
+            .select('home_team, away_team, predicted_winner, confidence, match_date')
+            .order('match_date', { ascending: false })
+            .limit(5);
 
-        if (!OPENAI_KEY) {
-            console.warn('[chat] No OPENAI_KEY set, using fallback.');
-            return res.status(200).json({ 
-                response: "I'm currently in maintenance mode. Please try again later when my brain is connected!" 
-            });
-        }
+        if (error) throw error;
 
-        // 1. Fetch some context from predictions_final to help the AI
-        const dbRes = await query(
-            `select matches, total_confidence, risk_level from predictions_final order by created_at desc limit 10`
-        );
-        
-        const context = dbRes.rows.map(r => {
-            const m = r.matches[0];
-            return `${m.home_team} vs ${m.away_team} (${m.sport}): Prediction ${m.prediction}, Confidence ${r.total_confidence}%`;
-        }).join('\n');
+        // 2. Format the data into a "Context String"
+        const contextString = predictions.map(p => 
+            `${p.home_team} vs ${p.away_team} on ${p.match_date}: Predicted Winner is ${p.predicted_winner} (${p.confidence}% confidence).`
+        ).join('\n');
 
-        // 2. Call OpenAI
-        const completion = await axios.post('https://api.openai.com/v1/chat/completions', {
-            model: 'gpt-3.5-turbo',
+        // 3. Send to Ollama Chat API (using explicitly configured 127.0.0.1 and gemma3:4b)
+        const ollamaResponse = await axios.post('http://127.0.0.1:11434/api/chat', {
+            model: process.env.OLLAMA_MODEL || 'gemma3:4b',
             messages: [
                 { 
                     role: 'system', 
-                    content: `You are SKCS AI, a sports prediction expert. Use the following context to answer questions if relevant. Be concise, professional, and clear. 
-                    Context of latest predictions:\n${context}` 
+                    content: `You are SKCS AI. Use the following AFL prediction data to answer the user's question accurately. If the data isn't here, say you don't have that specific prediction yet.\n\nDATA:\n${contextString}` 
                 },
-                { role: 'user', content: message }
+                { 
+                    role: 'user', 
+                    content: message 
+                }
             ],
-            max_tokens: 300
-        }, {
-            headers: {
-                'Authorization': `Bearer ${OPENAI_KEY}`,
-                'Content-Type': 'application/json'
-            }
+            stream: false
         });
 
-        const aiResponse = completion.data.choices[0].message.content;
-
+        // 4. Return the formatted reply 
+        // Note: Modified slightly to match frontend's expectation of { response: "..." }
         res.status(200).json({
-            response: aiResponse
+            response: ollamaResponse.data.message.content
         });
 
-    } catch (err) {
-        console.error('[chat] error:', err.response?.data || err.message);
-        res.status(500).json({ error: 'Failed to get AI response' });
+    } catch (error) {
+        console.error('[chat] Migration Error:', error.response?.data || error.message);
+        res.status(500).json({ error: 'Chatbot is currently offline.' });
     }
 });
 
