@@ -806,7 +806,7 @@
             if (container) container.innerHTML = '<p style="text-align:center;color:#94a3b8;">Loading predictions...</p>';
 
             try {
-                const response = await fetch('/api/predictions?tier=' + userTier + '&sport=' + sport, {
+                const response = await fetch('http://localhost:3000/api/predictions?tier=' + userTier + '&sport=' + sport, {
                     headers: { 'x-api-key': 'skcs_user_12345' }
                 });
                 if (!response.ok) throw new Error('API Error');
@@ -845,7 +845,7 @@
             inputField.value = ""; 
             addMessage(msg, "user"); 
             try {
-                const response = await fetch('/api/chat', {
+                const response = await fetch('http://localhost:3000/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'x-api-key': 'skcs_user_12345' },
                     body: JSON.stringify({ message: msg })
