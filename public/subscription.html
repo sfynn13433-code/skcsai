@@ -489,7 +489,7 @@ async function subscribe(planId){
     const data = await res.json();
     if (data.success) {
         alert("Subscription successful! Plan: " + data.planId);
-        window.location.href = "/index.html";
+        window.location.href = "index.html";
     } else {
         alert(data.error || "Subscription failed. Please log in.");
     }
