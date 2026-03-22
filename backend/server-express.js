@@ -52,7 +52,7 @@ app.use(helmet({
             "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
             "font-src": ["'self'", "https://fonts.gstatic.com"],
             "img-src": ["'self'", "data:", "https:"],
-            "connect-src": ["'self'", "https://*.supabase.co", "wss://*.supabase.co", "http://localhost:3000", "ws://localhost:3000"]
+            "connect-src": ["'self'", "https://*.supabase.co", "wss://*.supabase.co", "https://skcsai.onrender.com", "https://www.skcsaisportspredictions.co.za", "https://skcsaisportspredictions.co.za", "http://localhost:3000", "ws://localhost:3000"]
         }
     },
     crossOriginEmbedderPolicy: false 
