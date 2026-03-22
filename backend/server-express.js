@@ -7,6 +7,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const morgan = require('morgan');
+const path = require('path');
 const { requireRole } = require('./utils/auth');
 const { upsertProfile } = require('./database');
 const { getPlan } = require('./config/subscriptionPlans');
@@ -41,7 +42,21 @@ const app = express();
 
 app.disable('x-powered-by');
 
-app.use(helmet());
+// Updated Helmet Configuration for CSP compatibility
+app.use(helmet({
+    contentSecurityPolicy: {
+        useDefaults: true,
+        directives: {
+            "default-src": ["'self'"],
+            "script-src": ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+            "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            "font-src": ["'self'", "https://fonts.gstatic.com"],
+            "img-src": ["'self'", "data:", "https:"],
+            "connect-src": ["'self'", "https://*.supabase.co", "wss://*.supabase.co"]
+        }
+    },
+    crossOriginEmbedderPolicy: false 
+}));
 
 app.use(cors({
     origin: '*'
@@ -60,10 +75,14 @@ app.use(limiter);
 
 app.use(express.json({ limit: '1mb', strict: true }));
 
-app.use((req, _res, next) => {
+app.use((req, res, next) => {
     console.log(`[ROUTE HIT] ${req.method} ${req.url}`);
+    res.setHeader('X-SKCS-Debug', 'Verified-Backend-v1');
     next();
 });
+
+// Serve static files from the public directory
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Subscription endpoint
 app.post('/api/subscribe', requireSupabaseUser, async (req, res) => {
@@ -112,8 +131,9 @@ app.post('/api/subscribe', requireSupabaseUser, async (req, res) => {
     }
 });
 
+// Serve index.html at the root
 app.get('/', (_req, res) => {
-    res.status(200).json({ status: 'SKCS backend running' });
+    res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 app.use('/api/predictions', predictionsRouter);
