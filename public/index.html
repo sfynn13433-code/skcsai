@@ -776,46 +776,23 @@
     </footer>
     <!-- Scroll to top button -->
     <button id="scrollTopBtn" title="Go to top">⬆️</button>
-   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/config.js"></script>
+
+    <!-- ========== REPLACED SCRIPT SECTION ========== -->
     <script>
-        // FIX 1: Re-added your database connection, but named it supabaseClient to prevent the crash
-        const SUPABASE_URL = "https://ghzjntdvaptuxfpvhybb.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdoempudGR2YXB0dXhmcHZoeWJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDAzNzIsImV4cCI6MjA4NzgxNjM3Mn0.nWxOY0lDIDDvexELk9De2aEfPfM5iJjoaW91tbL7YQk";
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // --- GLOBAL SETTINGS ---
+        let activeSport = 'football';
+        let matchesLoaded = false;
+        let skcsMatches = [];
 
-        let skcsMatches = []; let matchesLoaded = false; let userTier = "normal"; let user = null; let activeSport = 'football';
-
-        async function checkSession() { 
-            // FIX 2: Updated to use supabaseClient
-            const { data } = await supabaseClient.auth.getSession(); 
-            if (data?.session) { user = data.session.user; userTier = user.user_metadata?.tier || "normal"; }
-            updateAuthUI();
-        } 
-
-        function updateAuthUI() {
-            const authLink = document.getElementById('authLink');
-            if (user) {
-                authLink.textContent = 'Logout';
-                // FIX 3: Updated to use supabaseClient
-                authLink.onclick = async (e) => { e.preventDefault(); await supabaseClient.auth.signOut(); window.location.reload(); };
-            } else { authLink.textContent = 'Login'; authLink.href = 'login.html'; }
-        }
-
-       async function loadMatches() { 
-            // Calls the function with the current active sport
-            await fetchPredictions(activeSport); 
-        }
-
-        // ADDED: tier = 'normal' here to prevent the ReferenceError
+        // 1. DATA LOADER: This talks to your Render Backend
         async function fetchPredictions(sport, tier = 'normal') {
             const container = document.getElementById(sport + '-matches');
             if (container) {
-                container.innerHTML = '<p style="text-align:center;color:#94a3b8;">Loading predictions...</p>';
+                container.innerHTML = '<p style="text-align:center;color:#94a3b8;">Loading latest SKCS predictions...</p>';
             }
 
             try {
-                // FIXED: window.API_BASE_URL (from config.js) + tier and sport variables are now all defined
+                // This uses the URL from your config.js to find your Render server
                 const response = await fetch(`${window.API_BASE_URL}/api/predictions?tier=${tier}&sport=${sport}`, {
                     method: 'GET',
                     headers: { 
@@ -828,10 +805,9 @@
                 
                 const data = await response.json();
                 
-                // Render the predictions into the UI
+                // This sends the data to be drawn on the screen
                 renderSport(sport, sport + '-matches', data.predictions || []);
                 
-                // Update global data tracking
                 matchesLoaded = true;
                 if (data.predictions) {
                     skcsMatches = [...skcsMatches, ...data.predictions.flatMap(p => p.matches)];
@@ -840,25 +816,27 @@
             } catch (error) {
                 console.error("Fetch error:", error);
                 if (container) {
-                    container.innerHTML = '<p style="color:#f87171;text-align:center;">Connection Error: Ensure backend is running.</p>';
+                    container.innerHTML = '<p style="color:#f87171;text-align:center;">Connection Error: Ensure SKCS backend is running.</p>';
                 }
             }
         }
 
-        // **** UPDATED renderSport with safety checks ****
+        // 2. VISUAL CARDS: This draws the matches (Fixes the "undefined" error)
         function renderSport(sport, containerId, predictions) {
             const container = document.getElementById(containerId);
             if (!container) return;
             
-            container.innerHTML = predictions.length === 0 ? '<p style="text-align:center;color:#94a3b8;">No predictions available.</p>' : '';
+            container.innerHTML = predictions.length === 0 ? '<p style="text-align:center;color:#94a3b8;">No predictions available right now.</p>' : '';
             
             predictions.forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'prediction-card';
                 
+                // Check if this is an Accumulator (Multi-bet)
                 const isAcca = p.matches && p.matches.length > 1;
                 const accaBadge = isAcca ? '<span style="background:#f59e0b;color:white;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:bold;margin-bottom:8px;display:inline-block;">ACCUMULATOR</span>' : '';
                 
+                // This part pulls the real names (Arsenal vs Chelsea, etc.)
                 let matchesHtml = "";
                 if (p.matches && Array.isArray(p.matches)) {
                     matchesHtml = p.matches.map(m => {
@@ -868,6 +846,7 @@
                     }).join('<br>');
                 }
 
+                // Format the prediction (e.g., home_win becomes HOME WIN)
                 const rawTip = (p.matches && p.matches[0]) ? p.matches[0].prediction : 'N/A';
                 const displayTip = rawTip.replace(/_/g, ' ').toUpperCase();
                 
@@ -886,6 +865,7 @@
             });
         }
 
+        // 3. CHATBOT: This handles the SKCS Assistant
         async function sendMessage() { 
             const inputField = document.getElementById("chat-input"); 
             const msg = inputField.value.trim(); 
@@ -920,7 +900,9 @@
             box.scrollTop = box.scrollHeight; 
         } 
 
+        // 4. PAGE STARTUP: This runs when you open the site
         document.addEventListener('DOMContentLoaded', () => {
+            // Chat button setup
             const sendBtn = document.getElementById('chatbot-send-btn');
             if(sendBtn) sendBtn.addEventListener('click', sendMessage);
 
@@ -931,6 +913,7 @@
                 });
             }
 
+            // Tab switching setup (Football / Rugby)
             document.querySelectorAll('.tab-button').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const tid = this.getAttribute('data-tab');
@@ -943,15 +926,15 @@
                     if (activeContent) activeContent.classList.add('active');
                     this.classList.add('active');
                     
-                    // Fetches predictions for the new tab
                     fetchPredictions(activeSport);
                 });
             });
             
-            if (typeof checkSession === 'function') checkSession(); 
-            loadMatches();
+            // Start the engine
+            fetchPredictions('football');
         });
 
+        // Scroll to top button
         const scrollTopBtn = document.getElementById('scrollTopBtn');
         if (scrollTopBtn) {
             window.addEventListener('scroll', () => { 
