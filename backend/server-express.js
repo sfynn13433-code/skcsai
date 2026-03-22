@@ -43,13 +43,12 @@ const app = express();
 app.disable('x-powered-by');
 
 // Helmet with CSP DISABLED for debugging
-// TODO: Re-enable CSP with correct directives once site is functional
 app.use(helmet({
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false 
 }));
 
-// ========== UPDATED CORS CONFIGURATION ==========
+// ========== UPDATED CORS CONFIGURATION FOR VERCEL PREVIEWS ==========
 app.use(cors({
     origin: function (origin, callback) {
         // Allow requests with no origin (like mobile apps or curl requests)
@@ -60,12 +59,16 @@ app.use(cors({
             'http://localhost:5500',
             'http://127.0.0.1:5500',
             'https://skcsai.vercel.app',
-            'https://skcsaisports.vercel.app',  // ← YOUR VERCEL FRONTEND
+            'https://skcsaisports.vercel.app',
             'https://www.skcsaisportspredictions.co.za',
             'https://skcsaisportspredictions.co.za'
         ];
         
-        if (allowedOrigins.indexOf(origin) !== -1) {
+        // Check if origin is in allowed list OR is a Vercel generated preview URL
+        const isAllowed = allowedOrigins.indexOf(origin) !== -1;
+        const isVercelPreview = origin.endsWith('.vercel.app') && origin.includes('stephens-projects');
+
+        if (isAllowed || isVercelPreview) {
             callback(null, true);
         } else {
             console.log('CORS blocked for origin:', origin);
@@ -99,9 +102,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// Serve static files from the public directory
-// NOTE: Keep this enabled while the custom domain points to Render.
-// When Vercel is live and DNS is moved, this line can be removed.
+// Serve static files
 app.use(express.static(path.join(__dirname, '../public')));
 
 // Subscription endpoint
@@ -182,7 +183,6 @@ app.get('/api/health-check', async (req, res) => {
         }
     };
     
-    // Log the check to the terminal
     console.log('[HEALTH CHECK] System status requested.');
     res.status(200).json(healthStatus);
 });
