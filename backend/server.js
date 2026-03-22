@@ -31,6 +31,13 @@ const {
     getLatestPredictions
 } = require('./database'); // adjust path if needed
 
+// ========== CORS ALLOWED ORIGINS ==========
+const allowedOrigins = [
+    'https://skcsaisports.vercel.app',
+    'https://www.skcsaisportspredictions.co.za', // Your custom domain
+    'http://localhost:3000'
+];
+
 // ========== Scheduled job to generate predictions daily ==========
 cron.schedule('0 2 * * *', async () => { // runs at 2:00 AM every day
     console.log('Running daily prediction generation...');
@@ -57,12 +64,36 @@ cron.schedule('0 2 * * *', async () => { // runs at 2:00 AM every day
     }
 });
 
+// ========== Helper: Set CORS headers based on request origin ==========
+function setCorsHeaders(req, res) {
+    const origin = req.headers.origin;
+    // Allow requests with no origin (like mobile apps or curl) or if origin is in allowed list
+    if (!origin || allowedOrigins.includes(origin)) {
+        if (origin) {
+            res.setHeader('Access-Control-Allow-Origin', origin);
+        } else {
+            // For requests without origin, you might still want to allow
+            res.setHeader('Access-Control-Allow-Origin', '*');
+        }
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key');
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+        return true;
+    }
+    return false; // origin not allowed
+}
+
 // ========== Create HTTP server ==========
 const server = http.createServer((req, res) => {
-    // Set CORS headers for ALL requests
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    // ===== CORS Handling =====
+    // Check if origin is allowed and set headers
+    const isOriginAllowed = setCorsHeaders(req, res);
+    if (!isOriginAllowed) {
+        // Origin not allowed: return 403 Forbidden
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'CORS policy: This origin is not allowed.' }));
+        return;
+    }
 
     // Handle preflight OPTIONS request
     if (req.method === 'OPTIONS') {
