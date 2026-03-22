@@ -537,7 +537,7 @@
       <div id="chat-messages"></div> 
       <div class="chat-input"> 
         <input type="text" id="chat-input" placeholder="Ask about today’s matches..." /> 
-        <button onclick="sendMessage()">Send</button> 
+        <button id="chatbot-send-btn">Send</button> 
       </div> 
     </div> 
 
@@ -862,6 +862,16 @@
         } 
 
         document.addEventListener('DOMContentLoaded', () => {
+            const sendBtn = document.getElementById('chatbot-send-btn');
+            if(sendBtn) sendBtn.addEventListener('click', sendMessage);
+
+            const chatInput = document.getElementById('chat-input');
+            if (chatInput) {
+                chatInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') sendMessage();
+                });
+            }
+
             document.querySelectorAll('.tab-button').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const tid = this.getAttribute('data-tab');
