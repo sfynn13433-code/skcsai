@@ -790,7 +790,7 @@
     async function fetchPredictions(sport, tier = 'normal') {
         const container = document.getElementById(sport + '-matches');
         if (container) {
-            container.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;">Updating SKCS Predictions...</p>';
+            container.innerHTML = '<p style="text-align:center;color:#4a5568;padding:20px;">Updating SKCS Predictions...</p>';
         }
 
         try {
@@ -829,21 +829,21 @@
         } catch (error) {
             console.error("SKCS Fetch error:", error);
             if (container) {
-                container.innerHTML = '<p style="color:#f87171;text-align:center;padding:20px;">Connection Error: Check if skcsai.onrender.com is live.</p>';
+                container.innerHTML = '<p style="color:#e53e3e;text-align:center;padding:20px;">Connection Error: Check if skcsai.onrender.com is live.</p>';
             }
         }
     }
 
     /**
      * Render Sport
-     * Optimized to find team names in deep JSON structures
+     * Optimized to find team names in deep JSON structures and ensure text is visible
      */
     function renderSport(sport, containerId, predictions) {
         const container = document.getElementById(containerId);
         if (!container) return;
         
         container.innerHTML = predictions.length === 0 ? 
-            `<p style="text-align:center;color:#94a3b8;padding:20px;">No new ${sport} predictions available.</p>` : '';
+            `<p style="text-align:center;color:#4a5568;padding:20px;">No new ${sport} predictions available.</p>` : '';
         
         predictions.forEach(p => {
             const card = document.createElement('div');
@@ -858,12 +858,10 @@
                 matchesHtml = p.matches.map(m => {
                     const findTeam = (obj, side) => {
                         if (!obj) return null;
-                        // Possible keys for home and away
                         const keys = side === 'home' 
                             ? ['home_team', 'home', 'homeTeam', 'player1'] 
                             : ['away_team', 'away', 'awayTeam', 'player2'];
                         
-                        // Check direct object, then metadata, then metadata.ai
                         for (let k of keys) if (obj[k]) return obj[k];
                         if (obj.metadata) {
                             for (let k of keys) if (obj.metadata[k]) return obj.metadata[k];
@@ -876,7 +874,8 @@
 
                     const h = findTeam(m, 'home') || "Team A";
                     const a = findTeam(m, 'away') || "Team B";
-                    return `<div style="margin-bottom:4px;">${h} <span style="color:#64748b;font-size:0.8rem;">vs</span> ${a}</div>`;
+                    // Using dark colors for better visibility on white backgrounds
+                    return `<div style="margin-bottom:4px; color:#1a202c;">${h} <span style="color:#718096;font-size:0.8rem;">vs</span> ${a}</div>`;
                 }).join('');
             }
 
@@ -887,12 +886,12 @@
             card.innerHTML = `
                 ${accaBadge}
                 <div class="match-info">
-                    <div class="teams" style="font-weight:bold; color:#fff; font-size:1.1rem; line-height:1.4;">${matchesHtml}</div>
-                    <div class="match-date" style="color:#94a3b8; font-size:0.75rem; margin-top:8px; letter-spacing:1px;">${sport.toUpperCase()}</div>
+                    <div class="teams" style="font-weight:bold; color:#1a202c; font-size:1.1rem; line-height:1.4;">${matchesHtml}</div>
+                    <div class="match-date" style="color:#4a5568; font-size:0.75rem; margin-top:8px; letter-spacing:1px;">${sport.toUpperCase()}</div>
                 </div>
-                <div class="prediction-details" style="margin-top:12px; border-top:1px solid #334155; padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
-                    <div class="prediction" style="color:#22c55e; font-weight:bold;">${displayTip}</div>
-                    <div class="confidence" style="color:#94a3b8; font-size:0.85rem;">${p.total_confidence || 0}% Confidence</div>
+                <div class="prediction-details" style="margin-top:12px; border-top:1px solid #e2e8f0; padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <div class="prediction" style="color:#059669; font-weight:bold;">${displayTip}</div>
+                    <div class="confidence" style="color:#4a5568; font-size:0.85rem;">${p.total_confidence || 0}% Confidence</div>
                 </div>`;
                 
             container.appendChild(card);
@@ -924,13 +923,13 @@
         if (!box) return;
         const div = document.createElement("div"); 
         div.className = `chat-bubble ${type}`; 
+        div.style.color = type === 'user' ? '#1a202c' : '#2d3748';
         div.innerText = text; 
         box.appendChild(div); 
         box.scrollTop = box.scrollHeight; 
     } 
 
     document.addEventListener('DOMContentLoaded', () => {
-        // Chat events
         const sendBtn = document.getElementById('chatbot-send-btn');
         if(sendBtn) sendBtn.addEventListener('click', sendMessage);
         const chatInput = document.getElementById('chat-input');
@@ -938,7 +937,6 @@
             chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
         }
 
-        // Tab events
         document.querySelectorAll('.tab-button').forEach(btn => {
             btn.addEventListener('click', function() {
                 const tid = this.getAttribute('data-tab');
@@ -952,7 +950,6 @@
             });
         });
         
-        // Initial load
         fetchPredictions('football');
     });
 </script>
