@@ -7,38 +7,32 @@ const { requireRole } = require('../utils/auth');
 
 const router = express.Router();
 
-function normalizeTier(tier) {
-    if (tier === 'normal' || tier === 'deep') return tier;
-    return null;
-}
-
+// GET /api/predictions
+// Simplified: always returns data, default tier = 'normal'
 router.get('/', requireRole('user'), async (req, res) => {
     try {
-        const tier = normalizeTier(req.query.tier);
-        const sport = req.query.sport; // Optional sport filter
+        // Use 'normal' as default if tier is missing
+        const tier = req.query.tier || 'normal';
+        const sport = req.query.sport;
 
-        if (!tier) {
-            res.status(400).json({ error: 'tier must be normal or deep' });
-            return;
-        }
+        console.log(`[PREDICTIONS] Request for Tier: ${tier}, Sport: ${sport || 'all'}`);
 
         let queryStr = `
-            select id, tier, type, matches, total_confidence, risk_level, created_at
-            from predictions_final
-            where tier = $1
+            SELECT id, tier, type, matches, total_confidence, risk_level, created_at
+            FROM predictions_final
+            WHERE tier = $1
         `;
         const queryParams = [tier];
 
         if (sport) {
-            // Check if any match in the 'matches' JSONB array has the requested sport
-            queryStr += ` and exists (
-                select 1 from jsonb_array_elements(matches) as m 
-                where lower(m->>'sport') = lower($2)
+            queryStr += ` AND EXISTS (
+                SELECT 1 FROM jsonb_array_elements(matches) AS m 
+                WHERE LOWER(m->>'sport') = LOWER($2)
             )`;
             queryParams.push(sport);
         }
 
-        queryStr += ` order by type asc, total_confidence desc, created_at desc;`;
+        queryStr += ` ORDER BY created_at DESC LIMIT 20;`;
 
         const dbRes = await query(queryStr, queryParams);
 
@@ -49,7 +43,7 @@ router.get('/', requireRole('user'), async (req, res) => {
             predictions: dbRes.rows
         });
     } catch (err) {
-        console.error('[predictions] error:', err);
+        console.error('[predictions] Route Error:', err);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
