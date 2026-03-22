@@ -802,48 +802,81 @@
             } else { authLink.textContent = 'Login'; authLink.href = 'login.html'; }
         }
 
-        async function loadMatches() { await fetchPredictions(activeSport); }
+       async function loadMatches() { 
+            // Calls the function with the current active sport
+            await fetchPredictions(activeSport); 
+        }
 
-        async function fetchPredictions(sport) {
+        // ADDED: tier = 'normal' here to prevent the ReferenceError
+        async function fetchPredictions(sport, tier = 'normal') {
             const container = document.getElementById(sport + '-matches');
-            if (container) container.innerHTML = '<p style="text-align:center;color:#94a3b8;">Loading predictions...</p>';
+            if (container) {
+                container.innerHTML = '<p style="text-align:center;color:#94a3b8;">Loading predictions...</p>';
+            }
 
             try {
-                // FIX 4: Hardcoded the local server URL to ensure the connection works
-                // RIGHT: This uses the Render URL automatically
-const response = await fetch(`${window.API_BASE_URL}/api/predictions?tier=${tier}&sport=${sport}`, {
-    method: 'GET',
-    headers: { 
-        'x-api-key': 'skcs_user_12345',
-        'Content-Type': 'application/json'
-    }
-});
+                // FIXED: window.API_BASE_URL (from config.js) + tier and sport variables are now all defined
+                const response = await fetch(`${window.API_BASE_URL}/api/predictions?tier=${tier}&sport=${sport}`, {
+                    method: 'GET',
+                    headers: { 
+                        'x-api-key': 'skcs_user_12345',
+                        'Content-Type': 'application/json'
+                    }
+                });
 
                 if (!response.ok) throw new Error('API Error');
+                
                 const data = await response.json();
+                
+                // Render the predictions into the UI
                 renderSport(sport, sport + '-matches', data.predictions || []);
+                
+                // Update global data tracking
                 matchesLoaded = true;
-                skcsMatches = [...skcsMatches, ...(data.predictions || []).flatMap(p => p.matches)];
+                if (data.predictions) {
+                    skcsMatches = [...skcsMatches, ...data.predictions.flatMap(p => p.matches)];
+                }
+
             } catch (error) {
                 console.error("Fetch error:", error);
-                if (container) container.innerHTML = '<p style="color:#f87171;text-align:center;">Connection Error: Ensure backend is running.</p>';
+                if (container) {
+                    container.innerHTML = '<p style="color:#f87171;text-align:center;">Connection Error: Ensure backend is running.</p>';
+                }
             }
         }
 
         function renderSport(sport, containerId, predictions) {
             const container = document.getElementById(containerId);
             if (!container) return;
+            
             container.innerHTML = predictions.length === 0 ? '<p style="text-align:center;color:#94a3b8;">No predictions available.</p>' : '';
             
             predictions.forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'prediction-card';
-                const isAcca = p.matches.length > 1;
-                const accaBadge = isAcca ? '<span style="background:#f59e0b;color:white;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:bold;margin-bottom:8px;display:inline-block;">ACCUMULATOR</span>' : '';
-                let matchesHtml = isAcca ? p.matches.map(m => m.home_team + ' vs ' + m.away_team).join('<br>') : p.matches[0].home_team + ' vs ' + p.matches[0].away_team;
                 
-                card.innerHTML = accaBadge + '<div class="match-info"><div class="teams">' + matchesHtml + '</div><div class="match-date">' + sport.toUpperCase() + '</div></div>' +
-                    '<div class="prediction-details"><div class="prediction">' + p.matches[0].prediction.replace('_',' ') + '</div><div class="confidence">' + p.total_confidence + '% Confidence</div></div>';
+                const isAcca = p.matches && p.matches.length > 1;
+                const accaBadge = isAcca ? '<span style="background:#f59e0b;color:white;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:bold;margin-bottom:8px;display:inline-block;">ACCUMULATOR</span>' : '';
+                
+                let matchesHtml = "";
+                if (p.matches && p.matches.length > 0) {
+                    matchesHtml = isAcca 
+                        ? p.matches.map(m => `${m.home_team} vs ${m.away_team}`).join('<br>') 
+                        : `${p.matches[0].home_team} vs ${p.matches[0].away_team}`;
+                }
+                
+                const predictionText = (p.matches && p.matches[0]) ? p.matches[0].prediction.replace('_',' ') : 'N/A';
+                
+                card.innerHTML = `
+                    ${accaBadge}
+                    <div class="match-info">
+                        <div class="teams">${matchesHtml}</div>
+                        <div class="match-date">${sport.toUpperCase()}</div>
+                    </div>
+                    <div class="prediction-details">
+                        <div class="prediction">${predictionText}</div>
+                        <div class="confidence">${p.total_confidence || 0}% Confidence</div>
+                    </div>`;
                 container.appendChild(card);
             });
         }
@@ -852,24 +885,35 @@ const response = await fetch(`${window.API_BASE_URL}/api/predictions?tier=${tier
             const inputField = document.getElementById("chat-input"); 
             const msg = inputField.value.trim(); 
             if (!msg) return;
+            
             inputField.value = ""; 
             addMessage(msg, "user"); 
+
             try {
-                // FIX 5: Hardcoded the local server URL to ensure the connection works
+                // FIXED: Uses the production Render URL for chat
                 const response = await fetch(`${window.API_BASE_URL}/api/chat`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'x-api-key': 'skcs_user_12345' },
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'x-api-key': 'skcs_user_12345' 
+                    },
                     body: JSON.stringify({ message: msg })
                 });
+                
                 const data = await response.json();
                 addMessage(data.response || "No response", "bot");
-            } catch (error) { addMessage(" Connection Error.", "error"); }
+            } catch (error) { 
+                addMessage("Connection Error: Unable to reach the SKCS Brain.", "error"); 
+            }
         } 
         
         function addMessage(text, type = "bot") { 
             const box = document.getElementById("chat-messages"); 
-            const div = document.createElement("div"); div.className = type; div.innerText = text; 
-            box.appendChild(div); box.scrollTop = box.scrollHeight; 
+            const div = document.createElement("div"); 
+            div.className = `chat-bubble ${type}`; 
+            div.innerText = text; 
+            box.appendChild(div); 
+            box.scrollTop = box.scrollHeight; 
         } 
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -887,19 +931,30 @@ const response = await fetch(`${window.API_BASE_URL}/api/predictions?tier=${tier
                 btn.addEventListener('click', function() {
                     const tid = this.getAttribute('data-tab');
                     activeSport = tid;
+                    
                     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
                     document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-                    document.getElementById(tid).classList.add('active');
+                    
+                    const activeContent = document.getElementById(tid);
+                    if (activeContent) activeContent.classList.add('active');
                     this.classList.add('active');
+                    
+                    // Fetches predictions for the new tab
                     fetchPredictions(activeSport);
                 });
             });
-            checkSession(); loadMatches();
+            
+            if (typeof checkSession === 'function') checkSession(); 
+            loadMatches();
         });
 
         const scrollTopBtn = document.getElementById('scrollTopBtn');
-        window.addEventListener('scroll', () => { scrollTopBtn.classList.toggle('show', window.scrollY > 300); });
-        scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        if (scrollTopBtn) {
+            window.addEventListener('scroll', () => { 
+                scrollTopBtn.classList.toggle('show', window.scrollY > 300); 
+            });
+            scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        }
     </script>
 </body>
 </html>
