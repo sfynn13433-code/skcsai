@@ -42,19 +42,10 @@ const app = express();
 
 app.disable('x-powered-by');
 
-// Updated Helmet Configuration for CSP compatibility
+// Helmet with CSP DISABLED for debugging
+// TODO: Re-enable CSP with correct directives once site is functional
 app.use(helmet({
-    contentSecurityPolicy: {
-        useDefaults: true,
-        directives: {
-            "default-src": ["'self'"],
-            "script-src": ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-            "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-            "font-src": ["'self'", "https://fonts.gstatic.com"],
-            "img-src": ["'self'", "data:", "https:"],
-            "connect-src": ["'self'", "https://*.supabase.co", "wss://*.supabase.co", "https://skcsai.onrender.com", "https://www.skcsaisportspredictions.co.za", "https://skcsaisportspredictions.co.za", "http://localhost:3000", "ws://localhost:3000"]
-        }
-    },
+    contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false 
 }));
 
