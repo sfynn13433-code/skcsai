@@ -779,21 +779,24 @@
 
     <!-- ========== REPLACED SCRIPT SECTION ========== -->
     <script>
-        // --- GLOBAL SETTINGS ---
-        let activeSport = 'football';
-        let matchesLoaded = false;
-        let skcsMatches = [];
+        /**
+         * SKCS FAIL-SAFE CONFIGURATION
+         * If window.API_BASE_URL is missing, we hardcode it here to prevent the /undefined/ 404 error.
+         */
+        const SKCS_BACKEND = window.API_BASE_URL || "https://skcsai.onrender.com";
 
-        // 1. DATA LOADER: This talks to your Render Backend
+        let activeSport = 'football';
+
+        // 1. THE DATA LOADER: This fetches the matches from Render
         async function fetchPredictions(sport, tier = 'normal') {
             const container = document.getElementById(sport + '-matches');
             if (container) {
-                container.innerHTML = '<p style="text-align:center;color:#94a3b8;">Loading latest SKCS predictions...</p>';
+                container.innerHTML = '<p style="text-align:center;color:#94a3b8;">Updating SKCS Predictions...</p>';
             }
 
             try {
-                // This uses the URL from your config.js to find your Render server
-                const response = await fetch(`${window.API_BASE_URL}/api/predictions?tier=${tier}&sport=${sport}`, {
+                // We use SKCS_BACKEND instead of window.API_BASE_URL to prevent "undefined"
+                const response = await fetch(`${SKCS_BACKEND}/api/predictions?tier=${tier}&sport=${sport}`, {
                     method: 'GET',
                     headers: { 
                         'x-api-key': 'skcs_user_12345',
@@ -801,52 +804,46 @@
                     }
                 });
 
-                if (!response.ok) throw new Error('API Error');
+                if (!response.ok) throw new Error('API Response Error');
                 
                 const data = await response.json();
                 
-                // This sends the data to be drawn on the screen
+                // This draws the matches on your screen
                 renderSport(sport, sport + '-matches', data.predictions || []);
-                
-                matchesLoaded = true;
-                if (data.predictions) {
-                    skcsMatches = [...skcsMatches, ...data.predictions.flatMap(p => p.matches)];
-                }
 
             } catch (error) {
-                console.error("Fetch error:", error);
+                console.error("SKCS Fetch error:", error);
                 if (container) {
-                    container.innerHTML = '<p style="color:#f87171;text-align:center;">Connection Error: Ensure SKCS backend is running.</p>';
+                    container.innerHTML = '<p style="color:#f87171;text-align:center;">Connection Error: Check if skcsai.onrender.com is live.</p>';
                 }
             }
         }
 
-        // 2. VISUAL CARDS: This draws the matches (Fixes the "undefined" error)
+        // 2. THE VISUAL CARDS: This fixes the "undefined" team names
         function renderSport(sport, containerId, predictions) {
             const container = document.getElementById(containerId);
             if (!container) return;
             
-            container.innerHTML = predictions.length === 0 ? '<p style="text-align:center;color:#94a3b8;">No predictions available right now.</p>' : '';
+            container.innerHTML = predictions.length === 0 ? '<p style="text-align:center;color:#94a3b8;">No new predictions available.</p>' : '';
             
             predictions.forEach(p => {
                 const card = document.createElement('div');
                 card.className = 'prediction-card';
                 
-                // Check if this is an Accumulator (Multi-bet)
                 const isAcca = p.matches && p.matches.length > 1;
                 const accaBadge = isAcca ? '<span style="background:#f59e0b;color:white;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:bold;margin-bottom:8px;display:inline-block;">ACCUMULATOR</span>' : '';
                 
-                // This part pulls the real names (Arsenal vs Chelsea, etc.)
+                // MAP REAL NAMES: Looks for home_team and away_team specifically
                 let matchesHtml = "";
                 if (p.matches && Array.isArray(p.matches)) {
                     matchesHtml = p.matches.map(m => {
-                        const home = m.home_team || m.home || "Team A";
-                        const away = m.away_team || m.away || "Team B";
-                        return `${home} vs ${away}`;
+                        const h = m.home_team || m.home || "Team A";
+                        const a = m.away_team || m.away || "Team B";
+                        return `${h} vs ${a}`;
                     }).join('<br>');
                 }
 
-                // Format the prediction (e.g., home_win becomes HOME WIN)
+                // Format the tip (e.g. home_win -> HOME WIN)
                 const rawTip = (p.matches && p.matches[0]) ? p.matches[0].prediction : 'N/A';
                 const displayTip = rawTip.replace(/_/g, ' ').toUpperCase();
                 
@@ -854,7 +851,7 @@
                     ${accaBadge}
                     <div class="match-info">
                         <div class="teams" style="font-weight:bold; color:#fff;">${matchesHtml}</div>
-                        <div class="match-date" style="color:#94a3b8; font-size:0.8rem;">${sport.toUpperCase()}</div>
+                        <div class="match-date" style="color:#94a3b8; font-size:0.8rem; margin-top:5px;">${sport.toUpperCase()}</div>
                     </div>
                     <div class="prediction-details" style="margin-top:10px; border-top:1px solid #334155; padding-top:10px;">
                         <div class="prediction" style="color:#22c55e; font-weight:bold;">${displayTip}</div>
@@ -865,7 +862,7 @@
             });
         }
 
-        // 3. CHATBOT: This handles the SKCS Assistant
+        // 3. THE CHATBOT: Works with the fixed SKCS_BACKEND
         async function sendMessage() { 
             const inputField = document.getElementById("chat-input"); 
             const msg = inputField.value.trim(); 
@@ -875,7 +872,7 @@
             addMessage(msg, "user"); 
 
             try {
-                const response = await fetch(`${window.API_BASE_URL}/api/chat`, {
+                const response = await fetch(`${SKCS_BACKEND}/api/chat`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json', 
@@ -893,6 +890,7 @@
         
         function addMessage(text, type = "bot") { 
             const box = document.getElementById("chat-messages"); 
+            if (!box) return;
             const div = document.createElement("div"); 
             div.className = `chat-bubble ${type}`; 
             div.innerText = text; 
@@ -900,48 +898,32 @@
             box.scrollTop = box.scrollHeight; 
         } 
 
-        // 4. PAGE STARTUP: This runs when you open the site
+        // 4. THE STARTUP: Runs when page loads
         document.addEventListener('DOMContentLoaded', () => {
-            // Chat button setup
             const sendBtn = document.getElementById('chatbot-send-btn');
             if(sendBtn) sendBtn.addEventListener('click', sendMessage);
 
             const chatInput = document.getElementById('chat-input');
             if (chatInput) {
-                chatInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') sendMessage();
-                });
+                chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
             }
 
-            // Tab switching setup (Football / Rugby)
             document.querySelectorAll('.tab-button').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const tid = this.getAttribute('data-tab');
                     activeSport = tid;
-                    
                     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
                     document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-                    
                     const activeContent = document.getElementById(tid);
                     if (activeContent) activeContent.classList.add('active');
                     this.classList.add('active');
-                    
                     fetchPredictions(activeSport);
                 });
             });
             
-            // Start the engine
+            // Kick off the first load
             fetchPredictions('football');
         });
-
-        // Scroll to top button
-        const scrollTopBtn = document.getElementById('scrollTopBtn');
-        if (scrollTopBtn) {
-            window.addEventListener('scroll', () => { 
-                scrollTopBtn.classList.toggle('show', window.scrollY > 300); 
-            });
-            scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-        }
     </script>
 </body>
 </html>
