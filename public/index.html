@@ -810,9 +810,15 @@
 
             try {
                 // FIX 4: Hardcoded the local server URL to ensure the connection works
-                const response = await fetch('http://localhost:3000/api/predictions?tier=' + userTier + '&sport=' + sport, {
-                    headers: { 'x-api-key': 'skcs_user_12345' }
-                });
+                // RIGHT: This uses the Render URL automatically
+const response = await fetch(`${window.API_BASE_URL}/api/predictions?tier=${tier}&sport=${sport}`, {
+    method: 'GET',
+    headers: { 
+        'x-api-key': 'skcs_user_12345',
+        'Content-Type': 'application/json'
+    }
+});
+
                 if (!response.ok) throw new Error('API Error');
                 const data = await response.json();
                 renderSport(sport, sport + '-matches', data.predictions || []);
@@ -850,7 +856,7 @@
             addMessage(msg, "user"); 
             try {
                 // FIX 5: Hardcoded the local server URL to ensure the connection works
-                const response = await fetch('http://localhost:3000/api/chat', {
+                const response = await fetch(`${window.API_BASE_URL}/api/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'x-api-key': 'skcs_user_12345' },
                     body: JSON.stringify({ message: msg })
