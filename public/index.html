@@ -778,6 +778,7 @@
     <button id="scrollTopBtn" title="Go to top">⬆️</button>
     <!-- ==================== MASTER SCRIPT ==================== -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
     <script>
         const SUPABASE_URL = "https://ghzjntdvaptuxfpvhybb.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdoempudGR2YXB0dXhmcHZoeWJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDAzNzIsImV4cCI6MjA4NzgxNjM3Mn0.nWxOY0lDIDDvexELk9De2aEfPfM5iJjoaW91tbL7YQk";
@@ -806,7 +807,7 @@
             if (container) container.innerHTML = '<p style="text-align:center;color:#94a3b8;">Loading predictions...</p>';
 
             try {
-                const response = await fetch('/api/predictions?tier=' + userTier + '&sport=' + sport, {
+                const response = await fetch(window.API_BASE_URL + '/api/predictions?tier=' + userTier + '&sport=' + sport, {
                     headers: { 'x-api-key': 'skcs_user_12345' }
                 });
                 if (!response.ok) throw new Error('API Error');
@@ -845,7 +846,7 @@
             inputField.value = ""; 
             addMessage(msg, "user"); 
             try {
-                const response = await fetch('/api/chat', {
+                const response = await fetch(window.API_BASE_URL + '/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'x-api-key': 'skcs_user_12345' },
                     body: JSON.stringify({ message: msg })

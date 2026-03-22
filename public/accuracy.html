@@ -180,6 +180,7 @@
         <p>SKCS AI Sports Predictions – Transparency you can trust</p>
     </footer>
 
+    <script src="js/config.js"></script>
     <script>
         // ========== SAMPLE DATA GENERATOR ==========
         const allSports = [
@@ -207,8 +208,7 @@
         async function loadAccuracyStats() {
             let data;
             try {
-                const API_BASE_URL = 'http://localhost:3000'; // Replace when deploying
-                const res = await fetch(`${API_BASE_URL}/api/accuracy`);
+                const res = await fetch(`${window.API_BASE_URL}/api/accuracy`);
                 if (!res.ok) throw new Error('Failed to fetch');
                 data = await res.json();
             } catch (error) {

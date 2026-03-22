@@ -59,7 +59,15 @@ app.use(helmet({
 }));
 
 app.use(cors({
-    origin: '*'
+    origin: [
+        'http://localhost:3000',
+        'http://localhost:5500',
+        'http://127.0.0.1:5500',
+        'https://skcsai.vercel.app',
+        'https://www.skcsaisportspredictions.co.za',
+        'https://skcsaisportspredictions.co.za'
+    ],
+    credentials: true
 }));
 
 app.use(morgan('combined'));
@@ -81,8 +89,8 @@ app.use((req, res, next) => {
     next();
 });
 
-// Serve static files from the public directory
-app.use(express.static(path.join(__dirname, '../public')));
+// Static file serving removed – frontend is now hosted on Vercel
+// app.use(express.static(path.join(__dirname, '../public')));
 
 // Subscription endpoint
 app.post('/api/subscribe', requireSupabaseUser, async (req, res) => {
