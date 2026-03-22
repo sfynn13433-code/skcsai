@@ -89,8 +89,10 @@ app.use((req, res, next) => {
     next();
 });
 
-// Static file serving removed – frontend is now hosted on Vercel
-// app.use(express.static(path.join(__dirname, '../public')));
+// Serve static files from the public directory
+// NOTE: Keep this enabled while the custom domain points to Render.
+// When Vercel is live and DNS is moved, this line can be removed.
+app.use(express.static(path.join(__dirname, '../public')));
 
 // Subscription endpoint
 app.post('/api/subscribe', requireSupabaseUser, async (req, res) => {
