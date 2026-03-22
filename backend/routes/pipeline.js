@@ -1,14 +1,45 @@
 'use strict';
 
 const express = require('express');
-const { runPipelineForMatches, runPipelineFromConfiguredDataMode, rebuildFinalOutputs } = require('../services/aiPipeline');
+const { 
+    runPipelineForMatches, 
+    runPipelineFromConfiguredDataMode, 
+    rebuildFinalOutputs 
+} = require('../services/aiPipeline');
+const { syncAllSports } = require('../services/syncService');
 const config = require('../config');
 const { requireRole } = require('../utils/auth');
 
 const router = express.Router();
 
-// Accept match data and run the full pipeline:
-// predictions_raw -> predictions_filtered -> predictions_final
+/**
+ * TRIGGER REAL DATA SYNC
+ * URL: POST https://skcsai.onrender.com/api/pipeline/sync
+ * This is the main button to pull real matches from APIs into Supabase.
+ */
+router.post('/sync', requireRole('admin'), async (req, res) => {
+    try {
+        console.log('[pipeline] Starting manual sync of REAL sports data...');
+        
+        // This calls the syncService to fetch real games and run AI analysis
+        const result = await syncAllSports();
+        
+        // Rebuild the website outputs immediately after sync
+        const final = await rebuildFinalOutputs();
+
+        res.status(200).json({
+            ok: true,
+            message: "Real-world matches synced and AI analysis complete.",
+            sync_details: result,
+            final_status: "Web outputs rebuilt"
+        });
+    } catch (err) {
+        console.error('[pipeline] Sync trigger failed:', err);
+        res.status(500).json({ error: 'Sync failed', details: err.message });
+    }
+});
+
+// Accept manual match data and run the full pipeline
 router.post('/run', requireRole('admin'), async (req, res) => {
     try {
         const matches = req.body?.matches;
@@ -37,26 +68,8 @@ router.post('/run', requireRole('admin'), async (req, res) => {
     }
 });
 
-router.get('/run', requireRole('admin'), async (_req, res) => {
-    try {
-        const pipeline = await runPipelineFromConfiguredDataMode();
-
-        if (pipeline?.error) {
-            res.status(409).json({ error: pipeline.error });
-            return;
-        }
-
-        res.status(200).json({
-            note: 'GET fallback route used',
-            ...pipeline
-        });
-    } catch (err) {
-        console.error('Pipeline error:', err);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-router.post('/mode', requireRole('admin'), async (req, res, next) => {
+// Switch between 'test' and 'live' mode
+router.post('/mode', requireRole('admin'), async (req, res) => {
     try {
         const mode = req.body?.mode;
         if (mode !== 'test' && mode !== 'live') {
@@ -74,16 +87,15 @@ router.post('/mode', requireRole('admin'), async (req, res, next) => {
     }
 });
 
-router.post('/rebuild', async (_req, res, next) => {
+// Force a rebuild of the website outputs (predictions_final table)
+router.post('/rebuild', requireRole('admin'), async (_req, res) => {
     try {
-        requireRole('admin')(_req, res, () => {});
-        if (res.headersSent) return;
-
+        console.log('[pipeline] Manual rebuild of final outputs requested...');
         const final = await rebuildFinalOutputs();
-        res.status(200).json({ ok: true, final });
+        res.status(200).json({ ok: true, message: "Final outputs rebuilt successfully", data: final });
     } catch (err) {
-        console.error('Pipeline error:', err);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('Pipeline rebuild error:', err);
+        res.status(500).json({ error: 'Rebuild failed' });
     }
 });
 

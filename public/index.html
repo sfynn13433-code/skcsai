@@ -837,8 +837,8 @@
                 let matchesHtml = "";
                 if (p.matches && Array.isArray(p.matches)) {
                     matchesHtml = p.matches.map(m => {
-                        const h = m.home_team || m.home || "Team A";
-                        const a = m.away_team || m.away || "Team B";
+                        const h = m.home_team || m.home || (m.metadata && m.metadata.home_team) || "Team A";
+                        const a = m.away_team || m.away || (m.metadata && m.metadata.away_team) || "Team B";
                         return `${h} vs ${a}`;
                     }).join('<br>');
                 }

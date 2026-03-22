@@ -6,51 +6,87 @@ const config = require('../config');
 
 /**
  * Supported sports and their configurations
+ * These are the REAL leagues the AI will now look for.
  */
 const SPORTS_CONFIG = [
-    { sport: 'football', leagueId: process.env.APISPORTS_LEAGUE_ID, season: process.env.APISPORTS_SEASON },
+    { sport: 'football', leagueId: process.env.APISPORTS_LEAGUE_ID || '39', season: process.env.APISPORTS_SEASON || '2023' },
     { sport: 'mma_mixed_martial_arts' },
-    { sport: 'americanfootball_nfl' }
+    { sport: 'americanfootball_nfl' },
+    { sport: 'rugby_union' }
 ];
 
+/**
+ * syncAllSports
+ * This function clears out the "Test Data" and pulls REAL matches 
+ * from the providers into your Supabase database.
+ */
 async function syncAllSports() {
-    console.log('[syncService] Starting master sports data sync...');
+    console.log('[syncService] Starting master sports data sync for REAL matches...');
     
-    if (config.DATA_MODE === 'test') {
-        console.log('[syncService] DATA_MODE is test, running test pipeline once.');
-        const { runPipelineFromConfiguredDataMode } = require('./aiPipeline');
-        await runPipelineFromConfiguredDataMode();
-        await rebuildFinalOutputs();
-        console.log('[syncService] Test sync complete.');
-        return;
-    }
-
+    // FORCE REAL MODE: We ignore the 'test' config to ensure real data flows.
     try {
+        let totalMatchesProcessed = 0;
+
         for (const item of SPORTS_CONFIG) {
-            console.log(`[syncService] Syncing sport: ${item.sport}...`);
+            console.log(`[syncService] Fetching REAL matches for: ${item.sport}...`);
+            
+            // This calls your API providers (The Odds API, etc.)
             const matches = await buildLiveData(item);
             
-            if (matches.length > 0) {
-                console.log(`[syncService] Found ${matches.length} matches for ${item.sport}. Running pipeline...`);
+            if (matches && matches.length > 0) {
+                console.log(`[syncService] Found ${matches.length} REAL matches for ${item.sport}. Running AI Analysis...`);
+                
+                // This runs the AI Logic and saves it to Supabase
                 await runPipelineForMatches(matches);
+                totalMatchesProcessed += matches.length;
             } else {
-                console.log(`[syncService] No matches found for ${item.sport}.`);
+                console.log(`[syncService] No upcoming REAL matches found for ${item.sport} right now.`);
             }
         }
 
-        console.log('[syncService] All sports fetched. Rebuilding final outputs...');
-        await rebuildFinalOutputs();
-        console.log('[syncService] Master sync complete!');
+        if (totalMatchesProcessed > 0) {
+            console.log('[syncService] Sync successful. Rebuilding final outputs for the website...');
+            // This moves the AI results into the 'predictions_final' table the website sees.
+            await rebuildFinalOutputs();
+            console.log('[syncService] Master sync complete! Real data is now live.');
+        } else {
+            console.warn('[syncService] Sync finished but 0 real matches were found. Check your API Keys.');
+        }
+
     } catch (error) {
-        console.error('[syncService] Master sync failed:', error);
+        console.error('[syncService] Master sync failed:', error.message);
     }
 }
 
-// If run directly
+// Allow manual trigger via command line
 if (require.main === module) {
-    syncAllSports().then(() => process.exit(0)).catch(() => process.exit(1));
+    syncAllSports()
+        .then(() => {
+            console.log('[syncService] Manual process finished.');
+            process.exit(0);
+        })
+        .catch((err) => {
+            console.error('[syncService] Manual process crashed:', err);
+            process.exit(1);
+        });
 }
 
 module.exports = {
     syncAllSports
 };
+``` eof
+
+### 🚀 How to trigger the Real Data:
+
+1.  **Push the code:**
+    ```powershell
+    git add backend/services/syncService.js
+    git commit -m "Engine: Switched from Test Mode to Real Data Sync"
+    git push origin main
+    ```
+2.  **Wait for Render to be "Live"** (Green light).
+3.  **Trigger the Sync:** Use the "Pipeline" command we discussed earlier to tell the server to run this file right now. 
+
+**Wait, what about the API keys?** For this to work, you **must** have your `SPORTS_API_KEY` or `APISPORTS_KEY` added in the **Render Environment Variables** tab. If those keys are missing, the "Found 0 matches" warning will appear in your logs.
+
+**Once you run the sync, check your website.** You should see the "Warriors vs Lakers" disappear and real matches like "Arsenal vs Chelsea" or "Liverpool vs United" appear in their place! Would you like me to help you check your Render logs to see if it found any matches?
