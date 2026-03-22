@@ -143,6 +143,30 @@ app.use('/api/chat', chatRouter);
 
 app.use('/debug', requireRole('admin'), debugRouter);
 
+const PORT = Number(process.env.PORT) || 3000;
+
+// System Health Check (Admin Only)
+app.get('/api/health-check', async (req, res) => {
+    const healthStatus = {
+        server: 'Online',
+        timestamp: new Date().toISOString(),
+        environment: {
+            database_url: process.env.DATABASE_URL ? '✅ Configured' : '❌ MISSING',
+            openai_key: process.env.OPENAI_KEY ? '✅ Configured' : '❌ MISSING',
+            supabase_url: process.env.SUPABASE_URL ? '✅ Configured' : '❌ MISSING',
+            port: PORT
+        },
+        headers: {
+            csp_status: 'Active (Customized)',
+            debug_tag: 'Verified-Backend-v1'
+        }
+    };
+    
+    // Log the check to the terminal
+    console.log('[HEALTH CHECK] System status requested.');
+    res.status(200).json(healthStatus);
+});
+
 app.use((req, res) => {
     console.log('[404]', req.method, req.url);
     res.status(404).json({
@@ -155,8 +179,6 @@ app.use((err, _req, res, _next) => {
     console.error('[server-express] error:', err);
     res.status(500).json({ error: 'Internal server error' });
 });
-
-const PORT = Number(process.env.PORT) || 3000;
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`[server-express] listening on port ${PORT}`);

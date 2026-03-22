@@ -476,7 +476,7 @@ async function subscribe(planId){
   }
 
   try {
-    const res = await fetch("https://skcsai.onrender.com/api/subscribe", {
+    const res = await fetch("/api/subscribe", {
       method:"POST",
       headers:{
         "Content-Type":"application/json",
