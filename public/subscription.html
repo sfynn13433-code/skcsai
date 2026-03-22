@@ -291,7 +291,7 @@ button:hover { opacity: 0.9; }
         <span class="skcs-direct">⚽ 22 Direct</span> | <span class="skcs-secondary">📊 12 Secondary</span> | <span class="skcs-multi">🔀 8 Multi</span> | <span class="skcs-same">🎯 8 Same Match</span> | <span class="skcs-acca">🔥 5 x 6-Match ACCA</span>
       </li>
       <li><strong>Sun (Pro Finish):</strong>
-        <span class="skcs-direct">⚽ 18 Direct</span> | <span class="skcs-secondary">📊 11 Secondary</span> | <span class="skcs-multi">🔀 6 Multi</span> | <span class="skcs-same">🎯 6 Same Match</span> | <span class="skcs-acca">🔥 4 x 6-Match ACCA</span>
+        <span class="skcs-direct">⚽ 18 Direct</span> | <span class="skcs-secondary">📊 11 Secondary</span> | <span class="skcs-multi">🔀 6 Multi</span> | <span class="skcs-same">🎯 6 Same Match</span> | <span class="skcs-acca">🔥 3 x 6-Match ACCA</span>
       </li>
     </ul>
     <div class="skcs-chatbot">Chatbot Access: 10 Requests / Day</div>
@@ -450,7 +450,7 @@ button:hover { opacity: 0.9; }
 const SUPABASE_URL = "https://ghzjntdvaptuxfpvhybb.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdoempudGR2YXB0dXhmcHZoeWJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDAzNzIsImV4cCI6MjA4NzgxNjM3Mn0.nWxOY0lDIDDvexELk9De2aEfPfM5iJjoaW91tbL7YQk";
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 function showCore(){
   document.getElementById('corePlans').style.display='grid';
@@ -467,7 +467,7 @@ function showElite(){
 }
 
 async function subscribe(planId){
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await supabaseClient.auth.getSession();
   const token = session?.access_token;
 
   if (!token) {
@@ -506,23 +506,25 @@ let skcsMatches = [];
 let matchesLoaded = false;
 let userTier = "normal";
 
+// UPDATED: "Fail-Safe" loadMatches that selects all columns (*)
 async function loadMatches() { 
-  const { data, error } = await supabase 
+  // We use "*" to select EVERY column available in the table
+  const { data, error } = await supabaseClient
     .from("matches") 
-    .select("id, home_team, away_team, match_name, sport"); 
+    .select("*"); 
 
   if (error) { 
     console.error("Error loading matches:", error); 
     return; 
-  } 
+  }
 
   skcsMatches = data; 
   matchesLoaded = true;
-  console.log("Matches loaded:", skcsMatches);
+  console.log("SUCCESS! Matches loaded from Supabase:", skcsMatches);
 } 
 
 async function checkSession() { 
-  const { data } = await supabase.auth.getSession(); 
+  const { data } = await supabaseClient.auth.getSession(); 
   if (!data?.session) { 
     console.log("No active session");
     userTier = "normal";
@@ -596,11 +598,11 @@ function findMatch(userInput) {
   const input = userInput.toLowerCase(); 
   return skcsMatches.find(m => 
     input.includes(m.home_team.toLowerCase()) || 
-    input.includes(m.away_team.toLowerCase()) || 
-    input.includes((m.match_name || "").toLowerCase()) 
+    input.includes(m.away_team.toLowerCase())
   ); 
 } 
 
+// Updated sendMessage function (fixed version)
 async function sendMessage() { 
   if (!matchesLoaded) { 
     addMessage("⚠️ System loading data. Please wait a moment."); 
@@ -610,16 +612,12 @@ async function sendMessage() {
   const inputField = document.getElementById("chat-input"); 
   const msg = inputField.value.trim(); 
   if (!msg) return;
+
+  // 1. Clear input and show user message
   inputField.value = ""; 
-
-  if (requestCount >= requestLimit) { 
-    addMessage("⚠️ Daily limit reached. Upgrade to continue.", "bot"); 
-    return; 
-  } 
-
-  requestCount++; 
   addMessage(msg, "user"); 
 
+  // 2. Find the match the user is asking about
   const matchObj = findMatch(msg); 
 
   if (!matchObj) { 
@@ -627,21 +625,12 @@ async function sendMessage() {
     return; 
   } 
 
+  // 3. Get the prediction for that match
+  // Note: This calls your getPrediction function we fixed earlier
   const prediction = await getPrediction(matchObj.id);
-  console.log("Prediction for match:", prediction);
 
   if (prediction) { 
-    addMessage(`📊 ${matchObj.sport.toUpperCase()} Analysis 
-
-Match: ${matchObj.home_team} vs ${matchObj.away_team} 
-
-🎯 Type: 
-${prediction.type} 
-
-📊 Confidence: ${prediction.total_confidence}% 
-⚠️ Risk: ${prediction.risk_level} 
-
-This output is generated from Stage 4 of the SKCS pipeline.`); 
+    addMessage(`📊 ${matchObj.sport.toUpperCase()} Analysis \n\nMatch: ${matchObj.home_team} vs ${matchObj.away_team} \n\n🎯 Type: \n${prediction.type} \n\n📊 Confidence: ${prediction.total_confidence}% \n⚠️ Risk: ${prediction.risk_level} \n\nThis output is generated from Stage 4 of the SKCS pipeline.`); 
   } else { 
     addMessage( 
       "This outcome is not available under your current subscription tier. Upgrade to access higher-confidence or additional markets.", 
