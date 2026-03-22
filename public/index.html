@@ -845,6 +845,7 @@
             }
         }
 
+        // **** UPDATED renderSport with safety checks ****
         function renderSport(sport, containerId, predictions) {
             const container = document.getElementById(containerId);
             if (!container) return;
@@ -855,28 +856,38 @@
                 const card = document.createElement('div');
                 card.className = 'prediction-card';
                 
+                // Check if it's an accumulator (more than 1 match)
                 const isAcca = p.matches && p.matches.length > 1;
                 const accaBadge = isAcca ? '<span style="background:#f59e0b;color:white;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:bold;margin-bottom:8px;display:inline-block;">ACCUMULATOR</span>' : '';
                 
+                // Build the team names string with fallback
                 let matchesHtml = "";
                 if (p.matches && p.matches.length > 0) {
-                    matchesHtml = isAcca 
-                        ? p.matches.map(m => `${m.home_team} vs ${m.away_team}`).join('<br>') 
-                        : `${p.matches[0].home_team} vs ${p.matches[0].away_team}`;
+                    matchesHtml = p.matches.map(m => {
+                        // Use || 'TBC' in case the names are missing in the database
+                        const home = m.home_team || m.home || 'TBC';
+                        const away = m.away_team || m.away || 'TBC';
+                        return `${home} vs ${away}`;
+                    }).join('<br>');
+                } else {
+                    matchesHtml = "Match details pending";
                 }
                 
-                const predictionText = (p.matches && p.matches[0]) ? p.matches[0].prediction.replace('_',' ') : 'N/A';
+                // Get the prediction text from the first match in the set
+                const rawPrediction = (p.matches && p.matches[0] && p.matches[0].prediction) ? p.matches[0].prediction : 'No Tip';
+                const cleanPrediction = rawPrediction.replace(/_/g, ' ').toUpperCase();
                 
                 card.innerHTML = `
                     ${accaBadge}
                     <div class="match-info">
-                        <div class="teams">${matchesHtml}</div>
-                        <div class="match-date">${sport.toUpperCase()}</div>
+                        <div class="teams" style="font-weight:bold; color:#fff; margin-bottom:5px;">${matchesHtml}</div>
+                        <div class="match-date" style="font-size:12px; color:#94a3b8;">${sport.toUpperCase()}</div>
                     </div>
-                    <div class="prediction-details">
-                        <div class="prediction">${predictionText}</div>
-                        <div class="confidence">${p.total_confidence || 0}% Confidence</div>
+                    <div class="prediction-details" style="margin-top:10px; padding-top:10px; border-top:1px solid #334155;">
+                        <div class="prediction" style="color:#22c55e; font-weight:bold;">${cleanPrediction}</div>
+                        <div class="confidence" style="font-size:13px; color:#94a3b8;">${p.total_confidence || 0}% Confidence</div>
                     </div>`;
+                    
                 container.appendChild(card);
             });
         }
