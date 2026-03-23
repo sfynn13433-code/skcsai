@@ -15,3 +15,10 @@ window.SKCS_CONFIG = {
     chat: `${window.API_BASE_URL}/api/chat`,
     subscribe: `${window.API_BASE_URL}/api/subscribe`
 };
+
+window.SUPABASE_URL = window.SUPABASE_URL || 'https://ghzjntdvaptuxfpvhybb.supabase.co';
+window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdoempudGR2YXB0dXhmcHZoeWJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDAzNzIsImV4cCI6MjA4NzgxNjM3Mn0.nWxOY0lDIDDvexELk9De2aEfPfM5iJjoaW91tbL7YQk';
+
+if (!window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) {
+    console.error('[SKCS] Supabase config missing: window.SUPABASE_URL / window.SUPABASE_ANON_KEY must be set');
+}

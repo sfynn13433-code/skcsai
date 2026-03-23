@@ -794,8 +794,7 @@
         }
 
         try {
-            // We use the 'type' parameter because your Supabase table uses the 'type' column
-            let url = `${SKCS_BACKEND}/api/predictions?tier=${tier}&type=${sport}`;
+            let url = `${SKCS_BACKEND}/api/predictions?tier=${tier}&sport=${sport}`;
             
             let response = await fetch(url, {
                 method: 'GET',
@@ -807,22 +806,7 @@
 
             let data = await response.json();
 
-            // FAIL-SAFE: If the backend logic still expects a 'sport' column, 
-            // we fetch everything and filter by the 'type' field in the result.
-            if (!response.ok || data.error || (data.predictions && data.predictions.length === 0)) {
-                console.warn("Backend filter mismatch. Fetching all and filtering locally by 'type'...");
-                const fallbackRes = await fetch(`${SKCS_BACKEND}/api/predictions?tier=${tier}`, {
-                    headers: { 'x-api-key': 'skcs_user_12345' }
-                });
-                const fallbackData = await fallbackRes.json();
-                
-                const allPredictions = fallbackData.predictions || [];
-                // Your Supabase column is 'type', so we check that field specifically
-                data.predictions = allPredictions.filter(p => 
-                    (p.type && p.type.toLowerCase() === sport.toLowerCase()) ||
-                    (p.sport && p.sport.toLowerCase() === sport.toLowerCase())
-                );
-            }
+            if (!response.ok || data.error) throw new Error(data.error || `HTTP ${response.status}`);
             
             renderSport(sport, sport + '-matches', data.predictions || []);
 

@@ -5,22 +5,50 @@ console.log('✅ LOADING database.js (PostgreSQL version)');
 const databaseUrl = config?.database?.url;
 const hasDatabaseUrl = typeof databaseUrl === 'string' && databaseUrl.trim().length > 0;
 
+function shouldUseSsl(connectionString) {
+    try {
+        const url = new URL(connectionString);
+        const host = (url.hostname || '').toLowerCase();
+        if (host === 'localhost' || host === '127.0.0.1') return false;
+        return true;
+    } catch {
+        return true;
+    }
+}
+
 // Create a connection pool to PostgreSQL only when configured.
 // This keeps local/dev and Render boot clean when DATABASE_URL is not set yet.
 const pool = hasDatabaseUrl
     ? new Pool({
         connectionString: databaseUrl,
-        ssl: { rejectUnauthorized: false }
+        connectionTimeoutMillis: 10_000,
+        idleTimeoutMillis: 30_000,
+        max: 10,
+        ssl: shouldUseSsl(databaseUrl) ? { rejectUnauthorized: false } : false
     })
     : null;
 
 if (pool) {
+    pool.on('error', (err) => {
+        console.error('❌ PostgreSQL pool error:', {
+            message: err?.message,
+            code: err?.code,
+            detail: err?.detail,
+            hint: err?.hint
+        });
+    });
+
     (async () => {
         try {
             const res = await pool.query('SELECT NOW() as now');
             console.log('✅ Supabase PostgreSQL connection test OK:', res.rows?.[0]?.now);
         } catch (err) {
-            console.error('❌ Supabase PostgreSQL connection test FAILED:', err?.message || err);
+            console.error('❌ Supabase PostgreSQL connection test FAILED:', {
+                message: err?.message,
+                code: err?.code,
+                detail: err?.detail,
+                hint: err?.hint
+            });
         }
     })();
 }
