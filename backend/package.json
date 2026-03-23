@@ -2,7 +2,7 @@
   "name": "skcs-backend",
   "private": true,
   "scripts": {
-  "start": "node server-express.js",
+  "start": "node server.js",
   "dev": "nodemon server-express.js"
 },
   "dependencies": {
