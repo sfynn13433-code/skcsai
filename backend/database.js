@@ -16,6 +16,29 @@ function shouldUseSsl(connectionString) {
     }
 }
 
+function summarizeDatabaseUrl(connectionString) {
+    try {
+        const url = new URL(connectionString);
+        return {
+            protocol: url.protocol,
+            host: url.hostname || null,
+            port: url.port || null,
+            database: url.pathname ? url.pathname.replace(/^\//, '') : null,
+            username: url.username || null,
+            sslmode: url.searchParams.get('sslmode') || null,
+            pgbouncer: url.searchParams.get('pgbouncer') || null
+        };
+    } catch (error) {
+        return {
+            parse_error: error?.message || 'Unable to parse DATABASE_URL'
+        };
+    }
+}
+
+if (hasDatabaseUrl) {
+    console.log('🔎 DATABASE_URL runtime summary:', summarizeDatabaseUrl(databaseUrl));
+}
+
 // Create a connection pool to PostgreSQL only when configured.
 // This keeps local/dev and Render boot clean when DATABASE_URL is not set yet.
 const pool = hasDatabaseUrl
