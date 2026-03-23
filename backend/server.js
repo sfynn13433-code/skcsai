@@ -1,46 +1,85 @@
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
-const url = require('url'); // for parsing query parameters
-const cron = require('node-cron'); // for scheduling
+'use strict';
+
+// ---------------------------------------------------------------
+//  SKCS‑AI backend – plain Node HTTP server
+// ---------------------------------------------------------------
+
+require('dotenv').config();               // load .env locally (Render provides its own vars)
+
+const http   = require('http');
+const fs     = require('fs');
+const url    = require('url');            // for query‑string parsing
+const cron   = require('node-cron');    // scheduled jobs
+
+// ----- Local helpers / services ---------------------------------
 const SecureStorage = require('./secure-storage');
 const secureStorage = new SecureStorage();
 
-
-// ========== NEW: Authentication modules ==========
 const config = require('./config');
 const { register, login, authenticateToken } = require('./auth');
 
-// ========== Prediction pipeline modules ==========
-require('dotenv').config(); // ensure .env is loaded
 const PredictionPipeline = require('./predictionPipeline');
 const { APISportsClient, OddsAPIClient } = require('./apiClients');
 
-// Database helper functions – assume they are exported from database.js
-const { 
-    getMatch, 
-    getTeamStats, 
-    getInjuries, 
+// ----- DB helper functions (adjust path if needed) -------------
+const {
+    getMatch,
+    getTeamStats,
+    getInjuries,
     getNewsSentiment,
     getAllUpcomingMatches,
     savePrediction,
     getPredictionsByTier,
     insertFinalPredictionRow,
     getLatestPredictions
-} = require('./database'); // adjust path if needed
+} = require('./database');
 
-// ========== CORS ALLOWED ORIGINS ==========
+// ----- CORS configuration ----------------------------------------
 const allowedOrigins = [
     'https://skcsaisports.vercel.app',
-    'https://www.skcsaisportspredictions.co.za', // Your custom domain
+    'https://skcsaisports-8pnce0hd6-stephens-projects-e3dd898a.vercel.app',
+    'https://www.skcsaisportspredictions.co.za',
     'http://localhost:3000'
 ];
 
-// ========== Scheduled job to generate predictions daily ==========
-cron.schedule('0 2 * * *', async () => { // runs at 2:00 AM every day
+/**
+ * Return true if the request origin is allowed.
+ * In addition to the exact whitelist we also accept **any** sub‑domain of
+ * `vercel.app` (covers preview URLs that contain a random hash).
+ */
+function setCorsHeaders(req, res) {
+    const origin = req.headers.origin;
+
+    if (
+        !origin ||                                   // no Origin header (curl, mobile SDK, etc.)
+        allowedOrigins.includes(origin) ||           // exact match to whitelist
+        origin.includes('vercel.app')                // any Vercel preview domain
+    ) {
+        // Echo the origin back (or `*` when we have none)
+        if (origin) {
+            res.setHeader('Access-Control-Allow-Origin', origin);
+        } else {
+            res.setHeader('Access-Control-Allow-Origin', '*');
+        }
+
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers',
+                      'Content-Type, Authorization, x-api-key');
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+        return true;      // allowed
+    }
+
+    return false;         // blocked
+}
+
+// ---------------------------------------------------------------
+//  Scheduled job – daily prediction generation (02:00 UTC)
+// ---------------------------------------------------------------
+cron.schedule('0 2 * * *', async () => {
     console.log('Running daily prediction generation...');
     try {
-        const matches = await getAllUpcomingMatches(7); // next 7 days
+        const matches = await getAllUpcomingMatches(7); // next 7 days
         for (const match of matches) {
             const pipeline = new PredictionPipeline(
                 match.id,
@@ -53,65 +92,43 @@ cron.schedule('0 2 * * *', async () => { // runs at 2:00 AM every day
             const prediction = await pipeline.run();
             if (prediction) {
                 await savePrediction(prediction);
-                console.log(`Generated prediction for match ${match.id}`);
+                console.log(`✅ Generated prediction for match ${match.id}`);
             }
         }
-        console.log('Daily prediction generation complete.');
-    } catch (error) {
-        console.error('Error in daily prediction job:', error);
+        console.log('✅ Daily prediction generation complete.');
+    } catch (err) {
+        console.error('❌ Error in daily prediction job:', err);
     }
 });
 
-// ========== Helper: Set CORS headers based on request origin ==========
-function setCorsHeaders(req, res) {
-    const origin = req.headers.origin;
-    // Allow requests with no origin (like mobile apps or curl) or if origin is in allowed list
-    if (!origin || allowedOrigins.includes(origin)) {
-        if (origin) {
-            res.setHeader('Access-Control-Allow-Origin', origin);
-        } else {
-            // For requests without origin, you might still want to allow
-            res.setHeader('Access-Control-Allow-Origin', '*');
-        }
-        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key');
-        res.setHeader('Access-Control-Allow-Credentials', 'true');
-        return true;
-    }
-    return false; // origin not allowed
-}
-
-// ========== Create HTTP server ==========
+// ---------------------------------------------------------------
+//  HTTP server – all request handling lives here
+// ---------------------------------------------------------------
 const server = http.createServer((req, res) => {
-    // ===== CORS Handling =====
-    // Check if origin is allowed and set headers
-    const isOriginAllowed = setCorsHeaders(req, res);
-    if (!isOriginAllowed) {
-        // Origin not allowed: return 403 Forbidden
+    // ---- CORS -------------------------------------------------
+    if (!setCorsHeaders(req, res)) {
         res.writeHead(403, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'CORS policy: This origin is not allowed.' }));
+        res.end(JSON.stringify({ error: 'CORS origin denied' }));
         return;
     }
 
-    // Handle preflight OPTIONS request
+    // ---- Pre‑flight (OPTIONS) ---------------------------------
     if (req.method === 'OPTIONS') {
-        res.writeHead(204);
+        res.writeHead(200);
         res.end();
         return;
     }
 
-    // Log every request
-    console.log(`→ New request: ${req.method} ${req.url}`);
+    // ---- Basic request logging --------------------------------
+    console.log(`→ ${req.method} ${req.url}`);
 
-    // ========================================
-    // Parse URL for query parameters (used in API routes)
-    // ========================================
+    // ---- Parse URL & query string ----------------------------
     const parsedUrl = url.parse(req.url, true);
     const pathname = parsedUrl.pathname;
 
-    // ========================================
-    // AUTH ROUTES (public)
-    // ========================================
+    // -----------------------------------------------------------
+    //  PUBLIC AUTH ROUTES
+    // -----------------------------------------------------------
     if (pathname === '/api/register' && req.method === 'POST') {
         register(req, res);
         return;
@@ -122,27 +139,28 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // ========================================
-    // PROTECTED PREDICTIONS (requires token)
-    // ========================================
+    // -----------------------------------------------------------
+    //  PROTECTED PREDICTION ROUTE (requires JWT)
+    // -----------------------------------------------------------
     if (pathname === '/api/user/predictions' && req.method === 'GET') {
         (async () => {
-            // Run authentication; if fails, authenticateToken already sent response
             const ok = await authenticateToken(req, res);
-            if (!ok) return;
+            if (!ok) return;    // auth already sent response
 
             try {
                 const user = req.user;
 
-                if (user.subscription_status !== 'active' && user.is_test_user !== true) {
+                // Subscription check
+                if (user.subscription_status !== 'active' && !user.is_test_user) {
                     res.writeHead(403, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ error: 'Subscription required' }));
                     return;
                 }
 
-                const date = parsedUrl.query.date || new Date().toISOString().split('T')[0];
+                const date = parsedUrl.query.date ||
+                             new Date().toISOString().split('T')[0];
 
-                // Map user subscription type to tier key
+                // Map subscription type → tier key
                 const tierKey = user.subscription_type === 'deep' ? 'deep30' : 'normal30';
                 const predictions = await getPredictionsByTier(tierKey, date);
 
@@ -153,8 +171,8 @@ const server = http.createServer((req, res) => {
                     count: predictions.length,
                     predictions
                 }));
-            } catch (error) {
-                console.error('Error fetching predictions:', error);
+            } catch (err) {
+                console.error('❌ Error fetching predictions:', err);
                 res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ error: 'Internal server error' }));
             }
@@ -162,11 +180,9 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // ========================================
-    // Existing routes (unchanged)
-    // ========================================
-
-    // Messages page
+    // -----------------------------------------------------------
+    //  MESSAGES PAGE (static HTML)
+    // -----------------------------------------------------------
     if (pathname === '/messages' && req.method === 'GET') {
         try {
             let submissions = [];
@@ -174,147 +190,136 @@ const server = http.createServer((req, res) => {
                 const data = fs.readFileSync('submissions.json', 'utf8');
                 submissions = JSON.parse(data);
             }
-            
+
             const html = `<!DOCTYPE html>
 <html>
 <head>
     <title>SKCS AI - Contact Messages</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: #f8f9fa; padding: 20px; max-width: 1000px; margin: 0 auto; }
-        h1 { color: #0d6efd; text-align: center; margin-bottom: 30px; }
-        .message-card { background: white; border-left: 4px solid #0d6efd; padding: 20px; margin-bottom: 20px; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
-        .message-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
-        .message-name { font-weight: bold; color: #0d6efd; }
-        .message-email { color: #666; font-size: 0.9em; }
-        .message-time { color: #888; font-size: 0.8em; }
-        .message-content { margin-top: 15px; line-height: 1.5; white-space: pre-wrap; }
-        .back-link { display: inline-block; margin-top: 30px; padding: 10px 20px; background: #0d6efd; color: white; text-decoration: none; border-radius: 5px; }
-        .no-messages { text-align: center; color: #666; font-style: italic; padding: 40px; }
+        body {font-family:'Segoe UI',Arial,sans-serif;background:#f8f9fa;padding:20px;max-width:1000px;margin:auto;}
+        h1 {color:#0d6efd;text-align:center;margin-bottom:30px;}
+        .msg{background:#fff;border-left:4px solid #0d6efd;padding:20px;margin-bottom:20px;border-radius:5px;box-shadow:0 2px 10px rgba(0,0,0,.08);}
+        .hdr{display:flex;justify-content:space-between;margin-bottom:10px;}
+        .name{font-weight:bold;color:#0d6efd;}
+        .email{color:#666;font-size:.9em;}
+        .time{color:#888;font-size:.8em;}
+        .content{margin-top:15px;line-height:1.5;white-space:pre-wrap;}
+        .back{display:inline-block;margin-top:30px;padding:10px 20px;background:#0d6efd;color:#fff;text-decoration:none;border-radius:5px;}
+        .none{color:#666;font-style:italic;text-align:center;padding:40px;}
     </style>
 </head>
 <body>
     <h1>📨 Contact Messages Received</h1>
-    ${submissions.length === 0 ? 
-        '<div class="no-messages">No messages received yet.</div>' : 
-        submissions.reverse().map(msg => `
-        <div class="message-card">
-            <div class="message-header">
-                <div>
-                    <div class="message-name">${msg.name}</div>
-                    <div class="message-email">${msg.email}</div>
+    ${submissions.length===0
+        ? '<div class="none">No messages received yet.</div>'
+        : submissions.reverse().map(m=>`
+            <div class="msg">
+                <div class="hdr">
+                    <div>
+                        <div class="name">${m.name}</div>
+                        <div class="email">${m.email}</div>
+                    </div>
+                    <div class="time">${new Date(m.timestamp).toLocaleString()}</div>
                 </div>
-                <div class="message-time">${new Date(msg.timestamp).toLocaleString()}</div>
-            </div>
-            <div class="message-content">${msg.message}</div>
-        </div>
-        `).join('')
+                <div class="content">${m.message}</div>
+            </div>`).join('')
     }
-    <a href="javascript:history.back()" class="back-link">← Back to Website</a>
+    <a href="javascript:history.back()" class="back">← Back to Website</a>
 </body>
 </html>`;
-            
+
             res.writeHead(200, { 'Content-Type': 'text/html' });
             res.end(html);
-            return;
-        } catch (error) {
-            console.log('Error loading messages:', error);
+        } catch (err) {
+            console.error('❌ Error loading messages:', err);
             res.writeHead(500, { 'Content-Type': 'text/plain' });
             res.end('Error loading messages');
-            return;
         }
-    }
-
-    // Homepage
-    if (pathname === '/' && req.method === 'GET') {
-        res.writeHead(200, { 'Content-Type': 'text/plain' });
-        res.end("Hello! Backend server is alive!\n");
         return;
     }
 
-    // Form submission (contact)
+    // -----------------------------------------------------------
+    //  ROOT – simple health‑check
+    // -----------------------------------------------------------
+    if (pathname === '/' && req.method === 'GET') {
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.end('Hello! Backend server is alive!\n');
+        return;
+    }
+
+    // -----------------------------------------------------------
+    //  CONTACT FORM SUBMISSION
+    // -----------------------------------------------------------
     if (pathname === '/submit' && req.method === 'POST') {
         let body = '';
-
-        req.on('data', chunk => {
-            body += chunk.toString();
-        });
-
+        req.on('data', chunk => body += chunk.toString());
         req.on('end', () => {
-            console.log('Form data received:');
-            console.log(body);
-
             try {
                 const lines = body.split('\r\n');
-                let parsedData = { name: '', email: '', message: '' };
-                
+                const parsed = { name: '', email: '', message: '' };
                 for (let i = 0; i < lines.length; i++) {
-                    if (lines[i].includes('name="name"')) {
-                        parsedData.name = lines[i + 2] || '';
-                    }
-                    if (lines[i].includes('name="email"')) {
-                        parsedData.email = lines[i + 2] || '';
-                    }
-                    if (lines[i].includes('name="message"')) {
-                        parsedData.message = lines[i + 2] || '';
-                    }
+                    if (lines[i].includes('name="name"'))    parsed.name    = lines[i + 2] || '';
+                    if (lines[i].includes('name="email"'))   parsed.email   = lines[i + 2] || '';
+                    if (lines[i].includes('name="message"')) parsed.message = lines[i + 2] || '';
                 }
-                
-                console.log('Parsed data:', parsedData);
-                
-                const timestamp = new Date().toLocaleString();
-                const textData = `\n=== New Form Submission ===\nTime: ${timestamp}\nName: ${parsedData.name}\nEmail: ${parsedData.email}\nMessage: ${parsedData.message}\n`;
-                
-                fs.appendFile('form-submissions.txt', textData, (err) => {
-                    if (err) console.error('Error saving to file:', err);
-                    else console.log('✅ Data saved to form-submissions.txt');
+
+                console.log('📨 Form data parsed:', parsed);
+
+                // ---- Plain‑text log ----
+                const txtLog = `\n=== New Form Submission ===\nTime: ${new Date().toLocaleString()}\nName: ${parsed.name}\nEmail: ${parsed.email}\nMessage: ${parsed.message}\n`;
+                fs.appendFile('form-submissions.txt', txtLog, err => {
+                    if (err) console.error('❌ txt log error:', err);
+                    else console.log('✅ Saved to form-submissions.txt');
                 });
-                
-                const jsonData = {
+
+                // ---- JSON log (array) ----
+                const jsonEntry = {
                     timestamp: new Date().toISOString(),
-                    name: parsedData.name || 'N/A',
-                    email: parsedData.email || 'N/A',
-                    message: parsedData.message || 'N/A'
+                    name: parsed.name || 'N/A',
+                    email: parsed.email || 'N/A',
+                    message: parsed.message || 'N/A'
                 };
-                
-                let allSubmissions = [];
+                let all = [];
                 if (fs.existsSync('submissions.json')) {
                     const existing = fs.readFileSync('submissions.json', 'utf8');
-                    allSubmissions = JSON.parse(existing);
+                    all = JSON.parse(existing);
                 }
-                allSubmissions.push(jsonData);
-                fs.writeFileSync('submissions.json', JSON.stringify(allSubmissions, null, 2));
-                console.log('✅ Data saved to submissions.json');
-                
-            } catch (error) {
-                console.log('Error parsing/saving data:', error);
+                all.push(jsonEntry);
+                fs.writeFileSync('submissions.json', JSON.stringify(all, null, 2));
+                console.log('✅ Saved to submissions.json');
+            } catch (err) {
+                console.error('❌ Form parsing / saving error:', err);
             }
 
             res.writeHead(200, { 'Content-Type': 'text/plain' });
-            res.end("Thank you! We received your message.");
+            res.end('Thank you! We received your message.');
         });
-
         return;
     }
 
-    // Secure subscription endpoint
+    // -----------------------------------------------------------
+    //  SECURE SUBSCRIPTION ENDPOINT
+    // -----------------------------------------------------------
     if (pathname === '/api/subscribe' && req.method === 'POST') {
-        const clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
+        const clientIP = req.headers['x-forwarded-for'] ||
+                         req.connection?.remoteAddress || 'unknown';
         const userAgent = req.headers['user-agent'] || 'Unknown';
-        
+
         secureStorage.logAccess(clientIP, '/api/subscribe', userAgent, 200);
-        
+
         let body = '';
         req.on('data', chunk => body += chunk.toString());
-        
+
         req.on('end', async () => {
             try {
-                const rateLimit = await secureStorage.checkRateLimit(clientIP, 5, 15);
-                if (!rateLimit.allowed) {
-                    res.writeHead(429, { 
+                // Rate‑limit: 5 calls per 15 min per IP
+                const rl = await secureStorage.checkRateLimit(clientIP, 5, 15);
+                if (!rl.allowed) {
+                    res.writeHead(429, {
                         'Content-Type': 'application/json',
                         'X-RateLimit-Limit': '5',
                         'X-RateLimit-Remaining': '0',
-                        'X-RateLimit-Reset': rateLimit.resetTime
+                        'X-RateLimit-Reset': rl.resetTime
                     });
                     res.end(JSON.stringify({
                         error: 'Rate limit exceeded',
@@ -323,77 +328,74 @@ const server = http.createServer((req, res) => {
                     }));
                     return;
                 }
-                
+
                 let data;
                 try {
                     data = JSON.parse(body);
                 } catch {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ error: 'Invalid JSON data' }));
+                    res.end(JSON.stringify({ error: 'Invalid JSON body' }));
                     return;
                 }
-                
+
                 const { email, name } = data;
-                
+
+                // ----- Basic validation -----
                 if (!email || typeof email !== 'string' || email.length > 254) {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ error: 'Invalid email address' }));
                     return;
                 }
-                
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(email)) {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ error: 'Invalid email format' }));
                     return;
                 }
-                
+
+                // ----- Persist subscription (encrypted) -----
                 const result = await secureStorage.saveSubscription(email, name, clientIP);
-                
+
+                // ----- Respond -----
                 res.writeHead(200, {
                     'Content-Type': 'application/json',
                     'Content-Security-Policy': "default-src 'self'",
                     'X-Content-Type-Options': 'nosniff',
                     'X-Frame-Options': 'DENY',
                     'X-RateLimit-Limit': '5',
-                    'X-RateLimit-Remaining': rateLimit.remaining.toString(),
-                    'X-RateLimit-Reset': rateLimit.resetTime
+                    'X-RateLimit-Remaining': rl.remaining.toString(),
+                    'X-RateLimit-Reset': rl.resetTime
                 });
-                
                 res.end(JSON.stringify({
                     success: true,
-                    message: 'Subscription received. Please check your email for verification.',
+                    message: 'Subscription received – check your email for verification.',
                     requiresVerification: true,
                     token: result.token
                 }));
-                
-                console.log(`✅ Secure subscription: ${email} from ${clientIP}`);
-                
-            } catch (error) {
-                console.error('Subscription error:', error);
+
+                console.log(`✅ New subscription: ${email} (IP ${clientIP})`);
+            } catch (err) {
+                console.error('❌ Subscription handler error:', err);
                 res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ error: 'Internal server error' }));
             }
         });
-        
         return;
     }
 
-    // ========================================
-    // Existing Prediction API routes (kept for testing)
-    // ========================================
-
-    // Get upcoming matches (optional sport filter)
+    // -----------------------------------------------------------
+    //  MATCHES API (public, optional sport filter)
+    // -----------------------------------------------------------
     if (pathname === '/api/matches' && req.method === 'GET') {
         (async () => {
             try {
                 const sport = parsedUrl.query.sport;
-                const days = parseInt(parsedUrl.query.days) || 7;
+                const days  = parseInt(parsedUrl.query.days, 10) || 7;
                 const matches = await getAllUpcomingMatches(days, sport);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify(matches));
-            } catch (error) {
-                console.error('Error fetching matches:', error);
+            } catch (err) {
+                console.error('❌ /api/matches error:', err);
                 res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ error: 'Internal server error' }));
             }
@@ -401,7 +403,9 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // Public predictions endpoint (kept for testing)
+    // -----------------------------------------------------------
+    //  PUBLIC PREDICTIONS endpoint (testing)
+    // -----------------------------------------------------------
     if (pathname === '/api/predictions' && req.method === 'GET') {
         (async () => {
             try {
@@ -411,8 +415,8 @@ const server = http.createServer((req, res) => {
                     count: predictions.length,
                     predictions
                 }));
-            } catch (error) {
-                console.error('Error fetching predictions:', error);
+            } catch (err) {
+                console.error('❌ /api/predictions error:', err);
                 res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ error: 'Internal server error' }));
             }
@@ -420,7 +424,9 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // Generate prediction for a specific match (test endpoint)
+    // -----------------------------------------------------------
+    //  SINGLE MATCH PREDICTION (test endpoint)
+    // -----------------------------------------------------------
     if (pathname.startsWith('/api/generate-prediction/') && req.method === 'GET') {
         (async () => {
             try {
@@ -434,17 +440,20 @@ const server = http.createServer((req, res) => {
                     insertFinalPredictionRow
                 );
                 const prediction = await pipeline.run();
+
                 if (prediction) {
-                    // Optionally save it
                     await savePrediction(prediction);
                     res.writeHead(200, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ success: true, prediction }));
                 } else {
                     res.writeHead(404, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ success: false, error: 'Match not found or prediction failed' }));
+                    res.end(JSON.stringify({
+                        success: false,
+                        error: 'Match not found or prediction failed'
+                    }));
                 }
-            } catch (error) {
-                console.error('Error generating prediction:', error);
+            } catch (err) {
+                console.error('❌ /api/generate-prediction error:', err);
                 res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ error: 'Internal server error' }));
             }
@@ -452,14 +461,16 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // ========== NEW: Manual trigger to generate predictions for all upcoming matches ==========
+    // -----------------------------------------------------------
+    //  MANUAL RUN‑ALL‑PREDICTIONS (admin / test)
+    // -----------------------------------------------------------
     if (pathname === '/api/run-predictions' && req.method === 'GET') {
         (async () => {
-            console.log('Manually running prediction generation for all upcoming matches...');
+            console.log('⚡ Manual prediction run started...');
             try {
-                // Get all matches in the next 30 days (to cover all we inserted)
                 const matches = await getAllUpcomingMatches(30);
                 let generated = 0;
+
                 for (const match of matches) {
                     const pipeline = new PredictionPipeline(
                         match.id,
@@ -473,46 +484,48 @@ const server = http.createServer((req, res) => {
                     if (prediction) {
                         await savePrediction(prediction);
                         generated++;
-                        console.log(`✅ Generated prediction for match ${match.id} (${match.home_team} vs ${match.away_team})`);
+                        console.log(`✅ ${match.id}: ${match.home_team} vs ${match.away_team}`);
                     } else {
-                        console.log(`❌ No prediction generated for match ${match.id}`);
+                        console.log(`❌ No prediction for ${match.id}`);
                     }
                 }
+
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ 
-                    success: true, 
-                    generated, 
-                    total: matches.length 
+                res.end(JSON.stringify({
+                    success: true,
+                    generated,
+                    total: matches.length
                 }));
-            } catch (error) {
-                console.error('Error in manual prediction run:', error);
+            } catch (err) {
+                console.error('❌ Manual run error:', err);
                 res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: error.message }));
+                res.end(JSON.stringify({ error: err.message }));
             }
         })();
         return;
     }
 
-    // If no route matched
+    // -----------------------------------------------------------
+    //  FALL‑BACK – unknown route
+    // -----------------------------------------------------------
     res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end("Not found");
+    res.end('Not found');
 });
 
+// ---------------------------------------------------------------
+//  Start listening (Render injects PORT via env)
+// ---------------------------------------------------------------
 const PORT = process.env.PORT || 3000;
-
 server.listen(PORT, () => {
-    console.log(`Server is running and listening on port ${PORT}`);
-    console.log(`Test URL: http://localhost:${PORT}`);
-    console.log(`View messages: http://localhost:${PORT}/messages`);
-    console.log(`Subscribe endpoint: http://localhost:${PORT}/api/subscribe`);
-    console.log(`Matches API: http://localhost:${PORT}/api/matches`);
-    console.log(`Public Predictions API: http://localhost:${PORT}/api/predictions?tier=deep30`);
-    console.log(`Protected Predictions API: http://localhost:${PORT}/api/user/predictions (requires token)`);
-    console.log(`Auth routes: /api/register, /api/login`);
-    console.log(`NEW: Manual predictions trigger: http://localhost:${PORT}/api/run-predictions`);
-    console.log('Form data will be saved to:');
-    console.log('  - form-submissions.txt (text format)');
-    console.log('  - submissions.json (JSON format)');
-    console.log('  - subscriptions.encrypted.dat (secure subscriptions)');
-    console.log('Daily prediction generation scheduled at 2:00 AM.');
+    console.log(`✅ Server listening on http://0.0.0.0:${PORT}`);
+    console.log('💡 Test URLs:');
+    console.log(`   • Root                → http://localhost:${PORT}/`);
+    console.log(`   • Messages page      → http://localhost:${PORT}/messages`);
+    console.log(`   • Subscribe API      → http://localhost:${PORT}/api/subscribe`);
+    console.log(`   • Matches API        → http://localhost:${PORT}/api/matches`);
+    console.log(`   • Public preds API   → http://localhost:${PORT}/api/predictions`);
+    console.log(`   • Protected preds    → http://localhost:${PORT}/api/user/predictions (needs JWT)`);
+    console.log(`   • Auth routes        → /api/register , /api/login`);
+    console.log(`   • Manual run         → http://localhost:${PORT}/api/run-predictions`);
+    console.log('🕒 Daily prediction job scheduled for 02:00 UTC (cron “0 2 * * *”).');
 });
