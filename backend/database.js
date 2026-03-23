@@ -1,8 +1,10 @@
+require('dotenv').config();
+
 const { Pool } = require('pg');
 const config = require('./config');
 console.log('✅ LOADING database.js (PostgreSQL version)');
 
-const databaseUrl = config?.database?.url;
+const databaseUrl = process.env.DATABASE_URL;
 const hasDatabaseUrl = typeof databaseUrl === 'string' && databaseUrl.trim().length > 0;
 
 function shouldUseSsl(connectionString) {
@@ -63,8 +65,8 @@ if (pool) {
 
     (async () => {
         try {
-            const res = await pool.query('SELECT NOW() as now');
-            console.log('✅ Supabase PostgreSQL connection test OK:', res.rows?.[0]?.now);
+            const res = await pool.query('SELECT 1 AS ok');
+            console.log('✅ Supabase PostgreSQL connection test OK:', res.rows?.[0]?.ok);
         } catch (err) {
             console.error('❌ Supabase PostgreSQL connection test FAILED:', {
                 message: err?.message,
@@ -72,6 +74,9 @@ if (pool) {
                 detail: err?.detail,
                 hint: err?.hint
             });
+            if (err?.code === '28P01') {
+                console.error('🚨 DATABASE AUTH CHECK: Render DATABASE_URL is reaching Supabase, but authentication failed. Verify the Render Environment value, reset the Supabase DB password if needed, and URL-encode any special characters in the password before pasting it into DATABASE_URL.');
+            }
         }
     })();
 }
