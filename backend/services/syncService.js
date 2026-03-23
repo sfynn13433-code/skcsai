@@ -74,19 +74,3 @@ if (require.main === module) {
 module.exports = {
     syncAllSports
 };
-``` eof
-
-### 🚀 How to trigger the Real Data:
-
-1.  **Push the code:**
-    ```powershell
-    git add backend/services/syncService.js
-    git commit -m "Engine: Switched from Test Mode to Real Data Sync"
-    git push origin main
-    ```
-2.  **Wait for Render to be "Live"** (Green light).
-3.  **Trigger the Sync:** Use the "Pipeline" command we discussed earlier to tell the server to run this file right now. 
-
-**Wait, what about the API keys?** For this to work, you **must** have your `SPORTS_API_KEY` or `APISPORTS_KEY` added in the **Render Environment Variables** tab. If those keys are missing, the "Found 0 matches" warning will appear in your logs.
-
-**Once you run the sync, check your website.** You should see the "Warriors vs Lakers" disappear and real matches like "Arsenal vs Chelsea" or "Liverpool vs United" appear in their place! Would you like me to help you check your Render logs to see if it found any matches?
