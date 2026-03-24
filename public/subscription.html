@@ -507,11 +507,10 @@ let skcsMatches = [];
 let matchesLoaded = false;
 let userTier = "normal";
 
-// UPDATED: "Fail-Safe" loadMatches that selects all columns (*)
+// UPDATED: Load matches from predictions_final table
 async function loadMatches() { 
-  // We use "*" to select EVERY column available in the table
   const { data, error } = await supabaseClient
-    .from("matches") 
+    .from("predictions_final") 
     .select("*"); 
 
   if (error) { 
@@ -519,9 +518,26 @@ async function loadMatches() {
     return; 
   }
 
-  skcsMatches = data; 
+  // Extract individual matches from the predictions_final JSONB matches column
+  skcsMatches = [];
+  (data || []).forEach(row => {
+    if (row.matches && Array.isArray(row.matches)) {
+      row.matches.forEach(m => {
+        skcsMatches.push({
+          id: m.match_id || m.id || row.id,
+          home_team: m.home_team || m.home || m.homeTeam || 'Unknown',
+          away_team: m.away_team || m.away || m.awayTeam || 'Unknown',
+          sport: m.sport || row.type || 'football',
+          prediction: m.prediction || '',
+          total_confidence: row.total_confidence || 0,
+          risk_level: m.risk_level || 'medium'
+        });
+      });
+    }
+  });
+
   matchesLoaded = true;
-  console.log("SUCCESS! Matches loaded from Supabase:", skcsMatches);
+  console.log("SUCCESS! Matches loaded from Supabase:", skcsMatches.length, "matches");
 } 
 
 async function checkSession() { 
@@ -536,7 +552,7 @@ async function checkSession() {
 } 
 
 async function loginUser(email, password) { 
-  const { data, error } = await supabase.auth.signInWithPassword({ 
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ 
     email: email, 
     password: password 
   }); 
@@ -548,7 +564,7 @@ async function loginUser(email, password) {
 }
 
 async function getTierRules() { 
-  const { data, error } = await supabase 
+  const { data, error } = await supabaseClient
     .from("tier_rules") 
     .select("*") 
     .eq("tier", userTier) 
@@ -564,7 +580,7 @@ async function getTierRules() {
 async function getPrediction(matchId) { 
   const tier = await getTierRules(); 
 
-  const { data, error } = await supabase 
+  const { data, error } = await supabaseClient
     .from("predictions_final") 
     .select("*") 
     .eq("match_id", matchId); 
