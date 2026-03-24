@@ -2,9 +2,8 @@
   "name": "skcs-backend",
   "private": true,
   "scripts": {
-  "start": "node server.js",
-  "dev": "nodemon server-express.js",
-  "encode-db-password": "node encode-db-password.js"
+  "start": "node server-express.js",
+  "dev": "nodemon server-express.js"
 },
   "dependencies": {
     "@supabase/supabase-js": "^2.56.0",

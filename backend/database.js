@@ -383,26 +383,31 @@ async function getPredictionsByTier(tier, date) {
     endDate.setHours(23, 59, 59, 999);
 
     const res = await pool.query(
-        `SELECT p.*, m.match_date, 
-            home_team.name as home_team_name, away_team.name as away_team_name,
-            l.name as league_name, l.sport
-        FROM predictions p
-        JOIN matches m ON p.match_id = m.id
-        JOIN teams home_team ON m.home_team_id = home_team.id
-        JOIN teams away_team ON m.away_team_id = away_team.id
-        JOIN leagues l ON m.league_id = l.id
-        WHERE p.${tierField} = 1
-          AND m.match_date BETWEEN $1 AND $2
-        ORDER BY p.confidence DESC
-        LIMIT $3`,
-        [startDate.toISOString(), endDate.toISOString(), tierConfig.daily]
+        `SELECT p.*, 
+            (p.matches->>'home_team')::text as home_team_name,
+            (p.matches->>'away_team')::text as away_team_name,
+            (p.matches->>'sport')::text as sport,
+            (p.matches->>'match_date')::timestamp as match_date
+        FROM predictions_final p
+        WHERE p.tier = $1
+          AND p.created_at BETWEEN $2 AND $3
+        ORDER BY p.total_confidence DESC
+        LIMIT $4`,
+        [tierConfig.deep ? 'deep' : 'normal', startDate.toISOString(), endDate.toISOString(), tierConfig.daily]
     );
 
-    // Parse JSON fields
+    // Flatten match data from JSONB array for frontend compatibility
     res.rows.forEach(r => {
-        r.recommended = JSON.parse(r.recommended || '[]');
-        r.avoid = JSON.parse(r.avoid || '[]');
-        r.risk_flags = JSON.parse(r.risk_flags || '[]');
+        if (r.matches && Array.isArray(r.matches)) {
+            const firstMatch = r.matches[0] || {};
+            r.home_team = firstMatch.home_team || null;
+            r.away_team = firstMatch.away_team || null;
+            r.prediction = firstMatch.prediction || null;
+            r.confidence = firstMatch.confidence || null;
+            r.odds = firstMatch.odds || null;
+            r.market = firstMatch.market || null;
+            r.volatility = firstMatch.volatility || null;
+        }
     });
 
     return res.rows;

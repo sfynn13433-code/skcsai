@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Node modules
 node_modules/
 
@@ -33,3 +34,12 @@ desktop.ini
 firebase.json
 .firebaserc
 node_modules/
+=======
+.env
+node_modules/
+backend/node_modules/
+.aider*
+codestoryconfig.toml
+.vercel
+.env*.local
+>>>>>>> 5e8b799fb8b89cb00e55c911dfdbbb9db6ebe18f
