@@ -18,24 +18,43 @@ const router = express.Router();
  * This is the main button to pull real matches from APIs into Supabase.
  */
 router.post('/sync', requireRole('admin'), async (req, res) => {
-    try {
-        console.log('[pipeline] Starting manual sync of REAL sports data...');
-        
-        // This calls the syncService to fetch real games and run AI analysis
-        const result = await syncAllSports();
-        
-        // Rebuild the website outputs immediately after sync
-        const final = await rebuildFinalOutputs();
+    console.log('[pipeline] Starting manual sync of REAL sports data (background)...');
+    
+    // Return immediately to avoid Render's 30-second timeout
+    res.status(202).json({
+        ok: true,
+        message: "Sync started in background. Check /api/pipeline/status for results."
+    });
 
-        res.status(200).json({
-            ok: true,
-            message: "Real-world matches synced and AI analysis complete.",
-            sync_details: result,
-            final_status: "Web outputs rebuilt"
-        });
+    // Run sync in background
+    try {
+        const result = await syncAllSports();
+        const final = await rebuildFinalOutputs();
+        console.log('[pipeline] Background sync complete:', JSON.stringify({
+            sync: result ? 'ok' : 'no result',
+            normal_singles: final?.normal?.singles?.length || 0,
+            normal_accas: final?.normal?.accas?.length || 0,
+            deep_singles: final?.deep?.singles?.length || 0,
+            deep_accas: final?.deep?.accas?.length || 0
+        }));
     } catch (err) {
-        console.error('[pipeline] Sync trigger failed:', err);
-        res.status(500).json({ error: 'Sync failed', details: err.message });
+        console.error('[pipeline] Background sync failed:', err.message);
+    }
+});
+
+// Check sync status / latest data
+router.get('/status', requireRole('admin'), async (_req, res) => {
+    try {
+        const { createClient } = require('@supabase/supabase-js');
+        const supabase = createClient(
+            process.env.SUPABASE_URL,
+            process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY
+        );
+        const { count: rawCount } = await supabase.from('predictions_raw').select('*', { count: 'exact', head: true });
+        const { count: finalCount } = await supabase.from('predictions_final').select('*', { count: 'exact', head: true });
+        res.json({ ok: true, predictions_raw: rawCount, predictions_final: finalCount });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 });
 
