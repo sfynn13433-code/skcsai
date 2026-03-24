@@ -7,12 +7,24 @@ if (!config?.database?.url) {
     console.warn('[db] DATABASE_URL is not set. Database operations will fail until it is configured.');
 }
 
+// Auto-convert direct Supabase URL to pooler URL to fix auth errors
+let connectionString = config?.database?.url || '';
+if (connectionString.includes('db.ghzjntdvaptuxfpvhybb.supabase.co')) {
+    connectionString = connectionString
+        .replace('db.ghzjntdvaptuxfpvhybb.supabase.co:5432', 'aws-1-eu-central-1.pooler.supabase.com:6543')
+        .replace('postgres:', 'postgres.ghzjntdvaptuxfpvhybb:');
+    if (!connectionString.includes('pgbouncer=')) {
+        connectionString += (connectionString.includes('?') ? '&' : '?') + 'pgbouncer=true';
+    }
+    console.log('[db] Auto-converted to Supabase pooler URL');
+}
+
 const pool = new Pool({
-    connectionString: config?.database?.url,
+    connectionString,
     max: 10,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 10_000,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : undefined
+    ssl: connectionString ? { rejectUnauthorized: false } : undefined
 });
 
 pool.on('error', (err) => {
