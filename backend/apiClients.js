@@ -10,37 +10,60 @@ class APISportsClient {
     }
 
     getBaseUrl(sport) {
-        if (sport === 'basketball') {
-            return 'https://v1.basketball.api-sports.io';
-        }
-        // default to football
-        return 'https://v3.football.api-sports.io';
+        const urls = {
+            football:         'https://v3.football.api-sports.io',
+            afl:              'https://v1.afl.api-sports.io',
+            baseball:         'https://v1.baseball.api-sports.io',
+            basketball:       'https://v1.basketball.api-sports.io',
+            formula1:         'https://v1.formula-1.api-sports.io',
+            handball:         'https://v1.handball.api-sports.io',
+            hockey:           'https://v1.hockey.api-sports.io',
+            mma:              'https://v1.mma.api-sports.io',
+            nba:              'https://v2.nba.api-sports.io',
+            american_football:'https://v1.american-football.api-sports.io',
+            rugby:            'https://v1.rugby.api-sports.io',
+            volleyball:       'https://v1.volleyball.api-sports.io'
+        };
+        return urls[sport] || urls.football;
+    }
+
+    getEndpoint(sport) {
+        const endpoints = {
+            football:         'fixtures',
+            formula1:         'races',
+            mma:              'fights'
+        };
+        return endpoints[sport] || 'games';
     }
 
     async getFixtures(leagueId, season, options = {}, sport = 'football') {
         try {
             const baseUrl = this.getBaseUrl(sport);
-            const params = { league: leagueId, season };
+            const endpoint = this.getEndpoint(sport);
+            const params = {};
+
+            if (leagueId) params.league = leagueId;
+            if (season) params.season = season;
             if (options.from) params.from = options.from;
             if (options.to) params.to = options.to;
+            if (options.date) params.date = options.date;
             if (options.page) params.page = options.page;
 
-            console.log(`🌐 Calling API: ${baseUrl}/fixtures`, params);
+            console.log(`[API-Sports] ${sport}: ${baseUrl}/${endpoint}`, params);
 
-            const response = await axios.get(`${baseUrl}/fixtures`, {
+            const response = await axios.get(`${baseUrl}/${endpoint}`, {
                 headers: this.headers,
                 params
             });
 
-            console.log(`✅ API response status: ${response.status}`);
+            console.log(`[API-Sports] ${sport}: status=${response.status} results=${response.data.results || 0}`);
             if (response.data.errors && Object.keys(response.data.errors).length > 0) {
-                console.log('⚠️ API errors:', response.data.errors);
+                console.warn(`[API-Sports] ${sport} errors:`, response.data.errors);
             }
-            console.log(`📊 Results count: ${response.data.results || 0}`);
 
             return response.data;
         } catch (error) {
-            console.error('❌ API-Sports error:', error.message);
+            console.error(`[API-Sports] ${sport} error:`, error.message);
             if (error.response) {
                 console.error('Response data:', error.response.data);
             }

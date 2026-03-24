@@ -9,10 +9,30 @@ const config = require('../config');
  * These are the REAL leagues the AI will now look for.
  */
 const SPORTS_CONFIG = [
-    { sport: 'football', leagueId: process.env.APISPORTS_LEAGUE_ID || '39', season: process.env.APISPORTS_SEASON || '2023' },
-    { sport: 'mma_mixed_martial_arts' },
-    { sport: 'americanfootball_nfl' },
-    { sport: 'rugby_union' }
+    // Football - Premier League (current season)
+    { sport: 'football',          leagueId: '39',  season: '2025', oddsKey: 'soccer_epl' },
+    // Basketball - EuroLeague
+    { sport: 'basketball',        leagueId: '120', season: '2025-2026', oddsKey: 'basketball_euroleague' },
+    // NBA
+    { sport: 'nba',               leagueId: '12',  season: '2025', oddsKey: 'basketball_nba' },
+    // American Football - NFL
+    { sport: 'american_football', leagueId: '1',   season: '2025', oddsKey: 'americanfootball_nfl' },
+    // Rugby - Six Nations
+    { sport: 'rugby',             leagueId: '44',  season: '2026', oddsKey: 'rugbyunion_six_nations' },
+    // Hockey - NHL
+    { sport: 'hockey',            leagueId: '57',  season: '2025', oddsKey: 'icehockey_nhl' },
+    // Baseball - MLB
+    { sport: 'baseball',          leagueId: '1',   season: '2026', oddsKey: 'baseball_mlb' },
+    // AFL - Australian Football League
+    { sport: 'afl',               leagueId: '1',   season: '2026', oddsKey: null },
+    // Handball - Champions League
+    { sport: 'handball',          leagueId: '30',  season: '2025', oddsKey: null },
+    // Volleyball - Nations League
+    { sport: 'volleyball',        leagueId: '78',  season: '2026', oddsKey: null },
+    // Formula 1
+    { sport: 'formula1',          leagueId: null,  season: '2026', oddsKey: null },
+    // MMA
+    { sport: 'mma',               leagueId: null,  season: '2026', oddsKey: 'mma_mixed_martial_arts' },
 ];
 
 /**

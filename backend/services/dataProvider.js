@@ -44,45 +44,89 @@ async function fetchOddsData(sportKey) {
     }));
 }
 
-async function buildLiveData(options = {}) {
-    const requestedSport = options.sport || process.env.APISPORTS_SPORT || 'football';
-    const leagueId = options.leagueId || process.env.APISPORTS_LEAGUE_ID;
-    const season = options.season || process.env.APISPORTS_SEASON;
+function todayStr() {
+    return new Date().toISOString().slice(0, 10);
+}
 
-    // 1. If it's MMA or NFL, use Odds-API
-    if (requestedSport === 'mma_mixed_martial_arts' || requestedSport === 'americanfootball_nfl') {
-        return await fetchOddsData(requestedSport);
-    }
+function futureStr(days) {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0, 10);
+}
 
-    // 2. Default to API-Sports (Football/Basketball)
-    if (!leagueId || !season) {
-        console.warn(`[dataProvider] skipping ${requestedSport} sync: missing league/season`);
-        return [];
-    }
-
-    const client = new APISportsClient();
-    const data = await client.getFixtures(leagueId, season, {}, requestedSport);
-    const fixtures = data?.response || [];
-
-    const out = fixtures.slice(0, 20).map((f) => {
-        const fixtureId = f?.fixture?.id;
-        const home = f?.teams?.home?.name;
-        const away = f?.teams?.away?.name;
-
+function normalizeFixture(f, sport) {
+    // Football v3 format
+    if (f?.fixture?.id) {
         return {
-            match_id: fixtureId ? String(fixtureId) : `live-${String(home)}-${String(away)}`,
-            sport: requestedSport,
-            home_team: home || null,
-            away_team: away || null,
+            match_id: String(f.fixture.id),
+            sport,
+            home_team: f.teams?.home?.name || null,
+            away_team: f.teams?.away?.name || null,
+            date: f.fixture?.date || null,
+            status: f.fixture?.status?.short || null,
             market: '1X2',
-            prediction: 'home_win',
+            prediction: null,
             confidence: null,
             volatility: null,
             odds: null
         };
-    });
+    }
+    // Other sports v1/v2 format (games, races, fights)
+    const id = f.id || f.game?.id || f.fight?.id || f.race?.id;
+    const home = f.teams?.home?.name || f.players?.home?.name || f.competitors?.[0]?.name || null;
+    const away = f.teams?.away?.name || f.players?.away?.name || f.competitors?.[1]?.name || null;
+    const date = f.date || f.game?.date || f.fight?.date || f.race?.date || null;
+    const status = f.status?.short || f.game?.status?.short || null;
 
-    console.log('[dataProvider] live fixtures fetched=%s returned=%s sport=%s league=%s season=%s', fixtures.length, out.length, requestedSport, leagueId, season);
+    return {
+        match_id: id ? String(id) : `live-${sport}-${home}-${away}`,
+        sport,
+        home_team: home,
+        away_team: away,
+        date,
+        status,
+        market: '1X2',
+        prediction: null,
+        confidence: null,
+        volatility: null,
+        odds: null
+    };
+}
+
+async function buildLiveData(options = {}) {
+    const sport = options.sport || 'football';
+    const leagueId = options.leagueId || null;
+    const season = options.season || null;
+    const today = todayStr();
+    const weekAhead = futureStr(7);
+
+    const client = new APISportsClient();
+
+    // Build query options based on sport
+    const queryOpts = {};
+    if (sport === 'football') {
+        queryOpts.from = today;
+        queryOpts.to = weekAhead;
+    } else {
+        queryOpts.date = today;
+    }
+
+    const data = await client.getFixtures(leagueId, season, queryOpts, sport);
+    const fixtures = data?.response || [];
+
+    if (fixtures.length === 0) {
+        console.log(`[dataProvider] ${sport}: 0 fixtures from API-Sports`);
+        // Fallback to Odds API for this sport
+        const oddsKey = options.oddsKey;
+        if (oddsKey) {
+            console.log(`[dataProvider] ${sport}: trying Odds API fallback (${oddsKey})`);
+            return await fetchOddsData(oddsKey);
+        }
+        return [];
+    }
+
+    const out = fixtures.slice(0, 30).map(f => normalizeFixture(f, sport));
+    console.log(`[dataProvider] ${sport}: fetched=${fixtures.length} returned=${out.length}`);
     return out;
 }
 
