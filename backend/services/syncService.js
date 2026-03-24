@@ -48,19 +48,21 @@ async function syncAllSports() {
         let totalMatchesProcessed = 0;
 
         for (const item of SPORTS_CONFIG) {
-            console.log(`[syncService] Fetching REAL matches for: ${item.sport}...`);
-            
-            // This calls your API providers (The Odds API, etc.)
-            const matches = await buildLiveData(item);
-            
-            if (matches && matches.length > 0) {
-                console.log(`[syncService] Found ${matches.length} REAL matches for ${item.sport}. Running AI Analysis...`);
+            try {
+                console.log(`[syncService] Fetching REAL matches for: ${item.sport}...`);
                 
-                // This runs the AI Logic and saves it to Supabase
-                await runPipelineForMatches(matches);
-                totalMatchesProcessed += matches.length;
-            } else {
-                console.log(`[syncService] No upcoming REAL matches found for ${item.sport} right now.`);
+                const matches = await buildLiveData(item);
+                
+                if (matches && matches.length > 0) {
+                    console.log(`[syncService] Found ${matches.length} REAL matches for ${item.sport}. Running AI Analysis...`);
+                    await runPipelineForMatches({ matches });
+                    totalMatchesProcessed += matches.length;
+                    console.log(`[syncService] ${item.sport}: pipeline complete for ${matches.length} matches`);
+                } else {
+                    console.log(`[syncService] No upcoming REAL matches found for ${item.sport} right now.`);
+                }
+            } catch (sportErr) {
+                console.error(`[syncService] ERROR processing ${item.sport}:`, sportErr.message);
             }
         }
 

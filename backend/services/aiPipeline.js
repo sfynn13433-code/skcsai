@@ -19,8 +19,7 @@ function buildRawPredictionFromProviderItem(item) {
     if (!match_id) throw new Error('match_id missing in provider item');
 
     const sport = normalizeSport(item.sport);
-    const market = String(item.market || '').trim();
-    const prediction = String(item.prediction || '').trim();
+    const market = String(item.market || '1X2').trim();
 
     const scoring = scoreMatch({
         match_id,
@@ -28,6 +27,9 @@ function buildRawPredictionFromProviderItem(item) {
         home_team: item.home_team || null,
         away_team: item.away_team || null
     });
+
+    const rawPrediction = String(item.prediction || '').trim();
+    const prediction = rawPrediction || (scoring.winner === 'home' ? 'home_win' : 'away_win');
 
     const raw = {
         match_id,
