@@ -16,7 +16,7 @@ const cron         = require('node-cron');
 const { syncAllSports }      = require('./services/syncService');
 
 // -------------------------------------------------
-//  Scheduler – runs every 6 hours
+//  Scheduler - runs every 6 hours
 // -------------------------------------------------
 cron.schedule('0 */6 * * *', () => {
     console.log('[cron] Triggering master sports sync...');
@@ -24,7 +24,7 @@ cron.schedule('0 */6 * * *', () => {
 });
 
 // -------------------------------------------------
-//  Helper – warn if important env vars are missing
+//  Helper - warn if important env vars are missing
 // -------------------------------------------------
 function warnEnv(name) {
     if (!process.env[name] || String(process.env[name]).trim().length === 0) {
@@ -93,7 +93,7 @@ app.use(cors({
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
-app.options('*', cors()); // pre‑flight
+app.options('*', cors()); // pre-flight
 
 app.use(morgan('combined'));
 
@@ -112,7 +112,7 @@ app.use(express.json({ limit: '1mb', strict: true }));
 // -----------------  Debug logging  -----------------
 app.use((req, res, next) => {
     console.log(`[ROUTE HIT] ${req.method} ${req.url}`);
-    res.setHeader('X‑SKCS‑Debug', 'Verified‑Backend‑v1');
+    res.setHeader('X-SKCS-Debug', 'Verified-Backend-v1');
     next();
 });
 
@@ -165,7 +165,7 @@ app.post('/api/subscribe', requireSupabaseUser, async (req, res) => {
 });
 
 // -------------------------------------------------
-//  Front‑end entry point
+//  Front-end entry point
 // -------------------------------------------------
 app.get('/', (_req, res) => {
     res.sendFile(path.join(__dirname, '../public/index.html'));
@@ -181,7 +181,7 @@ app.use('/api/chat',        chatRouter);
 app.use('/debug',           requireRole('admin'), debugRouter);
 
 // -------------------------------------------------
-//  Health‑check (admin only)
+//  Health-check (admin only)
 // -------------------------------------------------
 app.get('/api/health-check', async (req, res) => {
     const health = {
@@ -215,9 +215,9 @@ app.use((err, _req, res, _next) => {
 });
 
 // -------------------------------------------------
-//  Port binding – **Render injects process.env.PORT**
+//  Port binding - Render injects process.env.PORT
 // -------------------------------------------------
 const PORT = Number(process.env.PORT) || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[server‑express] listening on ${PORT}`);
+    console.log(`[server-express] listening on ${PORT}`);
 });
