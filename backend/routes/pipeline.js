@@ -114,7 +114,7 @@ router.post('/rebuild', requireRole('admin'), async (_req, res) => {
         res.status(200).json({ ok: true, message: "Final outputs rebuilt successfully", data: final });
     } catch (err) {
         console.error('Pipeline rebuild error:', err);
-        res.status(500).json({ error: 'Rebuild failed' });
+        res.status(500).json({ error: 'Rebuild failed', details: err.message });
     }
 });
 
