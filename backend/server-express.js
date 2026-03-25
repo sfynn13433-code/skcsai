@@ -14,6 +14,12 @@ const { getPlan }           = require('./config/subscriptionPlans');
 const { requireSupabaseUser } = require('./middleware/supabaseJwt');
 const cron         = require('node-cron');
 const { syncAllSports }      = require('./services/syncService');
+const { bootstrap }          = require('./dbBootstrap');
+
+// -------------------------------------------------
+//  Database bootstrap - ensure tables + seed data
+// -------------------------------------------------
+bootstrap().catch(err => console.error('[startup] bootstrap failed:', err.message));
 
 // -------------------------------------------------
 //  Scheduler - runs every 6 hours
