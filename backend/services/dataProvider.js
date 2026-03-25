@@ -1,7 +1,23 @@
 'use strict';
 
-const config = require('../config');
-const { APISportsClient, OddsAPIClient } = require('../apiClients');
+const SPORT_KEY_MAP = {
+    'soccer_epl': 'football',
+    'soccer_england_efl_cup': 'football',
+    'soccer_uefa_champs_league': 'football',
+    'basketball_nba': 'basketball',
+    'basketball_euroleague': 'basketball',
+    'americanfootball_nfl': 'nfl',
+    'icehockey_nhl': 'hockey',
+    'baseball_mlb': 'baseball',
+    'mma_mixed_martial_arts': 'mma',
+    'aussierules_afl': 'afl',
+    'rugbyunion_six_nations': 'rugby',
+    'rugbyunion_international': 'rugby'
+};
+
+function normalizeSportKey(sportKey) {
+    return SPORT_KEY_MAP[sportKey] || sportKey;
+}
 
 function normalizeMode(mode) {
     if (mode === 'test' || mode === 'live') return mode;
@@ -31,16 +47,18 @@ async function fetchOddsData(sportKey) {
     const data = await client.getOdds(sportKey);
     if (!data) return [];
 
+    const normalizedSport = normalizeSportKey(sportKey);
+
     return data.map(event => ({
         match_id: `odds-${event.id}`,
-        sport: sportKey,
+        sport: normalizedSport,
         home_team: event.home_team,
         away_team: event.away_team,
-        market: '1X2', // Default mapping
-        prediction: 'home_win', // Placeholder
+        market: '1X2',
+        prediction: 'home_win',
         confidence: null,
         volatility: null,
-        odds: null // Could parse from bookmakers if needed
+        odds: null
     }));
 }
 
