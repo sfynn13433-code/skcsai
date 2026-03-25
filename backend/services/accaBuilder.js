@@ -299,75 +299,59 @@ async function buildFinalForTier(tier) {
 
         await clearFinalForTier(t, client);
 
+        // Build singles from all limited candidates
         const singles = [];
-        for (const p of perMatchLimited) {
+        for (const p of limitedCandidates) {
             const matches = [toFinalMatchPayload(p)];
             const total = computeTotalConfidence(matches);
             const row = await insertFinalRow({
-                tier: t,
-                type: 'single',
-                matches,
-                total_confidence: total,
-                risk_level: riskLevelFromConfidence(total)
+                tier: t, type: 'single', matches, total_confidence: total, risk_level: riskLevelFromConfidence(total)
             }, client);
             singles.push(row);
         }
 
+        // Build ACCAs only if we have reasonable number of low volatility candidates
         const lowVol = limitedCandidates.filter(p => p.volatility === 'low');
-
-        const maxAccaSize = tierRules.max_acca_size;
         const accas = [];
+        const maxAccaSize = Math.min(tierRules.max_acca_size, 3); // Cap at 3 to limit combinations
 
-        // Build deterministic ACCAs: we generate combinations starting from size=2 up to maxAccaSize.
-        // For deep tier, low volatility is already enforced above.
-        for (let size = 2; size <= maxAccaSize; size++) {
-            const combos = combinations(lowVol, size);
-            for (const combo of combos) {
-                if (!combo.length) continue;
+        // Only build ACCAs if we have 2-10 low volatility candidates
+        if (lowVol.length >= 2 && lowVol.length <= 10) {
+            for (let size = 2; size <= maxAccaSize; size++) {
+                const combos = combinations(lowVol, size);
+                for (const combo of combos) {
+                    if (!combo.length) continue;
 
-                if (accaRules.no_same_match) {
-                    const matchIds = combo.map(p => p.match_id);
-                    const set = new Set(matchIds);
-                    if (set.size !== matchIds.length) continue;
+                    if (accaRules.no_same_match) {
+                        const matchIds = combo.map(p => p.match_id);
+                        const set = new Set(matchIds);
+                        if (set.size !== matchIds.length) continue;
+                    }
+
+                    if (!accaRules.allow_high_volatility) {
+                        if (combo.some(p => p.volatility === 'high')) continue;
+                    }
+
+                    if (t === 'deep' && combo.some(p => p.volatility !== 'low')) continue;
+
+                    if (accaRules.no_conflicting_markets) {
+                        const { hasConflicts } = detectConflicts(combo);
+                        if (hasConflicts) continue;
+                    }
+
+                    const matches = combo.map(toFinalMatchPayload);
+                    const avg = computeTotalConfidence(matches);
+                    const row = await insertFinalRow({
+                        tier: t, type: 'acca', matches, total_confidence: avg, risk_level: riskLevelFromConfidence(avg)
+                    }, client);
+                    accas.push(row);
                 }
-
-                if (!accaRules.allow_high_volatility) {
-                    if (combo.some(p => p.volatility === 'high')) continue;
-                }
-
-                // Deep tier rejects medium volatility (spec)
-                if (t === 'deep' && combo.some(p => p.volatility !== 'low')) continue;
-
-                if (accaRules.no_conflicting_markets) {
-                    const { hasConflicts } = detectConflicts(combo);
-                    if (hasConflicts) continue;
-                }
-
-                const matches = combo.map(toFinalMatchPayload);
-                const avg = computeTotalConfidence(matches);
-                const row = await insertFinalRow({
-                    tier: t,
-                    type: 'acca',
-                    matches,
-                    total_confidence: avg,
-                    risk_level: riskLevelFromConfidence(avg)
-                }, client);
-
-                accas.push(row);
             }
         }
 
         console.log('[accaBuilder] tier=%s singles=%s accas=%s', t, singles.length, accas.length);
-
-        return {
-            tier: t,
-            singles,
-            accas
-        };
+        return { tier: t, singles, accas };
     });
 }
 
-module.exports = {
-    buildFinalForTier,
-    buildAccaV2
-};
+module.exports = { buildFinalForTier, buildAccaV2 };
