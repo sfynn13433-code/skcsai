@@ -293,6 +293,10 @@ async function buildFinalForTier(tier) {
         const valid = await loadValidFilteredPredictions(t, client);
         const perMatchLimited = enforcePerMatchLimit(valid, accaRules.max_per_match);
 
+        // Limit candidates to prevent combinatorial explosion and timeouts
+        const MAX_ACCA_CANDIDATES = 30;
+        const limitedCandidates = perMatchLimited.slice(0, MAX_ACCA_CANDIDATES);
+
         await clearFinalForTier(t, client);
 
         const singles = [];
@@ -309,7 +313,7 @@ async function buildFinalForTier(tier) {
             singles.push(row);
         }
 
-        const lowVol = perMatchLimited.filter(p => p.volatility === 'low');
+        const lowVol = limitedCandidates.filter(p => p.volatility === 'low');
 
         const maxAccaSize = tierRules.max_acca_size;
         const accas = [];
