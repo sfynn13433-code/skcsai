@@ -7,6 +7,59 @@ const { requireRole } = require('../utils/auth');
 
 const router = express.Router();
 
+const SPORT_FILTER_MAP = {
+    football: ['football', 'soccer_epl', 'soccer_england_efl_cup', 'soccer_uefa_champs_league'],
+    basketball: ['basketball', 'nba', 'basketball_nba', 'basketball_euroleague'],
+    nfl: ['nfl', 'american_football', 'americanfootball_nfl'],
+    rugby: ['rugby', 'rugbyunion_international', 'rugbyunion_six_nations'],
+    hockey: ['hockey', 'icehockey_nhl'],
+    baseball: ['baseball', 'baseball_mlb'],
+    afl: ['afl', 'aussierules_afl'],
+    mma: ['mma', 'mma_mixed_martial_arts'],
+    formula1: ['formula1'],
+    handball: ['handball'],
+    volleyball: ['volleyball'],
+    cricket: ['cricket']
+};
+
+function getSportFilterValues(sport) {
+    const key = String(sport || '').trim().toLowerCase();
+    if (!key) return [];
+    return SPORT_FILTER_MAP[key] || [key];
+}
+
+function extractTeamNames(predictions) {
+    const names = new Set();
+    for (const row of predictions) {
+        const matches = Array.isArray(row.matches) ? row.matches : [];
+        for (const m of matches) {
+            const home = m?.home_team || m?.metadata?.home_team || null;
+            const away = m?.away_team || m?.metadata?.away_team || null;
+            if (home && String(home).trim()) names.add(String(home).trim());
+            if (away && String(away).trim()) names.add(String(away).trim());
+        }
+    }
+    return Array.from(names);
+}
+
+function buildPlayersByTeam(rows) {
+    const map = new Map();
+    for (const row of rows) {
+        if (!map.has(row.team_id)) map.set(row.team_id, []);
+        const list = map.get(row.team_id);
+        if (list.length >= 3) continue;
+        list.push({
+            id: row.id,
+            name: row.name,
+            position: row.position,
+            number: row.number,
+            age: row.age,
+            photo: row.photo
+        });
+    }
+    return map;
+}
+
 // GET /api/predictions
 // Simplified: always returns data, default tier = 'normal'
 router.get('/', requireRole('user'), async (req, res) => {
@@ -14,6 +67,7 @@ router.get('/', requireRole('user'), async (req, res) => {
         // Use 'normal' as default if tier is missing
         const tier = req.query.tier || 'normal';
         const sport = req.query.sport;
+        const sportFilterValues = getSportFilterValues(sport);
 
         console.log(`[PREDICTIONS] Request for Tier: ${tier}, Sport: ${sport || 'all'}`);
 
@@ -24,23 +78,117 @@ router.get('/', requireRole('user'), async (req, res) => {
         `;
         const queryParams = [tier];
 
-        if (sport) {
+        if (sportFilterValues.length > 0) {
             queryStr += ` AND EXISTS (
                 SELECT 1 FROM jsonb_array_elements(matches) AS m 
-                WHERE LOWER(m->>'sport') = LOWER($2)
+                WHERE LOWER(m->>'sport') = ANY($2::text[])
             )`;
-            queryParams.push(sport);
+            queryParams.push(sportFilterValues);
         }
 
         queryStr += ` ORDER BY created_at DESC LIMIT 20;`;
 
         const dbRes = await query(queryStr, queryParams);
+        const predictions = dbRes.rows;
+
+        const teamNames = extractTeamNames(predictions).map(n => n.toLowerCase());
+        const teamInfoByName = new Map();
+
+        if (teamNames.length > 0) {
+            try {
+                const teamRes = await query(
+                    `
+                    SELECT
+                        t.id,
+                        t.name,
+                        t.logo,
+                        t.country,
+                        l.id AS league_id,
+                        l.name AS league_name,
+                        l.country AS league_country,
+                        l.season AS league_season,
+                        s.id AS sport_id,
+                        s.slug AS sport_slug,
+                        s.name AS sport_name
+                    FROM teams t
+                    LEFT JOIN leagues l ON l.id = t.league_id
+                    LEFT JOIN sports s ON s.id = l.sport_id
+                    WHERE LOWER(t.name) = ANY($1::text[])
+                    `,
+                    [teamNames]
+                );
+
+                const teamIds = [];
+                for (const row of teamRes.rows) {
+                    teamIds.push(row.id);
+                }
+
+                const playersByTeam = new Map();
+                if (teamIds.length > 0) {
+                    const playersRes = await query(
+                        `
+                        SELECT id, team_id, name, age, number, position, photo
+                        FROM players
+                        WHERE team_id = ANY($1::int[])
+                        ORDER BY team_id, name ASC
+                        `,
+                        [teamIds]
+                    );
+                    const grouped = buildPlayersByTeam(playersRes.rows);
+                    for (const [teamId, players] of grouped.entries()) {
+                        playersByTeam.set(teamId, players);
+                    }
+                }
+
+                for (const row of teamRes.rows) {
+                    teamInfoByName.set(String(row.name).toLowerCase(), {
+                        id: row.id,
+                        name: row.name,
+                        logo: row.logo,
+                        country: row.country,
+                        league: {
+                            id: row.league_id,
+                            name: row.league_name,
+                            country: row.league_country,
+                            season: row.league_season
+                        },
+                        sport: {
+                            id: row.sport_id,
+                            slug: row.sport_slug,
+                            name: row.sport_name
+                        },
+                        players: playersByTeam.get(row.id) || []
+                    });
+                }
+            } catch (enrichErr) {
+                console.warn('[predictions] enrichment skipped:', enrichErr.message);
+            }
+        }
+
+        const enrichedPredictions = predictions.map((row) => {
+            const matches = Array.isArray(row.matches) ? row.matches : [];
+            const enrichedMatches = matches.map((m) => {
+                const home = m?.home_team || m?.metadata?.home_team || null;
+                const away = m?.away_team || m?.metadata?.away_team || null;
+                const homeKey = home ? String(home).toLowerCase() : null;
+                const awayKey = away ? String(away).toLowerCase() : null;
+                return {
+                    ...m,
+                    home_team_info: homeKey ? (teamInfoByName.get(homeKey) || null) : null,
+                    away_team_info: awayKey ? (teamInfoByName.get(awayKey) || null) : null
+                };
+            });
+            return {
+                ...row,
+                matches: enrichedMatches
+            };
+        });
 
         res.status(200).json({
             tier,
             sport: sport || 'all',
-            count: dbRes.rows.length,
-            predictions: dbRes.rows
+            count: enrichedPredictions.length,
+            predictions: enrichedPredictions
         });
     } catch (err) {
         console.error('[predictions] Route Error:', err);

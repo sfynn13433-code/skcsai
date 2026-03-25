@@ -859,8 +859,22 @@
 
                     const h = findTeam(m, 'home') || "Team A";
                     const a = findTeam(m, 'away') || "Team B";
+                    const homeInfo = m.home_team_info || null;
+                    const awayInfo = m.away_team_info || null;
+                    const homeLogo = homeInfo && homeInfo.logo ? `<img src="${homeInfo.logo}" alt="${h}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px;"/>` : '';
+                    const awayLogo = awayInfo && awayInfo.logo ? `<img src="${awayInfo.logo}" alt="${a}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-left:6px;"/>` : '';
+
+                    const homePlayer = homeInfo && Array.isArray(homeInfo.players) ? homeInfo.players.find(pl => pl && pl.photo) : null;
+                    const awayPlayer = awayInfo && Array.isArray(awayInfo.players) ? awayInfo.players.find(pl => pl && pl.photo) : null;
+                    const playerPreview = (homePlayer || awayPlayer)
+                        ? `<div style="margin-top:4px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:#4a5568;font-size:0.72rem;">${homePlayer ? `<span style="display:flex;align-items:center;gap:4px;"><img src="${homePlayer.photo}" alt="${homePlayer.name || 'Home player'}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;"/>${homePlayer.name || ''}</span>` : ''}${awayPlayer ? `<span style="display:flex;align-items:center;gap:4px;"><img src="${awayPlayer.photo}" alt="${awayPlayer.name || 'Away player'}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;"/>${awayPlayer.name || ''}</span>` : ''}</div>`
+                        : '';
+
+                    const leagueLabel = (homeInfo && homeInfo.league && homeInfo.league.name)
+                        ? `<div style="margin-top:2px;color:#718096;font-size:0.68rem;letter-spacing:0.3px;">${homeInfo.league.name}</div>`
+                        : '';
                     // Using dark colors for better visibility on white backgrounds
-                    return `<div style="margin-bottom:4px; color:#1a202c;">${h} <span style="color:#718096;font-size:0.8rem;">vs</span> ${a}</div>`;
+                    return `<div style="margin-bottom:6px; color:#1a202c;">${homeLogo}${h} <span style="color:#718096;font-size:0.8rem;">vs</span> ${a}${awayLogo}${leagueLabel}${playerPreview}</div>`;
                 }).join('');
             }
 
