@@ -147,7 +147,10 @@ button:hover { opacity: 0.9; }
 
 <div class="container">
 
-<h1>Choose Your Plan</h1>
+<div style="display: flex; align-items: center; margin-bottom: 20px;">
+  <button onclick="goBack()" style="width: auto; padding: 8px 16px; background: #64748b; margin-right: 10px; margin-top: 0;">← Back</button>
+  <h1 style="margin: 0; flex-grow: 1;">Choose Your Plan</h1>
+</div>
 
 <div class="tabs">
   <div id="tabCore" class="tab active-core" onclick="showCore()">🟢 SKCS Core</div>
@@ -193,7 +196,7 @@ button:hover { opacity: 0.9; }
       </li>
     </ul>
     <div class="skcs-chatbot">Chatbot Access: 2 Requests / Day</div>
-    <button class="core-btn" onclick="subscribe('core_4')">Select Plan</button>
+    <button class="core-btn" onclick="selectPlan('core_4day_sprint')">Select Plan</button>
   </div>
 
   <!-- Core 9-Day -->
@@ -218,7 +221,7 @@ button:hover { opacity: 0.9; }
       </li>
     </ul>
     <div class="skcs-chatbot">Chatbot Access: 5 Requests / Day</div>
-    <button class="core-btn" onclick="subscribe('core_9')">Select Plan</button>
+    <button class="core-btn" onclick="selectPlan('core_9day_run')">Select Plan</button>
   </div>
 
   <!-- Core 14-Day -->
@@ -243,7 +246,7 @@ button:hover { opacity: 0.9; }
       </li>
     </ul>
     <div class="skcs-chatbot">Chatbot Access: 10 Requests / Day</div>
-    <button class="core-btn" onclick="subscribe('core_14')">Select Plan</button>
+    <button class="core-btn" onclick="selectPlan('core_14day_pro')">Select Plan</button>
   </div>
 
   <!-- Core 30-Day -->
@@ -268,7 +271,7 @@ button:hover { opacity: 0.9; }
       </li>
     </ul>
     <div class="skcs-chatbot">Chatbot Access: 20 Requests / Day</div>
-    <button class="core-btn" onclick="subscribe('core_30')">Select Plan</button>
+    <button class="core-btn" onclick="selectPlan('core_30day_limitless')">Select Plan</button>
   </div>
 
 </div>
@@ -298,7 +301,7 @@ button:hover { opacity: 0.9; }
       </li>
     </ul>
     <div class="skcs-chatbot">Chatbot: 10 Requests / Day</div>
-    <button class="elite-btn" onclick="subscribe('elite_4')">Select Plan</button>
+    <button class="elite-btn" onclick="selectPlan('elite_4day_deep_dive')">Select Plan</button>
   </div>
 
   <!-- Elite 9-Day -->
@@ -323,7 +326,7 @@ button:hover { opacity: 0.9; }
       </li>
     </ul>
     <div class="skcs-chatbot">Chatbot: 25 Requests / Day</div>
-    <button class="elite-btn" onclick="subscribe('elite_9')">Select Plan</button>
+    <button class="elite-btn" onclick="selectPlan('elite_9day_deep_strike')">Select Plan</button>
   </div>
 
   <!-- Elite 14-Day -->
@@ -348,7 +351,7 @@ button:hover { opacity: 0.9; }
       </li>
     </ul>
     <div class="skcs-chatbot">Chatbot: 50 Requests / Day</div>
-    <button class="elite-btn" onclick="subscribe('elite_14')">Select Plan</button>
+    <button class="elite-btn" onclick="selectPlan('elite_14day_deep_pro')">Select Plan</button>
   </div>
 
   <!-- Elite 30-Day -->
@@ -373,7 +376,7 @@ button:hover { opacity: 0.9; }
       </li>
     </ul>
     <div class="skcs-chatbot">Chatbot: 150 Requests / Day</div>
-    <button class="elite-btn" onclick="subscribe('elite_30')">Select Plan</button>
+    <button class="elite-btn" onclick="selectPlan('elite_30day_deep_vip')">Select Plan</button>
   </div>
 
 </div>
@@ -402,41 +405,55 @@ function showElite(){
   document.getElementById('tabElite').classList.add('active-elite');
 }
 
-async function subscribe(planId){
+async function selectPlan(tierId) {
   const { data: { session } } = await supabaseClient.auth.getSession();
-  const token = session?.access_token;
-
-  if (!token) {
-    alert("Please log in to subscribe.");
+  
+  if (!session || !session.user) {
+    alert("Please log in to select a plan.");
     window.location.href = "login.html";
     return;
   }
 
+  const userEmail = session.user.email;
+  const SKCS_BACKEND = "https://skcsai.onrender.com";
+
   try {
-    const res = await fetch(window.API_BASE_URL + "/api/subscribe", {
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "Authorization":"Bearer "+token
+    const res = await fetch(SKCS_BACKEND + "/api/select-plan", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": "skcs_user_12345"
       },
-      body: JSON.stringify({ planId })
+      body: JSON.stringify({
+        user_email: userEmail,
+        tier_id: tierId
+      })
     });
 
     const data = await res.json();
+    
     if (data.success) {
-        alert("Subscription successful! Plan: " + data.planId);
-        window.location.href = "index.html";
+      alert(`✅ Plan activated: ${data.tier_name}\nExpires: ${new Date(data.expires_at).toLocaleDateString()}`);
+      window.location.href = "index.html";
+    } else if (data.requires_payment) {
+      alert("Payment processing coming soon. For now, use test email: sfynn13433@gmail.com");
     } else {
-        alert(data.error || "Subscription failed. Please log in.");
+      alert(data.error || "Failed to select plan. Please try again.");
     }
   } catch (err) {
     console.error(err);
-    alert("An error occurred. Please try again.");
+    alert("Connection error. Please try again.");
   }
 }
 
+function goBack() {
+  window.history.back();
+}
+
 // Initialize
-checkSession();
+if (typeof checkSession === 'function') {
+  checkSession();
+}
 </script>
 
 </body>
