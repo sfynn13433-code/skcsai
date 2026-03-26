@@ -12,13 +12,22 @@ The SKCS system now fetches **REAL, LIVE fixtures** from the-odds-api.com instea
 
 ### Step 2: Add API Key to Environment
 
-Add this line to `backend/scripts/.env`:
+Open `backend/scripts/.env` and add this line:
 
 ```
 ODDS_API_KEY=your_api_key_here
 ```
 
 Replace `your_api_key_here` with your actual API key from the-odds-api.com.
+
+**Location:** `c:\Users\skcsa\OneDrive\Desktop\SKCS Things\SKCS-test\backend\scripts\.env`
+
+If the file doesn't exist, create it with:
+```
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+ODDS_API_KEY=your_odds_api_key
+```
 
 ### Step 3: Run the Fixture Loader
 
