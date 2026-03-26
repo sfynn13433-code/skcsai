@@ -781,7 +781,7 @@
     <!-- ========== REPLACED SCRIPT SECTION ========== -->
     <script>
     // Configuration: Points to the Render backend
-    const SKCS_BACKEND = window.API_BASE_URL || "https://skcsai.onrender.com";
+    const SKCS_BACKEND = window.API_BASE_URL || ((window.location.protocol === 'http:' || window.location.protocol === 'https:') ? window.location.origin : "https://skcsai.onrender.com");
     let activeSport = 'football';
 
     /**
@@ -814,7 +814,7 @@
         } catch (error) {
             console.error("SKCS Fetch error:", error);
             if (container) {
-                container.innerHTML = '<p style="color:#e53e3e;text-align:center;padding:20px;">Connection Error: Check if skcsai.onrender.com is live.</p>';
+                container.innerHTML = `<p style="color:#e53e3e;text-align:center;padding:20px;">Connection Error: Check if ${SKCS_BACKEND} is live.</p>`;
             }
         }
     }
@@ -870,8 +870,37 @@
                         ? `<div style="margin-top:4px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:#4a5568;font-size:0.72rem;">${homePlayer ? `<span style="display:flex;align-items:center;gap:4px;"><img src="${homePlayer.photo}" alt="${homePlayer.name || 'Home player'}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;"/>${homePlayer.name || ''}</span>` : ''}${awayPlayer ? `<span style="display:flex;align-items:center;gap:4px;"><img src="${awayPlayer.photo}" alt="${awayPlayer.name || 'Away player'}" style="width:16px;height:16px;border-radius:50%;object-fit:cover;"/>${awayPlayer.name || ''}</span>` : ''}</div>`
                         : '';
 
-                    const leagueLabel = (homeInfo && homeInfo.league && homeInfo.league.name)
-                        ? `<div style="margin-top:2px;color:#718096;font-size:0.68rem;letter-spacing:0.3px;">${homeInfo.league.name}</div>`
+                    // Extract rich metadata from prediction for all 12 sports
+                    const meta = m.metadata || {};
+                    let contextLabel = '';
+                    
+                    // F1: Show race name and circuit
+                    if (meta.race_name) {
+                        contextLabel = `${meta.race_name}${meta.circuit ? ' • ' + meta.circuit : ''}`;
+                    }
+                    // Volleyball: Show tournament and stage
+                    else if (meta.tournament) {
+                        contextLabel = `${meta.tournament}${meta.stage ? ' • ' + meta.stage : ''}${meta.gender ? ' • ' + meta.gender : ''}`;
+                    }
+                    // MMA: Show event and weight class
+                    else if (meta.event) {
+                        contextLabel = `${meta.event}${meta.weight_class ? ' • ' + meta.weight_class : ''}${meta.venue ? ' • ' + meta.venue : ''}`;
+                    }
+                    // Cricket: Show series and format
+                    else if (meta.series) {
+                        contextLabel = `${meta.series}${meta.format ? ' • ' + meta.format : ''}`;
+                    }
+                    // Team sports: Show league/division/round info
+                    else if (meta.league) {
+                        contextLabel = `${meta.league}${meta.matchday ? ' • ' + meta.matchday : ''}${meta.week ? ' • ' + meta.week : ''}${meta.round ? ' • ' + meta.round : ''}${meta.division ? ' • ' + meta.division : ''}${meta.conference ? ' • ' + meta.conference : ''}`;
+                    }
+                    // Fall back to league info from teams table
+                    else if (homeInfo && homeInfo.league && homeInfo.league.name) {
+                        contextLabel = homeInfo.league.name;
+                    }
+                    
+                    const leagueLabel = contextLabel 
+                        ? `<div style="margin-top:2px;color:#718096;font-size:0.68rem;letter-spacing:0.3px;">${contextLabel}</div>`
                         : '';
                     // Using dark colors for better visibility on white backgrounds
                     return `<div style="margin-bottom:6px; color:#1a202c;">${homeLogo}${h} <span style="color:#718096;font-size:0.8rem;">vs</span> ${a}${awayLogo}${leagueLabel}${playerPreview}</div>`;
