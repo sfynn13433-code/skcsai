@@ -911,11 +911,27 @@
             const rawTip = firstMatch.prediction || 'N/A';
             const displayTip = rawTip.replace(/_/g, ' ').toUpperCase();
             
+            // Format date and time from commence_time
+            let dateTimeStr = '';
+            if (firstMatch.commence_time) {
+                try {
+                    const matchDate = new Date(firstMatch.commence_time);
+                    const day = String(matchDate.getDate()).padStart(2, '0');
+                    const month = String(matchDate.getMonth() + 1).padStart(2, '0');
+                    const year = String(matchDate.getFullYear()).slice(-2);
+                    const hours = String(matchDate.getHours()).padStart(2, '0');
+                    const mins = String(matchDate.getMinutes()).padStart(2, '0');
+                    dateTimeStr = `${day}/${month}/${year} ${hours}:${mins}`;
+                } catch (e) {
+                    dateTimeStr = '';
+                }
+            }
+            
             card.innerHTML = `
                 ${accaBadge}
                 <div class="match-info">
                     <div class="teams" style="font-weight:bold; color:#1a202c; font-size:1.1rem; line-height:1.4;">${matchesHtml}</div>
-                    <div class="match-date" style="color:#4a5568; font-size:0.75rem; margin-top:8px; letter-spacing:1px;">${sport.toUpperCase()}</div>
+                    <div class="match-date" style="color:#4a5568; font-size:0.75rem; margin-top:8px; letter-spacing:1px;">${sport.toUpperCase()}${dateTimeStr ? ' • ' + dateTimeStr : ''}</div>
                 </div>
                 <div class="prediction-details" style="margin-top:12px; border-top:1px solid #e2e8f0; padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
                     <div class="prediction" style="color:#059669; font-weight:bold;">${displayTip}</div>
