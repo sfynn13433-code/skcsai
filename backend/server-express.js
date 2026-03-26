@@ -22,12 +22,20 @@ const { bootstrap }          = require('./dbBootstrap');
 bootstrap().catch(err => console.error('[startup] bootstrap failed:', err.message));
 
 // -------------------------------------------------
-//  Scheduler - runs every 6 hours
+//  Scheduler - runs at 06:00, 14:00, 18:00 UTC
 // -------------------------------------------------
-cron.schedule('0 */6 * * *', () => {
-    console.log('[cron] Triggering master sports sync...');
-    syncAllSports().catch(err => console.error('[cron] Sync failed:', err));
-});
+const CRON_SLOTS_UTC = [
+    { label: 'morning_cleanup', expr: '0 6 * * *' },
+    { label: 'midday_setup', expr: '0 14 * * *' },
+    { label: 'pregame_finalization', expr: '0 18 * * *' }
+];
+
+for (const slot of CRON_SLOTS_UTC) {
+    cron.schedule(slot.expr, () => {
+        console.log(`[cron] Triggering master sports sync: ${slot.label}`);
+        syncAllSports().catch(err => console.error(`[cron] Sync failed (${slot.label}):`, err));
+    }, { timezone: 'UTC' });
+}
 
 // -------------------------------------------------
 //  Helper - warn if important env vars are missing
@@ -126,7 +134,100 @@ app.use((req, res, next) => {
 app.use(express.static(path.join(__dirname, '../public')));
 
 // -------------------------------------------------
-//  Subscription endpoint (example)
+//  Subscription tier definitions
+// -------------------------------------------------
+const SUBSCRIPTION_TIERS = {
+    'core_4day_sprint': { name: '4-Day Sprint', tier: 'core', duration_days: 4, price: 3.99 },
+    'core_9day_run': { name: '9-Day Run ⭐', tier: 'core', duration_days: 9, price: 7.99 },
+    'core_14day_pro': { name: '14-Day Pro', tier: 'core', duration_days: 14, price: 14.99 },
+    'core_30day_limitless': { name: '30-Day Limitless', tier: 'core', duration_days: 30, price: 29.99 },
+    'elite_4day_deep_dive': { name: '4-Day Deep Dive', tier: 'elite', duration_days: 4, price: 9.99 },
+    'elite_9day_deep_strike': { name: '9-Day Deep Strike ⭐', tier: 'elite', duration_days: 9, price: 19.99 },
+    'elite_14day_deep_pro': { name: '14-Day Deep Pro', tier: 'elite', duration_days: 14, price: 39.99 },
+    'elite_30day_deep_vip': { name: '30-Day Deep VIP', tier: 'elite', duration_days: 30, price: 59.99 }
+};
+
+// Test emails that bypass payment
+const TEST_EMAILS = ['sfynn13433@gmail.com', 'sfynn450@gmail.com'];
+
+// -------------------------------------------------
+//  Select Plan endpoint (with auth bypass for test emails)
+// -------------------------------------------------
+app.post('/api/select-plan', async (req, res) => {
+    try {
+        const { user_email, tier_id } = req.body || {};
+
+        if (!user_email || !tier_id) {
+            return res.status(400).json({ error: 'user_email and tier_id required' });
+        }
+
+        const tier = SUBSCRIPTION_TIERS[tier_id];
+        if (!tier) {
+            return res.status(400).json({ error: 'Invalid tier ID' });
+        }
+
+        // Check if user is in test email list (bypass payment)
+        if (TEST_EMAILS.includes(user_email)) {
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + tier.duration_days);
+
+            return res.status(201).json({
+                success: true,
+                message: `Access granted to ${tier.name}`,
+                tier_id: tier_id,
+                tier_name: tier.name,
+                expires_at: expiresAt.toISOString(),
+                is_test_user: true
+            });
+        }
+
+        // For non-test users, payment is required
+        return res.status(402).json({
+            success: false,
+            requires_payment: true,
+            message: 'Payment processing not yet implemented',
+            tier_id: tier_id
+        });
+
+    } catch (err) {
+        console.error('SELECT PLAN ERROR:', err);
+        res.status(500).json({ error: 'Failed to select plan' });
+    }
+});
+
+// -------------------------------------------------
+//  Refresh predictions endpoint
+// -------------------------------------------------
+app.post('/api/refresh-predictions', async (req, res) => {
+    try {
+        const apiKey = req.headers['x-api-key'];
+
+        // Simple auth check
+        if (apiKey !== process.env.SKCS_REFRESH_KEY && apiKey !== 'skcs_refresh_key') {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        // Trigger the sync service
+        console.log('[REFRESH] Triggering sports data sync...');
+        await syncAllSports().catch(err => {
+            console.error('[REFRESH] Sync failed:', err);
+            throw err;
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Predictions refreshed',
+            timestamp: new Date().toISOString()
+        });
+
+    } catch (err) {
+        console.error('REFRESH PREDICTIONS ERROR:', err);
+        res.status(500).json({ error: 'Failed to refresh predictions' });
+    }
+});
+
+// -------------------------------------------------
+//  Subscription endpoint (legacy)
 // -------------------------------------------------
 app.post('/api/subscribe', requireSupabaseUser, async (req, res) => {
     try {
