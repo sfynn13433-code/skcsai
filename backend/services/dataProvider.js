@@ -1,5 +1,8 @@
 'use strict';
 
+const config = require('../config');
+const { APISportsClient, OddsAPIClient } = require('../apiClients');
+
 const SPORT_KEY_MAP = {
     'soccer_epl': 'football',
     'soccer_england_efl_cup': 'football',
@@ -54,6 +57,7 @@ async function fetchOddsData(sportKey) {
         sport: normalizedSport,
         home_team: event.home_team,
         away_team: event.away_team,
+        date: event.commence_time || null,
         market: '1X2',
         prediction: 'home_win',
         confidence: null,
@@ -116,21 +120,21 @@ async function buildLiveData(options = {}) {
     const leagueId = options.leagueId || null;
     const season = options.season || null;
     const today = todayStr();
-    const weekAhead = futureStr(7);
+    const windowEnd = futureStr(5);
 
     const client = new APISportsClient();
 
     // Build query options based on sport
-    const queryOpts = {};
-    if (sport === 'football') {
-        queryOpts.from = today;
-        queryOpts.to = weekAhead;
-    } else {
-        queryOpts.date = today;
-    }
+    const queryOpts = { from: today, to: windowEnd };
 
-    const data = await client.getFixtures(leagueId, season, queryOpts, sport);
-    const fixtures = data?.response || [];
+    let data = await client.getFixtures(leagueId, season, queryOpts, sport);
+    let fixtures = data?.response || [];
+
+    // Some sports only support single-day queries. Retry with `date` if needed.
+    if (fixtures.length === 0 && sport !== 'football') {
+        data = await client.getFixtures(leagueId, season, { date: today }, sport);
+        fixtures = data?.response || [];
+    }
 
     if (fixtures.length === 0) {
         console.log(`[dataProvider] ${sport}: 0 fixtures from API-Sports`);

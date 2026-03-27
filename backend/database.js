@@ -266,6 +266,45 @@ async function initializeTables() {
                 rule_value = EXCLUDED.rule_value;
         `);
 
+        // Prediction Results (Historical Data)
+        await client.query(`CREATE TABLE IF NOT EXISTS prediction_results (
+            id BIGSERIAL PRIMARY KEY,
+            match_id TEXT NOT NULL,
+            sport TEXT NOT NULL,
+            prediction_type TEXT NOT NULL, -- 'normal', 'deep'
+            market TEXT NOT NULL,
+            prediction TEXT NOT NULL,
+            actual_outcome TEXT,
+            status TEXT NOT NULL CHECK (status IN ('Win', 'Loss', 'Pending')),
+            confidence REAL,
+            odds REAL,
+            settled_at TIMESTAMPTZ,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )`);
+
+        // Insert some dummy historical data if the table is empty
+        const countRes = await client.query('SELECT COUNT(*) FROM prediction_results');
+        if (parseInt(countRes.rows[0].count) === 0) {
+            console.log('Inserting dummy historical data into prediction_results...');
+            const dummyData = [
+                ['EPL_1', 'football', 'normal', '1X2', 'Home Win', 'Home Win', 'Win', 72, 1.85],
+                ['EPL_2', 'football', 'deep', '1X2', 'Away Win', 'Draw', 'Loss', 81, 2.10],
+                ['NBA_1', 'basketball', 'normal', 'Spread', 'Lakers -4.5', 'Lakers -4.5', 'Win', 68, 1.91],
+                ['NBA_2', 'basketball', 'deep', 'Over/Under', 'Over 210.5', 'Over 210.5', 'Win', 79, 1.91],
+                ['MLB_1', 'baseball', 'normal', 'Moneyline', 'Dodgers', 'Dodgers', 'Win', 65, 1.70],
+                ['NFL_1', 'nfl', 'deep', '1X2', 'Chiefs', 'Chiefs', 'Win', 85, 1.55],
+                ['UFC_1', 'mma', 'normal', 'Winner', 'McGregor', 'Loss', 'Loss', 74, 1.65],
+                ['F1_1', 'formula1', 'deep', 'Winner', 'Verstappen', 'Verstappen', 'Win', 92, 1.40]
+            ];
+            for (const row of dummyData) {
+                await client.query(
+                    `INSERT INTO prediction_results (match_id, sport, prediction_type, market, prediction, actual_outcome, status, confidence, odds, settled_at)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW() - INTERVAL '1 day')`,
+                    row
+                );
+            }
+        }
+
         await client.query('COMMIT');
         console.log('Database tables initialized.');
     } catch (err) {

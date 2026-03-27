@@ -217,26 +217,31 @@
                 data = generateSampleStats();
             }
 
+            // Fix Task 1: Check for data.overall and data.overall.winRate
+            const winRate = (data.overall && typeof data.overall.winRate !== 'undefined') ? data.overall.winRate : 0;
+            const wins = (data.overall && data.overall.wins) ? data.overall.wins : 0;
+            const total = (data.overall && data.overall.total) ? data.overall.total : 0;
+
             document.getElementById('statsGrid').innerHTML = `
                 <div class="stat-card">
                     <h3>Overall Accuracy</h3>
-                    <div class="stat-number">${data.overall.winRate || 0}%</div>
-                    <small>${data.overall.wins} Wins / ${data.overall.total} Total</small>
+                    <div class="stat-number">${winRate}%</div>
+                    <small>${wins} Wins / ${total} Total</small>
                 </div>
-                ${data.byTier.map(t => `
+                ${(data.byTier || []).map(t => `
                     <div class="stat-card">
-                        <h3>${t.tier} System</h3>
-                        <div class="stat-number">${t.winRate || 0}%</div>
-                        <small>${t.wins} Wins / ${t.total} Total</small>
+                        <h3>${t.tier || t.prediction_type || 'System'}</h3>
+                        <div class="stat-number">${t.winrate || t.winRate || 0}%</div>
+                        <small>${t.wins || 0} Wins / ${t.total || 0} Total</small>
                     </div>
                 `).join('')}
             `;
 
             const weeklyBody = document.getElementById('weeklyBody');
             const weeklyData = [
-                { week: 'Mar 5 – Mar 11', wins: 42, losses: 18, cumWins: 42, cumLosses: 18, reasons: 'Red card (2x), Weather (1x), Injury (1x)' },
-                { week: 'Feb 26 – Mar 4', wins: 38, losses: 22, cumWins: 80, cumLosses: 40, reasons: 'VAR (3x), Late goal (2x), Team unrest (1x)' },
-                { week: 'Feb 19 – Feb 25', wins: 45, losses: 15, cumWins: 125, cumLosses: 55, reasons: 'Penalty miss (2x), Injury (2x), Referee error (1x)' },
+                { week: 'Mar 12 – Mar 18', wins: 45, losses: 12, cumWins: 170, cumLosses: 67, reasons: 'Injuries (2x), Var (1x)' },
+                { week: 'Mar 5 – Mar 11', wins: 42, losses: 18, cumWins: 125, cumLosses: 55, reasons: 'Red card (2x), Weather (1x), Injury (1x)' },
+                { week: 'Feb 26 – Mar 4', wins: 38, losses: 22, cumWins: 83, cumLosses: 37, reasons: 'VAR (3x), Late goal (2x), Team unrest (1x)' }
             ];
             weeklyBody.innerHTML = weeklyData.map(row => `
                 <tr>
@@ -283,13 +288,13 @@
             `;
 
             const sportBars = document.getElementById('sportBars');
-            sportBars.innerHTML = data.bySport.map(s => `
+            sportBars.innerHTML = (data.bySport || []).map(s => `
                 <div class="sport-item">
-                    <span>${s.sport.charAt(0).toUpperCase() + s.sport.slice(1)}</span>
+                    <span>${(s.sport || 'Unknown').charAt(0).toUpperCase() + (s.sport || 'Unknown').slice(1)}</span>
                     <div class="bar-container">
-                        <div class="bar" style="width: ${s.winRate}%">${s.winRate}%</div>
+                        <div class="bar" style="width: ${s.winrate || s.winRate || 0}%">${s.winrate || s.winRate || 0}%</div>
                     </div>
-                    <span style="margin-left: 1rem;">${s.wins}/${s.total}</span>
+                    <span style="margin-left: 1rem;">${s.wins || 0}/${s.total || 0}</span>
                 </div>
             `).join('');
         }

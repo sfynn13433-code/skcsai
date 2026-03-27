@@ -1,0 +1,944 @@
+[dotenv@17.3.1] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+[syncService] Starting master sports data sync for REAL matches...
+[syncService] Fetching REAL matches for: football...
+[API-Sports] football: fixtures { league: '39', season: '2024', from: '2026-03-26', to: '2026-04-02' }
+[API-Sports] football: results=0
+[dataProvider] football: 0 fixtures from API-Sports
+[dataProvider] football: trying Odds API fallback (soccer_epl)
+[syncService] Found 20 REAL matches for football. Running AI Analysis...
+[aiPipeline] manual matches input count=20
+[aiScoring] match_id=odds-10d3a3a8df4f15a0754da8195a47c41f home=West Ham United away=Wolverhampton Wanderers diff=%.2f winner=3.8999999999999986 confidence=%.2f volatility=away 61.95 high
+[aiScoring] match_id=odds-ff027a0ac6a0538a713b46bd753b670d home=Arsenal away=Bournemouth diff=%.2f winner=32.01 confidence=%.2f volatility=home 75.4 low
+[aiScoring] match_id=odds-0b8adb16f16b2490e3fbd514a2d86190 home=Brentford away=Everton diff=%.2f winner=2.7200000000000006 confidence=%.2f volatility=home 61.36 high
+[aiScoring] match_id=odds-44d98d5d5c19eb115a527f1de294f03e home=Burnley away=Brighton and Hove Albion diff=%.2f winner=53.68 confidence=%.2f volatility=home 79.74 low
+[aiScoring] match_id=odds-f022ab37b6c69f588015498186a9694b home=Liverpool away=Fulham diff=%.2f winner=15.829999999999998 confidence=%.2f volatility=away 68.25 medium
+[aiScoring] match_id=odds-542c7cb070f6d66aa7003cd825d5c199 home=Nottingham Forest away=Aston Villa diff=%.2f winner=17.440000000000005 confidence=%.2f volatility=away 68.73 medium
+[aiScoring] match_id=odds-aa83ffb32d9d72361f2cca8c1d3c2b19 home=Crystal Palace away=Newcastle United diff=%.2f winner=31.320000000000007 confidence=%.2f volatility=away 75.26 low
+[aiScoring] match_id=odds-5b7b41cabf1a84e8991c9cf3d0a7ab90 home=Sunderland away=Tottenham Hotspur diff=%.2f winner=30.1 confidence=%.2f volatility=away 75.02 low
+[aiScoring] match_id=odds-e4c2f457a464a95a8631ab28ef77b0b9 home=Chelsea away=Manchester City diff=%.2f winner=8.879999999999995 confidence=%.2f volatility=away 64.44 high
+[aiScoring] match_id=odds-7d48c93e68e7403998d0ed38e99caae5 home=Manchester United away=Leeds United diff=%.2f winner=34.37 confidence=%.2f volatility=home 75.87 low
+[aiScoring] match_id=odds-2c2061ffc9ee67808fd45273089d7795 home=Brentford away=Fulham diff=%.2f winner=79.88 confidence=%.2f volatility=away 84.98 low
+[aiScoring] match_id=odds-be6cdb6ddd27d099b5291f0d1e051d92 home=Newcastle United away=Bournemouth diff=%.2f winner=60.74 confidence=%.2f volatility=home 81.15 low
+[aiScoring] match_id=odds-d137c5f062243e857803fcebfdda2953 home=Leeds United away=Wolverhampton Wanderers diff=%.2f winner=8.100000000000001 confidence=%.2f volatility=home 64.05 high
+[aiScoring] match_id=odds-5e7f44119f2e640fdf04c245a764657f home=Tottenham Hotspur away=Brighton and Hove Albion diff=%.2f winner=24.39 confidence=%.2f volatility=home 70.82 medium
+[aiScoring] match_id=odds-933e20e0892b28ca075a9ab5465d5c6d home=Chelsea away=Manchester United diff=%.2f winner=15.399999999999991 confidence=%.2f volatility=away 68.12 medium
+[aiScoring] match_id=odds-72406c12d6334a8f3475a640ea1f814b home=Aston Villa away=Sunderland diff=%.2f winner=59.25 confidence=%.2f volatility=home 80.85 low
+[aiScoring] match_id=odds-95d68f9006aa718d447c759366118c31 home=Nottingham Forest away=Burnley diff=%.2f winner=17.580000000000005 confidence=%.2f volatility=away 68.77 medium
+[aiScoring] match_id=odds-3e7369c873aed1c62f4d76fd652d73c7 home=Everton away=Liverpool diff=%.2f winner=66.77000000000001 confidence=%.2f volatility=away 82.35 low
+[aiScoring] match_id=odds-67946ccfc03197bc48eb7b6c9786b713 home=Manchester City away=Arsenal diff=%.2f winner=38.67 confidence=%.2f volatility=home 76.73 low
+[aiScoring] match_id=odds-ea28653ebcd7743146869e2aa7851275 home=Crystal Palace away=West Ham United diff=%.2f winner=1.4100000000000037 confidence=%.2f volatility=away 60.71 high
+[filterEngine] raw_id=931 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=61.95, market=1X2, volatility=high)
+[filterEngine] raw_id=931 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=61.95, market=1X2, volatility=high)
+[filterEngine] raw_id=932 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=932 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=933 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=61.36, market=1X2, volatility=high)
+[filterEngine] raw_id=933 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=61.36, market=1X2, volatility=high)
+[filterEngine] raw_id=934 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=934 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=935 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=935 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=68.25, market=1X2, volatility=medium)
+[filterEngine] raw_id=936 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=936 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=68.73, market=1X2, volatility=medium)
+[filterEngine] raw_id=937 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=937 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=938 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=938 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=939 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=64.44, market=1X2, volatility=high)
+[filterEngine] raw_id=939 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=64.44, market=1X2, volatility=high)
+[filterEngine] raw_id=940 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=940 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=941 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=941 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=942 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=942 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=943 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=64.05, market=1X2, volatility=high)
+[filterEngine] raw_id=943 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=64.05, market=1X2, volatility=high)
+[filterEngine] raw_id=944 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=944 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=70.82, market=1X2, volatility=medium)
+[filterEngine] raw_id=945 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=945 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=68.12, market=1X2, volatility=medium)
+[filterEngine] raw_id=946 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=946 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=947 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=947 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=68.77, market=1X2, volatility=medium)
+[filterEngine] raw_id=948 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=948 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=949 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=949 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=950 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=60.71, market=1X2, volatility=high)
+[filterEngine] raw_id=950 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=60.71, market=1X2, volatility=high)
+[aiPipeline] inserted_raw=20 filtered_valid=25 filtered_invalid=15
+[syncService] football: pipeline complete for 20 matches
+[syncService] Fetching REAL matches for: football...
+[API-Sports] football: fixtures { league: '40', season: '2024', from: '2026-03-26', to: '2026-04-02' }
+[API-Sports] football: results=0
+[dataProvider] football: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for football right now.
+[syncService] Fetching REAL matches for: football...
+[API-Sports] football: fixtures { league: '140', season: '2024', from: '2026-03-26', to: '2026-04-02' }
+[API-Sports] football: results=0
+[dataProvider] football: 0 fixtures from API-Sports
+[dataProvider] football: trying Odds API fallback (soccer_spain_la_liga)
+[syncService] Found 20 REAL matches for football. Running AI Analysis...
+[aiPipeline] manual matches input count=20
+[aiScoring] match_id=odds-94c793aedd0e0b35ef9a5f8ae3f310bf home=Rayo Vallecano away=Elche CF diff=%.2f winner=55.36 confidence=%.2f volatility=home 80.07 low
+[aiScoring] match_id=odds-a11fdb34323eb45bb26279fa3f3624f9 home=Real Sociedad away=Levante diff=%.2f winner=28.900000000000002 confidence=%.2f volatility=away 72.17 medium
+[aiScoring] match_id=odds-484623067ed77047e7899444d8dbdbe2 home=Mallorca away=Real Madrid diff=%.2f winner=50.43 confidence=%.2f volatility=away 79.09 low
+[aiScoring] match_id=odds-6e60a9838e7776546f2ea2e2ffb18086 home=Real Betis away=Espanyol diff=%.2f winner=15.969999999999999 confidence=%.2f volatility=away 68.29 medium
+[aiScoring] match_id=odds-7d959c47ee381295b685da531ba6461b home=Atlético Madrid away=Barcelona diff=%.2f winner=31.730000000000004 confidence=%.2f volatility=home 75.35 low
+[aiScoring] match_id=odds-6fb17c1ee4b1d9e5b165f7f2129621d6 home=Getafe away=Athletic Bilbao diff=%.2f winner=25.299999999999997 confidence=%.2f volatility=away 71.09 medium
+[aiScoring] match_id=odds-f11e0b1d7c006317bb49a968a329abad home=Valencia away=Celta Vigo diff=%.2f winner=21.49 confidence=%.2f volatility=home 69.95 medium
+[aiScoring] match_id=odds-4bd93caf5225a09ca7c863347e9578a6 home=Oviedo away=Sevilla diff=%.2f winner=2.9000000000000057 confidence=%.2f volatility=home 61.45 high
+[aiScoring] match_id=odds-afd4c593a31f1451820094112520c894 home=Alavés away=CA Osasuna diff=%.2f winner=13.810000000000002 confidence=%.2f volatility=away 66.91 high
+[aiScoring] match_id=odds-be28a5e512211e725fea8524a9a60d42 home=Girona away=Villarreal diff=%.2f winner=35.129999999999995 confidence=%.2f volatility=away 76.03 low
+[aiScoring] match_id=odds-7559b639344db13dd02fe99179c7d77f home=Real Madrid away=Girona diff=%.2f winner=26.950000000000003 confidence=%.2f volatility=home 71.59 medium
+[aiScoring] match_id=odds-016d8d76a7cc27f1bc8cc6775df92683 home=Real Sociedad away=Alavés diff=%.2f winner=65.57 confidence=%.2f volatility=away 82.11 low
+[aiScoring] match_id=odds-fb63c2d00e89a32791a12a8859455b11 home=Elche CF away=Valencia diff=%.2f winner=21.91 confidence=%.2f volatility=away 70.07 medium
+[aiScoring] match_id=odds-55b745a0778185dd0225c9412bb3b69a home=Barcelona away=Espanyol diff=%.2f winner=7.700000000000003 confidence=%.2f volatility=away 63.85 high
+[aiScoring] match_id=odds-c81f5a4b65049a4e0a90fc94be704069 home=Sevilla away=Atlético Madrid diff=%.2f winner=10.469999999999999 confidence=%.2f volatility=home 65.24 high
+[aiScoring] match_id=odds-ed245ff0289860db9cd29c9b76b44926 home=CA Osasuna away=Real Betis diff=%.2f winner=47.94 confidence=%.2f volatility=home 78.59 low
+[aiScoring] match_id=odds-21c5b81029447a350af6e553f1e31c5c home=Mallorca away=Rayo Vallecano diff=%.2f winner=32.1 confidence=%.2f volatility=away 75.42 low
+[aiScoring] match_id=odds-1a8b233790dce45b2219cdb234a7916c home=Celta Vigo away=Oviedo diff=%.2f winner=93.75 confidence=%.2f volatility=away 87.75 low
+[aiScoring] match_id=odds-a1e8d7ee23f8c72f75be14bb70723d99 home=Athletic Bilbao away=Villarreal diff=%.2f winner=52.89999999999999 confidence=%.2f volatility=away 79.58 low
+[aiScoring] match_id=odds-c4a4e452254d87ff646343d0357d58e7 home=Levante away=Getafe diff=%.2f winner=34.59 confidence=%.2f volatility=home 75.92 low
+[filterEngine] raw_id=951 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=951 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=952 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=952 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=72.17, market=1X2, volatility=medium)
+[filterEngine] raw_id=953 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=953 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=954 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=954 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=68.29, market=1X2, volatility=medium)
+[filterEngine] raw_id=955 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=955 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=956 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=956 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=71.09, market=1X2, volatility=medium)
+[filterEngine] raw_id=957 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=957 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=69.95, market=1X2, volatility=medium)
+[filterEngine] raw_id=958 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=61.45, market=1X2, volatility=high)
+[filterEngine] raw_id=958 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=61.45, market=1X2, volatility=high)
+[filterEngine] raw_id=959 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=66.91, market=1X2, volatility=high)
+[filterEngine] raw_id=959 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=66.91, market=1X2, volatility=high)
+[filterEngine] raw_id=960 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=960 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=961 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=961 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=71.59, market=1X2, volatility=medium)
+[filterEngine] raw_id=962 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=962 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=963 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=963 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=70.07, market=1X2, volatility=medium)
+[filterEngine] raw_id=964 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=63.85, market=1X2, volatility=high)
+[filterEngine] raw_id=964 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=63.85, market=1X2, volatility=high)
+[filterEngine] raw_id=965 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=65.24, market=1X2, volatility=high)
+[filterEngine] raw_id=965 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=65.24, market=1X2, volatility=high)
+[filterEngine] raw_id=966 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=966 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=967 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=967 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=968 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=968 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=969 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=969 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=970 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=970 tier=deep is_valid=true reason=null
+[aiPipeline] inserted_raw=20 filtered_valid=26 filtered_invalid=14
+[syncService] football: pipeline complete for 20 matches
+[syncService] Fetching REAL matches for: football...
+[API-Sports] football: fixtures { league: '141', season: '2024', from: '2026-03-26', to: '2026-04-02' }
+[API-Sports] football: results=0
+[dataProvider] football: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for football right now.
+[syncService] Fetching REAL matches for: football...
+[API-Sports] football: fixtures { league: '78', season: '2024', from: '2026-03-26', to: '2026-04-02' }
+[API-Sports] football: results=0
+[dataProvider] football: 0 fixtures from API-Sports
+[dataProvider] football: trying Odds API fallback (soccer_germany_bundesliga)
+[syncService] Found 18 REAL matches for football. Running AI Analysis...
+[aiPipeline] manual matches input count=18
+[aiScoring] match_id=odds-4a06993eaaca2737b8d8767a96350ad5 home=Borussia Monchengladbach away=1. FC Heidenheim diff=%.2f winner=74.36 confidence=%.2f volatility=away 83.87 low
+[aiScoring] match_id=odds-f8a6cd95ad50bc1feaf12cb33ac954a2 home=Hamburger SV away=Augsburg diff=%.2f winner=9.700000000000003 confidence=%.2f volatility=home 64.85 high
+[aiScoring] match_id=odds-2eb636f91544c94cedd3ae508413ace0 home=Bayer Leverkusen away=VfL Wolfsburg diff=%.2f winner=29.39 confidence=%.2f volatility=home 72.32 medium
+[aiScoring] match_id=odds-c1f65614c6b768a59d14f9cac40bb461 home=SC Freiburg away=Bayern Munich diff=%.2f winner=33.029999999999994 confidence=%.2f volatility=home 75.61 low
+[aiScoring] match_id=odds-2263af8695c4807e1bdb09074b2b0572 home=TSG Hoffenheim away=FSV Mainz 05 diff=%.2f winner=20.630000000000003 confidence=%.2f volatility=home 69.69 medium
+[aiScoring] match_id=odds-67cbe7fb3e36126d6b3d0e6c09e08c61 home=Werder Bremen away=RB Leipzig diff=%.2f winner=3.369999999999999 confidence=%.2f volatility=away 61.69 high
+[aiScoring] match_id=odds-a4706fa91e96cb778acd67f3af0472ad home=VfB Stuttgart away=Borussia Dortmund diff=%.2f winner=18.36 confidence=%.2f volatility=home 69.01 medium
+[aiScoring] match_id=odds-0df0181e5d8b6e4b9358b75b2a883618 home=Union Berlin away=FC St. Pauli diff=%.2f winner=39.17999999999999 confidence=%.2f volatility=away 76.84 low
+[aiScoring] match_id=odds-70ba98d2f3acde5f5f222d1686cd7f5f home=Eintracht Frankfurt away=1. FC Köln diff=%.2f winner=21.340000000000003 confidence=%.2f volatility=away 69.9 medium
+[aiScoring] match_id=odds-9847177fb0b30fca5007da172846c714 home=Augsburg away=TSG Hoffenheim diff=%.2f winner=26.749999999999996 confidence=%.2f volatility=home 71.53 medium
+[aiScoring] match_id=odds-2511313dfbfa1fe5714b0b8cd6ba0c1f home=1. FC Heidenheim away=Union Berlin diff=%.2f winner=40.75999999999999 confidence=%.2f volatility=home 77.15 low
+[aiScoring] match_id=odds-a37f2dbc488d6e5d8d222c90baf147ad home=Borussia Dortmund away=Bayer Leverkusen diff=%.2f winner=24.970000000000002 confidence=%.2f volatility=away 70.99 medium
+[aiScoring] match_id=odds-5d7d753912fa6244f3eec78d2fd2e1b4 home=RB Leipzig away=Borussia Monchengladbach diff=%.2f winner=5.479999999999999 confidence=%.2f volatility=away 62.74 high
+[aiScoring] match_id=odds-0ed7ec2f06bb6aade4f4efb225fe239f home=VfL Wolfsburg away=Eintracht Frankfurt diff=%.2f winner=66.98 confidence=%.2f volatility=away 82.4 low
+[aiScoring] match_id=odds-0b40b16ce0a37bbd5e9e8405c2d3fd16 home=FC St. Pauli away=Bayern Munich diff=%.2f winner=28.749999999999993 confidence=%.2f volatility=home 72.13 medium
+[aiScoring] match_id=odds-5a6b97618df4296ab0fe52ddbf8cf9c9 home=1. FC Köln away=Werder Bremen diff=%.2f winner=79.14 confidence=%.2f volatility=home 84.83 low
+[aiScoring] match_id=odds-292214a603a411e313a6c30ec6d0ca5a home=VfB Stuttgart away=Hamburger SV diff=%.2f winner=37.33 confidence=%.2f volatility=away 76.47 low
+[aiScoring] match_id=odds-06f3024060ccf4d366a992e875d45d65 home=FSV Mainz 05 away=SC Freiburg diff=%.2f winner=92.06 confidence=%.2f volatility=away 87.41 low
+[filterEngine] raw_id=971 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=971 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=972 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=64.85, market=1X2, volatility=high)
+[filterEngine] raw_id=972 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=64.85, market=1X2, volatility=high)
+[filterEngine] raw_id=973 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=973 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=72.32, market=1X2, volatility=medium)
+[filterEngine] raw_id=974 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=974 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=975 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=975 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=69.69, market=1X2, volatility=medium)
+[filterEngine] raw_id=976 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=61.69, market=1X2, volatility=high)
+[filterEngine] raw_id=976 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=61.69, market=1X2, volatility=high)
+[filterEngine] raw_id=977 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=977 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=69.01, market=1X2, volatility=medium)
+[filterEngine] raw_id=978 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=978 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=979 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=979 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=69.9, market=1X2, volatility=medium)
+[filterEngine] raw_id=980 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=980 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=71.53, market=1X2, volatility=medium)
+[filterEngine] raw_id=981 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=981 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=982 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=982 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=70.99, market=1X2, volatility=medium)
+[filterEngine] raw_id=983 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=62.74, market=1X2, volatility=high)
+[filterEngine] raw_id=983 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=62.74, market=1X2, volatility=high)
+[filterEngine] raw_id=984 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=984 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=985 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=985 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=72.13, market=1X2, volatility=medium)
+[filterEngine] raw_id=986 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=986 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=987 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=987 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=988 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=988 tier=deep is_valid=true reason=null
+[aiPipeline] inserted_raw=18 filtered_valid=23 filtered_invalid=13
+[syncService] football: pipeline complete for 18 matches
+[syncService] Fetching REAL matches for: football...
+[API-Sports] football: fixtures { league: '79', season: '2024', from: '2026-03-26', to: '2026-04-02' }
+[API-Sports] football: results=0
+[dataProvider] football: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for football right now.
+[syncService] Fetching REAL matches for: football...
+[API-Sports] football: fixtures { league: '135', season: '2024', from: '2026-03-26', to: '2026-04-02' }
+[API-Sports] football: results=0
+[dataProvider] football: 0 fixtures from API-Sports
+[dataProvider] football: trying Odds API fallback (soccer_italy_serie_a)
+[syncService] Found 20 REAL matches for football. Running AI Analysis...
+[aiPipeline] manual matches input count=20
+[aiScoring] match_id=odds-700c4db228b5ab42ddbf452d9c49eed0 home=Sassuolo away=Cagliari diff=%.2f winner=46.2 confidence=%.2f volatility=away 78.24 low
+[aiScoring] match_id=odds-4c82fb0d076253015c44b7f2c9316267 home=Hellas Verona away=Fiorentina diff=%.2f winner=25.85 confidence=%.2f volatility=home 71.26 medium
+[aiScoring] match_id=odds-4026d1ba245b980683a63170645bcb00 home=Lazio away=Parma diff=%.2f winner=54.21 confidence=%.2f volatility=away 79.84 low
+[aiScoring] match_id=odds-5293817b7f4a4732e56eb630a3c6c560 home=Cremonese away=Bologna diff=%.2f winner=63.230000000000004 confidence=%.2f volatility=away 81.65 low
+[aiScoring] match_id=odds-70882d892b579af091e4cfdcf4174b47 home=Pisa away=Torino diff=%.2f winner=49.79 confidence=%.2f volatility=home 78.96 low
+[aiScoring] match_id=odds-b1b253402d511794ce9c1f2a5c9924bc home=Inter Milan away=AS Roma diff=%.2f winner=94.28999999999999 confidence=%.2f volatility=home 87.86 low
+[aiScoring] match_id=odds-33a35cd2b0fc5a4a9058c42508e3907d home=Lecce away=Atalanta BC diff=%.2f winner=56.25 confidence=%.2f volatility=away 80.25 low
+[aiScoring] match_id=odds-4c19e0d00239c155b45365c7a59f54c4 home=Udinese away=Como diff=%.2f winner=20.160000000000004 confidence=%.2f volatility=away 69.55 medium
+[aiScoring] match_id=odds-d425218c011ce000fc19d915cee8b96a home=Juventus away=Genoa diff=%.2f winner=42.699999999999996 confidence=%.2f volatility=away 77.54 low
+[aiScoring] match_id=odds-6b90b14f2287e029cdcfbf64f12af661 home=Napoli away=AC Milan diff=%.2f winner=13.93 confidence=%.2f volatility=away 66.97 high
+[aiScoring] match_id=odds-f062043a8fec6a94a60945cd30dcc02c home=AS Roma away=Pisa diff=%.2f winner=56.92 confidence=%.2f volatility=away 80.38 low
+[aiScoring] match_id=odds-85fa84288bb071355fa3c5e21e503053 home=Cagliari away=Cremonese diff=%.2f winner=83.69 confidence=%.2f volatility=home 85.74 low
+[aiScoring] match_id=odds-f089e6581f7bdced30b8d57a5d1d5a42 home=Torino away=Hellas Verona diff=%.2f winner=62.11 confidence=%.2f volatility=away 81.42 low
+[aiScoring] match_id=odds-6a932fae8df6532d61938a879d3b2563 home=AC Milan away=Udinese diff=%.2f winner=21.03 confidence=%.2f volatility=home 69.81 medium
+[aiScoring] match_id=odds-8e3d1f62508116713ac4347706dc5b15 home=Atalanta BC away=Juventus diff=%.2f winner=28.619999999999997 confidence=%.2f volatility=home 72.09 medium
+[aiScoring] match_id=odds-af7a080341b8f2e80963d09cb7b58ebf home=Genoa away=Sassuolo diff=%.2f winner=31.33 confidence=%.2f volatility=home 75.27 low
+[aiScoring] match_id=odds-c187fbd4becdcc4dd23e14aa7416de89 home=Bologna away=Lecce diff=%.2f winner=64.74000000000001 confidence=%.2f volatility=home 81.95 low
+[aiScoring] match_id=odds-85b7fa24125db9f7f782cafe8cac4507 home=Como away=Inter Milan diff=%.2f winner=35.959999999999994 confidence=%.2f volatility=away 76.19 low
+[aiScoring] match_id=odds-faf84aee9f7f605347a77a1c9efa3eeb home=Parma away=Napoli diff=%.2f winner=49.370000000000005 confidence=%.2f volatility=home 78.87 low
+[aiScoring] match_id=odds-0ae9d856d4839d6d82d566e7166413f1 home=Fiorentina away=Lazio diff=%.2f winner=2.9599999999999937 confidence=%.2f volatility=home 61.48 high
+[filterEngine] raw_id=989 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=989 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=990 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=990 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=71.26, market=1X2, volatility=medium)
+[filterEngine] raw_id=991 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=991 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=992 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=992 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=993 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=993 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=994 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=994 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=995 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=995 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=996 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=996 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=69.55, market=1X2, volatility=medium)
+[filterEngine] raw_id=997 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=997 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=998 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=66.97, market=1X2, volatility=high)
+[filterEngine] raw_id=998 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=66.97, market=1X2, volatility=high)
+[filterEngine] raw_id=999 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=999 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1000 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1000 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1001 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1001 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1002 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1002 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=69.81, market=1X2, volatility=medium)
+[filterEngine] raw_id=1003 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1003 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=72.09, market=1X2, volatility=medium)
+[filterEngine] raw_id=1004 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1004 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1005 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1005 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1006 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1006 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1007 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1007 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1008 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=61.48, market=1X2, volatility=high)
+[filterEngine] raw_id=1008 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=61.48, market=1X2, volatility=high)
+[aiPipeline] inserted_raw=20 filtered_valid=32 filtered_invalid=8
+[syncService] football: pipeline complete for 20 matches
+[syncService] Fetching REAL matches for: football...
+[API-Sports] football: fixtures { league: '136', season: '2024', from: '2026-03-26', to: '2026-04-02' }
+[API-Sports] football: results=0
+[dataProvider] football: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for football right now.
+[syncService] Fetching REAL matches for: football...
+[API-Sports] football: fixtures { league: '61', season: '2024', from: '2026-03-26', to: '2026-04-02' }
+[API-Sports] football: results=0
+[dataProvider] football: 0 fixtures from API-Sports
+[dataProvider] football: trying Odds API fallback (soccer_france_ligue_one)
+[syncService] Found 18 REAL matches for football. Running AI Analysis...
+[aiPipeline] manual matches input count=18
+[aiScoring] match_id=odds-e7567f1b35dff2942700c64fd9514cb3 home=Paris Saint Germain away=Toulouse diff=%.2f winner=10.149999999999999 confidence=%.2f volatility=home 65.08 high
+[aiScoring] match_id=odds-c6b303dea1551810acb0eb3bbc238ab2 home=Strasbourg away=Nice diff=%.2f winner=15.430000000000007 confidence=%.2f volatility=away 68.13 medium
+[aiScoring] match_id=odds-ea83c2e347a7f55f8265fe49489708f2 home=Brest away=Rennes diff=%.2f winner=1.4000000000000004 confidence=%.2f volatility=away 60.7 high
+[aiScoring] match_id=odds-4dc4098b179fbfdbf44efac87bc64917 home=Lille away=RC Lens diff=%.2f winner=29.020000000000003 confidence=%.2f volatility=away 72.21 medium
+[aiScoring] match_id=odds-9834da029f6f9df59c317bc2d7ca8eb5 home=Angers away=Lyon diff=%.2f winner=31.74 confidence=%.2f volatility=home 75.35 low
+[aiScoring] match_id=odds-273a71fd48f3acd95fc90d3984769f18 home=Le Havre away=Auxerre diff=%.2f winner=85.32 confidence=%.2f volatility=home 86.06 low
+[aiScoring] match_id=odds-c8484cd6cf5211a276f65fcabc0a657a home=Lorient away=Paris FC diff=%.2f winner=7.299999999999997 confidence=%.2f volatility=home 63.65 high
+[aiScoring] match_id=odds-9ab57447db837d4f2e655655a8a2369d home=Metz away=Nantes diff=%.2f winner=4.2 confidence=%.2f volatility=away 62.1 high
+[aiScoring] match_id=odds-6711a91275c7b1630162aba2511e6559 home=AS Monaco away=Marseille diff=%.2f winner=23.22 confidence=%.2f volatility=away 70.47 medium
+[aiScoring] match_id=odds-18fbb4cb379d56c455607f6c26c46aaf home=Paris FC away=AS Monaco diff=%.2f winner=7.450000000000003 confidence=%.2f volatility=home 63.73 high
+[aiScoring] match_id=odds-86fa33dc4f47a556a3f97799c74f5ec6 home=Marseille away=Metz diff=%.2f winner=91.04 confidence=%.2f volatility=home 87.21 low
+[aiScoring] match_id=odds-c2b4ff1a2bfccbfed68e6070a982fe72 home=RC Lens away=Paris Saint Germain diff=%.2f winner=18.85 confidence=%.2f volatility=home 69.16 medium
+[aiScoring] match_id=odds-5061b890abe6e00a4bb580ef5c57dec1 home=Auxerre away=Nantes diff=%.2f winner=0.54 confidence=%.2f volatility=home 60.27 high
+[aiScoring] match_id=odds-ae3024de9f152e9a71ef56794c52ca16 home=Rennes away=Angers diff=%.2f winner=49.9 confidence=%.2f volatility=away 78.98 low
+[aiScoring] match_id=odds-730920e1de1514f334169c8620660356 home=Brest away=Strasbourg diff=%.2f winner=60.58 confidence=%.2f volatility=away 81.12 low
+[aiScoring] match_id=odds-bc66d1e7b1afd516f0e4fd88414e99a7 home=Nice away=Le Havre diff=%.2f winner=7.459999999999994 confidence=%.2f volatility=away 63.73 high
+[aiScoring] match_id=odds-36775df2bcf046549c9fa7bd4d6f2dcb home=Toulouse away=Lille diff=%.2f winner=0.020000000000003126 confidence=%.2f volatility=home 60.01 high
+[aiScoring] match_id=odds-5504a8c750f9af9f20ffa2d3bcb22302 home=Lyon away=Lorient diff=%.2f winner=56.42 confidence=%.2f volatility=away 80.28 low
+[filterEngine] raw_id=1009 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=65.08, market=1X2, volatility=high)
+[filterEngine] raw_id=1009 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=65.08, market=1X2, volatility=high)
+[filterEngine] raw_id=1010 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1010 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=68.13, market=1X2, volatility=medium)
+[filterEngine] raw_id=1011 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=60.7, market=1X2, volatility=high)
+[filterEngine] raw_id=1011 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=60.7, market=1X2, volatility=high)
+[filterEngine] raw_id=1012 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1012 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=72.21, market=1X2, volatility=medium)
+[filterEngine] raw_id=1013 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1013 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1014 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1014 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1015 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=63.65, market=1X2, volatility=high)
+[filterEngine] raw_id=1015 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=63.65, market=1X2, volatility=high)
+[filterEngine] raw_id=1016 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=62.1, market=1X2, volatility=high)
+[filterEngine] raw_id=1016 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=62.1, market=1X2, volatility=high)
+[filterEngine] raw_id=1017 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1017 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=70.47, market=1X2, volatility=medium)
+[filterEngine] raw_id=1018 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=63.73, market=1X2, volatility=high)
+[filterEngine] raw_id=1018 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=63.73, market=1X2, volatility=high)
+[filterEngine] raw_id=1019 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1019 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1020 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1020 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=69.16, market=1X2, volatility=medium)
+[filterEngine] raw_id=1021 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=60.27, market=1X2, volatility=high)
+[filterEngine] raw_id=1021 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=60.27, market=1X2, volatility=high)
+[filterEngine] raw_id=1022 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1022 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1023 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1023 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1024 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=63.73, market=1X2, volatility=high)
+[filterEngine] raw_id=1024 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=63.73, market=1X2, volatility=high)
+[filterEngine] raw_id=1025 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=60.01, market=1X2, volatility=high)
+[filterEngine] raw_id=1025 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=60.01, market=1X2, volatility=high)
+[filterEngine] raw_id=1026 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1026 tier=deep is_valid=true reason=null
+[aiPipeline] inserted_raw=18 filtered_valid=16 filtered_invalid=20
+[syncService] football: pipeline complete for 18 matches
+[syncService] Fetching REAL matches for: football...
+[API-Sports] football: fixtures { league: '62', season: '2024', from: '2026-03-26', to: '2026-04-02' }
+[API-Sports] football: results=0
+[dataProvider] football: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for football right now.
+[syncService] Fetching REAL matches for: football...
+[API-Sports] football: fixtures { league: '2', season: '2024', from: '2026-03-26', to: '2026-04-02' }
+[API-Sports] football: results=0
+[dataProvider] football: 0 fixtures from API-Sports
+[dataProvider] football: trying Odds API fallback (soccer_uefa_champs_league)
+[syncService] Found 4 REAL matches for football. Running AI Analysis...
+[aiPipeline] manual matches input count=4
+[aiScoring] match_id=odds-59588b6ac97dcdf15b4de0652d9aebca home=Sporting Lisbon away=Arsenal diff=%.2f winner=15.159999999999997 confidence=%.2f volatility=home 68.05 medium
+[aiScoring] match_id=odds-59fe57b2fc5fe8a6ab3f7699f388f7f0 home=Real Madrid away=Bayern Munich diff=%.2f winner=11.009999999999998 confidence=%.2f volatility=home 65.51 high
+[aiScoring] match_id=odds-68c250a354dfc0a238ee73466465a9f9 home=Barcelona away=Atlético Madrid diff=%.2f winner=31.730000000000004 confidence=%.2f volatility=away 75.35 low
+[aiScoring] match_id=odds-df0b1a0f35307c661511183f7865f9e5 home=Paris Saint Germain away=Liverpool diff=%.2f winner=20.860000000000007 confidence=%.2f volatility=away 69.76 medium
+[filterEngine] raw_id=1027 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1027 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=68.05, market=1X2, volatility=medium)
+[filterEngine] raw_id=1028 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=65.51, market=1X2, volatility=high)
+[filterEngine] raw_id=1028 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=65.51, market=1X2, volatility=high)
+[filterEngine] raw_id=1029 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1029 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1030 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1030 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=69.76, market=1X2, volatility=medium)
+[aiPipeline] inserted_raw=4 filtered_valid=4 filtered_invalid=4
+[syncService] football: pipeline complete for 4 matches
+[syncService] Fetching REAL matches for: football...
+[API-Sports] football: fixtures { league: '3', season: '2024', from: '2026-03-26', to: '2026-04-02' }
+[API-Sports] football: results=0
+[dataProvider] football: 0 fixtures from API-Sports
+[dataProvider] football: trying Odds API fallback (soccer_uefa_europa_league)
+[syncService] Found 4 REAL matches for football. Running AI Analysis...
+[aiPipeline] manual matches input count=4
+[aiScoring] match_id=odds-d7fa148e8293c4ed1e68e6baaef9c21d home=SC Braga away=Real Betis diff=%.2f winner=5.649999999999999 confidence=%.2f volatility=away 62.83 high
+[aiScoring] match_id=odds-0702b712ee41c530dc5f1056776f47ba home=Bologna away=Aston Villa diff=%.2f winner=10.300000000000004 confidence=%.2f volatility=home 65.15 high
+[aiScoring] match_id=odds-dc7b4170fd72717bbd1cce3194abbf52 home=SC Freiburg away=Celta Vigo diff=%.2f winner=95.28999999999999 confidence=%.2f volatility=home 88.06 low
+[aiScoring] match_id=odds-a34ce4940b9580c2057ecd052e51d89b home=Porto away=Nottingham Forest diff=%.2f winner=45.620000000000005 confidence=%.2f volatility=home 78.12 low
+[filterEngine] raw_id=1031 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=62.83, market=1X2, volatility=high)
+[filterEngine] raw_id=1031 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=62.83, market=1X2, volatility=high)
+[filterEngine] raw_id=1032 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=65.15, market=1X2, volatility=high)
+[filterEngine] raw_id=1032 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=65.15, market=1X2, volatility=high)
+[filterEngine] raw_id=1033 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1033 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1034 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1034 tier=deep is_valid=true reason=null
+[aiPipeline] inserted_raw=4 filtered_valid=4 filtered_invalid=4
+[syncService] football: pipeline complete for 4 matches
+[syncService] Fetching REAL matches for: nba...
+[API-Sports] nba: games { league: '12', season: '2024', date: '2026-03-26' }
+[API-Sports] nba: results=0
+[dataProvider] nba: 0 fixtures from API-Sports
+[dataProvider] nba: trying Odds API fallback (basketball_nba)
+[syncService] Found 5 REAL matches for nba. Running AI Analysis...
+[aiPipeline] manual matches input count=5
+[aiScoring] match_id=odds-b5dcac663f902f16c62d91c7552bd07a home=Charlotte Hornets away=New York Knicks diff=%.2f winner=22.440000000000005 confidence=%.2f volatility=home 70.23 medium
+[aiScoring] match_id=odds-63f535c5a95e35b7644f7b6655c82b98 home=Detroit Pistons away=New Orleans Pelicans diff=%.2f winner=5.020000000000003 confidence=%.2f volatility=away 62.51 high
+[aiScoring] match_id=odds-6c518123941e3d6b5ca85502a16136f5 home=Orlando Magic away=Sacramento Kings diff=%.2f winner=5.179999999999993 confidence=%.2f volatility=home 62.59 high
+[aiScoring] match_id=odds-9443e4a245659d7362366345b5a91b39 home=Boston Celtics away=Atlanta Hawks diff=%.2f winner=6.579999999999998 confidence=%.2f volatility=away 63.29 high
+[aiScoring] match_id=odds-5ce07242b2ab7c9c82700854c237a77a home=Cleveland Cavaliers away=Miami Heat diff=%.2f winner=42.260000000000005 confidence=%.2f volatility=away 77.45 low
+[filterEngine] raw_id=1035 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1035 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=70.23, market=1X2, volatility=medium)
+[filterEngine] raw_id=1036 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=62.51, market=1X2, volatility=high)
+[filterEngine] raw_id=1036 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=62.51, market=1X2, volatility=high)
+[filterEngine] raw_id=1037 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=62.59, market=1X2, volatility=high)
+[filterEngine] raw_id=1037 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=62.59, market=1X2, volatility=high)
+[filterEngine] raw_id=1038 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=63.29, market=1X2, volatility=high)
+[filterEngine] raw_id=1038 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=63.29, market=1X2, volatility=high)
+[filterEngine] raw_id=1039 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1039 tier=deep is_valid=true reason=null
+[aiPipeline] inserted_raw=5 filtered_valid=3 filtered_invalid=7
+[syncService] nba: pipeline complete for 5 matches
+[syncService] Fetching REAL matches for: nba...
+[API-Sports] nba: games { league: '20', season: '2024', date: '2026-03-26' }
+[API-Sports] nba: results=0
+[dataProvider] nba: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for nba right now.
+[syncService] Fetching REAL matches for: basketball...
+[API-Sports] basketball: games { league: '117', season: '2024-2025', date: '2026-03-26' }
+[API-Sports] basketball: results=0
+[dataProvider] basketball: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for basketball right now.
+[syncService] Fetching REAL matches for: basketball...
+[API-Sports] basketball: games { league: '85', season: '2024-2025', date: '2026-03-26' }
+[API-Sports] basketball: results=0
+[dataProvider] basketball: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for basketball right now.
+[syncService] Fetching REAL matches for: basketball...
+[API-Sports] basketball: games { league: '120', season: '2024-2025', date: '2026-03-26' }
+[API-Sports] basketball: results=0
+[dataProvider] basketball: 0 fixtures from API-Sports
+[dataProvider] basketball: trying Odds API fallback (basketball_euroleague)
+[syncService] Found 9 REAL matches for basketball. Running AI Analysis...
+[aiPipeline] manual matches input count=9
+[aiScoring] match_id=odds-30c5b3deac8863897e6679d47a03b959 home=FC Bayern München away=ASVEL Lyon Villeurbanne diff=%.2f winner=89.06 confidence=%.2f volatility=away 86.81 low
+[aiScoring] match_id=odds-5b3aaea1c555d8348a74737c0c99d34e home=Maccabi Tel Aviv away=Dubai Basketball diff=%.2f winner=44.55 confidence=%.2f volatility=home 77.91 low
+[aiScoring] match_id=odds-87e9cf40c94ecb90b9bf308a037a336e home=Pallacanestro Olimpia Milano away=Virtus Segafredo Bologna diff=%.2f winner=4.09 confidence=%.2f volatility=away 62.05 high
+[aiScoring] match_id=odds-4c3039a77b49066fdfd41fae7e75bb1f home=Real Madrid away=Anadolu Efes diff=%.2f winner=0.04000000000000625 confidence=%.2f volatility=home 60.02 high
+[aiScoring] match_id=odds-e580a2e238f7fdd8a6b886484bf24266 home=Fenerbahce SK away=Žalgiris diff=%.2f winner=40.32000000000001 confidence=%.2f volatility=home 77.06 low
+[aiScoring] match_id=odds-d3623dbe5b78aba876f1585623a83dbd home=Panathinaikos away=AS Monaco diff=%.2f winner=53.64 confidence=%.2f volatility=away 79.73 low
+[aiScoring] match_id=odds-9420452bef90c2414f12099c66baf801 home=FC Barcelona Bàsquet away=KK Crvena zvezda diff=%.2f winner=60.33 confidence=%.2f volatility=home 81.07 low
+[aiScoring] match_id=odds-a3e3ec10740d75f9c298c75df95aa1f9 home=Saski Baskonia away=Hapoel Tel Aviv diff=%.2f winner=64.5 confidence=%.2f volatility=away 81.9 low
+[aiScoring] match_id=odds-edb51da030469f8ac626250d19c246eb home=KK Partizan NIS away=Valencia Basket diff=%.2f winner=42 confidence=%.2f volatility=away 77.4 low
+[filterEngine] raw_id=1040 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1040 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1041 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1041 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1042 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=62.05, market=1X2, volatility=high)
+[filterEngine] raw_id=1042 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=62.05, market=1X2, volatility=high)
+[filterEngine] raw_id=1043 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=60.02, market=1X2, volatility=high)
+[filterEngine] raw_id=1043 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=60.02, market=1X2, volatility=high)
+[filterEngine] raw_id=1044 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1044 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1045 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1045 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1046 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1046 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1047 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1047 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1048 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1048 tier=deep is_valid=true reason=null
+[aiPipeline] inserted_raw=9 filtered_valid=14 filtered_invalid=4
+[syncService] basketball: pipeline complete for 9 matches
+[syncService] Fetching REAL matches for: rugby...
+[API-Sports] rugby: games { league: '13', season: '2024', date: '2026-03-26' }
+[API-Sports] rugby: results=0
+[dataProvider] rugby: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for rugby right now.
+[syncService] Fetching REAL matches for: rugby...
+[API-Sports] rugby: games { league: '14', season: '2024', date: '2026-03-26' }
+[API-Sports] rugby: results=0
+[dataProvider] rugby: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for rugby right now.
+[syncService] Fetching REAL matches for: rugby...
+[API-Sports] rugby: games { league: '1', season: '2024', date: '2026-03-26' }
+[API-Sports] rugby: results=0
+[dataProvider] rugby: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for rugby right now.
+[syncService] Fetching REAL matches for: rugby...
+[API-Sports] rugby: games { league: '45', season: '2024', date: '2026-03-26' }
+[API-Sports] rugby: results=0
+[dataProvider] rugby: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for rugby right now.
+[syncService] Fetching REAL matches for: rugby...
+[API-Sports] rugby: games { league: '44', season: '2024', date: '2026-03-26' }
+[API-Sports] rugby: results=0
+[dataProvider] rugby: 0 fixtures from API-Sports
+[dataProvider] rugby: trying Odds API fallback (rugbyunion_international)
+[syncService] No upcoming REAL matches found for rugby right now.
+[syncService] Fetching REAL matches for: rugby...
+[API-Sports] rugby: games { league: '7', season: '2024', date: '2026-03-26' }
+Odds API error: Request failed with status code 404
+[API-Sports] rugby: results=0
+[dataProvider] rugby: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for rugby right now.
+[syncService] Fetching REAL matches for: american_football...
+[API-Sports] american_football: games { league: '1', season: '2024', date: '2026-03-26' }
+[API-Sports] american_football: results=0
+[dataProvider] american_football: 0 fixtures from API-Sports
+[dataProvider] american_football: trying Odds API fallback (americanfootball_nfl)
+[syncService] No upcoming REAL matches found for american_football right now.
+[syncService] Fetching REAL matches for: american_football...
+[API-Sports] american_football: games { league: '2', season: '2024', date: '2026-03-26' }
+[API-Sports] american_football: results=0
+[dataProvider] american_football: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for american_football right now.
+[syncService] Fetching REAL matches for: baseball...
+[API-Sports] baseball: games { league: '1', season: '2024', date: '2026-03-26' }
+[API-Sports] baseball: results=0
+[dataProvider] baseball: 0 fixtures from API-Sports
+[dataProvider] baseball: trying Odds API fallback (baseball_mlb)
+[syncService] Found 14 REAL matches for baseball. Running AI Analysis...
+[aiPipeline] manual matches input count=14
+[aiScoring] match_id=odds-7dc467f8d7fca948c9e9ca103825d968 home=New York Mets away=Pittsburgh Pirates diff=%.2f winner=84.16 confidence=%.2f volatility=home 85.83 low
+[aiScoring] match_id=odds-afb66747c7f054c593a2674b7b304b4e home=Milwaukee Brewers away=Chicago White Sox diff=%.2f winner=29.249999999999993 confidence=%.2f volatility=home 72.27 medium
+[aiScoring] match_id=odds-4de2590a17bdf6f8b4a906f4c63162c0 home=Chicago Cubs away=Washington Nationals diff=%.2f winner=16.900000000000006 confidence=%.2f volatility=away 68.57 medium
+[aiScoring] match_id=odds-c52d19ac74eb2f89bfb7bc284970d655 home=Baltimore Orioles away=Minnesota Twins diff=%.2f winner=33.07 confidence=%.2f volatility=away 75.61 low
+[aiScoring] match_id=odds-3954fca33e068341fbcf893afefbc2e6 home=Cincinnati Reds away=Boston Red Sox diff=%.2f winner=5.9399999999999995 confidence=%.2f volatility=home 62.97 high
+[aiScoring] match_id=odds-ded68cb95818777b5dd185d53a79acff home=San Diego Padres away=Detroit Tigers diff=%.2f winner=10.299999999999997 confidence=%.2f volatility=away 65.15 high
+[aiScoring] match_id=odds-938a5275d47936ba93f9663f6415f344 home=Houston Astros away=Los Angeles Angels diff=%.2f winner=62.67 confidence=%.2f volatility=home 81.53 low
+[aiScoring] match_id=odds-ac57f6f9aed299cfeb9551b910fa7248 home=Philadelphia Phillies away=Texas Rangers diff=%.2f winner=45.4 confidence=%.2f volatility=away 78.08 low
+[aiScoring] match_id=odds-cfdeb0596b2f626db8901c8a4dc5ea7c home=St. Louis Cardinals away=Tampa Bay Rays diff=%.2f winner=70.97 confidence=%.2f volatility=away 83.19 low
+[aiScoring] match_id=odds-a6a0dde319f89b70eb1cf1e004b81fe6 home=Los Angeles Dodgers away=Arizona Diamondbacks diff=%.2f winner=8.5 confidence=%.2f volatility=away 64.25 high
+[aiScoring] match_id=odds-5c8789e78ef558dfaf6b887deacec21c home=Seattle Mariners away=Cleveland Guardians diff=%.2f winner=3.0199999999999996 confidence=%.2f volatility=home 61.51 high
+[aiScoring] match_id=odds-f827191f31f31298e4dd836d72eabdbc home=Toronto Blue Jays away=Athletics diff=%.2f winner=24.82 confidence=%.2f volatility=home 70.95 medium
+[aiScoring] match_id=odds-45eec2b395c23c0449b2d9ee928b3f8d home=Miami Marlins away=Colorado Rockies diff=%.2f winner=19.47 confidence=%.2f volatility=away 69.34 medium
+[aiScoring] match_id=odds-88ab453feed0e220f331817b3aec9b00 home=Atlanta Braves away=Kansas City Royals diff=%.2f winner=12.219999999999999 confidence=%.2f volatility=home 66.11 high
+[filterEngine] raw_id=1049 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1049 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1050 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1050 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=72.27, market=1X2, volatility=medium)
+[filterEngine] raw_id=1051 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1051 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=68.57, market=1X2, volatility=medium)
+[filterEngine] raw_id=1052 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1052 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1053 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=62.97, market=1X2, volatility=high)
+[filterEngine] raw_id=1053 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=62.97, market=1X2, volatility=high)
+[filterEngine] raw_id=1054 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=65.15, market=1X2, volatility=high)
+[filterEngine] raw_id=1054 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=65.15, market=1X2, volatility=high)
+[filterEngine] raw_id=1055 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1055 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1056 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1056 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1057 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1057 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1058 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=64.25, market=1X2, volatility=high)
+[filterEngine] raw_id=1058 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=64.25, market=1X2, volatility=high)
+[filterEngine] raw_id=1059 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=61.51, market=1X2, volatility=high)
+[filterEngine] raw_id=1059 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=61.51, market=1X2, volatility=high)
+[filterEngine] raw_id=1060 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1060 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=70.95, market=1X2, volatility=medium)
+[filterEngine] raw_id=1061 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1061 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=69.34, market=1X2, volatility=medium)
+[filterEngine] raw_id=1062 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=66.11, market=1X2, volatility=high)
+[filterEngine] raw_id=1062 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=66.11, market=1X2, volatility=high)
+[aiPipeline] inserted_raw=14 filtered_valid=14 filtered_invalid=14
+[syncService] baseball: pipeline complete for 14 matches
+[syncService] Fetching REAL matches for: baseball...
+[API-Sports] baseball: games { league: '2', season: '2024', date: '2026-03-26' }
+[API-Sports] baseball: results=0
+[dataProvider] baseball: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for baseball right now.
+[syncService] Fetching REAL matches for: baseball...
+[API-Sports] baseball: games { league: '3', season: '2024', date: '2026-03-26' }
+[API-Sports] baseball: results=0
+[dataProvider] baseball: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for baseball right now.
+[syncService] Fetching REAL matches for: baseball...
+[API-Sports] baseball: games { league: '96', season: '2024', date: '2026-03-26' }
+[API-Sports] baseball: results=0
+[dataProvider] baseball: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for baseball right now.
+[syncService] Fetching REAL matches for: baseball...
+[API-Sports] baseball: games { league: '97', season: '2024', date: '2026-03-26' }
+[API-Sports] baseball: results=0
+[dataProvider] baseball: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for baseball right now.
+[syncService] Fetching REAL matches for: hockey...
+[API-Sports] hockey: games { league: '57', season: '2024', date: '2026-03-26' }
+[API-Sports] hockey: results=0
+[dataProvider] hockey: 0 fixtures from API-Sports
+[dataProvider] hockey: trying Odds API fallback (icehockey_nhl)
+[syncService] Found 13 REAL matches for hockey. Running AI Analysis...
+[aiPipeline] manual matches input count=13
+[aiScoring] match_id=odds-0d07b0bc16914cd16d27e6efdda5709c home=Philadelphia Flyers away=Chicago Blackhawks diff=%.2f winner=71.48 confidence=%.2f volatility=home 83.3 low
+[aiScoring] match_id=odds-e177659727b1af9292acb2a8a17a5a8a home=Montréal Canadiens away=Columbus Blue Jackets diff=%.2f winner=25.35 confidence=%.2f volatility=home 71.11 medium
+[aiScoring] match_id=odds-6f154e5425ac7de91c666137975d388d home=New York Islanders away=Dallas Stars diff=%.2f winner=23.18 confidence=%.2f volatility=away 70.45 medium
+[aiScoring] match_id=odds-86b9d3367318cc518bb08f3eb5b94e7b home=Florida Panthers away=Minnesota Wild diff=%.2f winner=3.4000000000000004 confidence=%.2f volatility=away 61.7 high
+[aiScoring] match_id=odds-8642b100ab8ed115ed6acecb443e230e home=Ottawa Senators away=Pittsburgh Penguins diff=%.2f winner=10.14 confidence=%.2f volatility=home 65.07 high
+[aiScoring] match_id=odds-63ff0b1c118990abba7fba4bdded8c57 home=Tampa Bay Lightning away=Seattle Kraken diff=%.2f winner=16.689999999999998 confidence=%.2f volatility=away 68.51 medium
+[aiScoring] match_id=odds-6d199999a290c76b534d073c7abfdcd7 home=Winnipeg Jets away=Colorado Avalanche diff=%.2f winner=58.650000000000006 confidence=%.2f volatility=away 80.73 low
+[aiScoring] match_id=odds-e22bc7bc35798e005e96cc45e87a2d42 home=Nashville Predators away=New Jersey Devils diff=%.2f winner=26.060000000000002 confidence=%.2f volatility=away 71.32 medium
+[aiScoring] match_id=odds-10559c030c7293bc53b2d0f326c45262 home=St Louis Blues away=San Jose Sharks diff=%.2f winner=60.47 confidence=%.2f volatility=home 81.09 low
+[aiScoring] match_id=odds-6fd356a13c8665331b6f21b565459901 home=Calgary Flames away=Anaheim Ducks diff=%.2f winner=45.91 confidence=%.2f volatility=home 78.18 low
+[aiScoring] match_id=odds-3959df0512860392efd8dc3a1066f611 home=Utah Mammoth away=Washington Capitals diff=%.2f winner=3.5200000000000005 confidence=%.2f volatility=home 61.76 high
+[aiScoring] match_id=odds-f6d65306910a9e6269ab476bdfa69cb1 home=Vegas Golden Knights away=Edmonton Oilers diff=%.2f winner=55.91 confidence=%.2f volatility=home 80.18 low
+[aiScoring] match_id=odds-cd42b2a632ccfc158be49e864b62b3c8 home=Vancouver Canucks away=Los Angeles Kings diff=%.2f winner=19.33 confidence=%.2f volatility=home 69.3 medium
+[filterEngine] raw_id=1063 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1063 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1064 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1064 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=71.11, market=1X2, volatility=medium)
+[filterEngine] raw_id=1065 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1065 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=70.45, market=1X2, volatility=medium)
+[filterEngine] raw_id=1066 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=61.7, market=1X2, volatility=high)
+[filterEngine] raw_id=1066 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=61.7, market=1X2, volatility=high)
+[filterEngine] raw_id=1067 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=65.07, market=1X2, volatility=high)
+[filterEngine] raw_id=1067 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=65.07, market=1X2, volatility=high)
+[filterEngine] raw_id=1068 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1068 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=68.51, market=1X2, volatility=medium)
+[filterEngine] raw_id=1069 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1069 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1070 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1070 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=71.32, market=1X2, volatility=medium)
+[filterEngine] raw_id=1071 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1071 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1072 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1072 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1073 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=61.76, market=1X2, volatility=high)
+[filterEngine] raw_id=1073 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=61.76, market=1X2, volatility=high)
+[filterEngine] raw_id=1074 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1074 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1075 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1075 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=69.3, market=1X2, volatility=medium)
+[aiPipeline] inserted_raw=13 filtered_valid=15 filtered_invalid=11
+[syncService] hockey: pipeline complete for 13 matches
+[syncService] Fetching REAL matches for: hockey...
+[API-Sports] hockey: games { league: '58', season: '2024', date: '2026-03-26' }
+[API-Sports] hockey: results=0
+[dataProvider] hockey: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for hockey right now.
+[syncService] Fetching REAL matches for: hockey...
+[API-Sports] hockey: games { league: '69', season: '2024', date: '2026-03-26' }
+[API-Sports] hockey: results=0
+[dataProvider] hockey: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for hockey right now.
+[syncService] Fetching REAL matches for: hockey...
+[API-Sports] hockey: games { league: '70', season: '2024', date: '2026-03-26' }
+[API-Sports] hockey: results=0
+[dataProvider] hockey: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for hockey right now.
+[syncService] Fetching REAL matches for: volleyball...
+[API-Sports] volleyball: games { league: '95', season: '2024', date: '2026-03-26' }
+[API-Sports] volleyball: results=0
+[dataProvider] volleyball: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for volleyball right now.
+[syncService] Fetching REAL matches for: volleyball...
+[API-Sports] volleyball: games { league: '96', season: '2024', date: '2026-03-26' }
+[API-Sports] volleyball: results=0
+[dataProvider] volleyball: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for volleyball right now.
+[syncService] Fetching REAL matches for: handball...
+[API-Sports] handball: games { league: '82', season: '2024', date: '2026-03-26' }
+[API-Sports] handball: results=0
+[dataProvider] handball: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for handball right now.
+[syncService] Fetching REAL matches for: handball...
+[API-Sports] handball: games { league: '83', season: '2024', date: '2026-03-26' }
+[API-Sports] handball: results=0
+[dataProvider] handball: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for handball right now.
+[syncService] Fetching REAL matches for: afl...
+[API-Sports] afl: games { league: '1', season: '2024', date: '2026-03-26' }
+[API-Sports] afl: results=0
+[dataProvider] afl: 0 fixtures from API-Sports
+[dataProvider] afl: trying Odds API fallback (aussierules_afl)
+[syncService] Found 6 REAL matches for afl. Running AI Analysis...
+[aiPipeline] manual matches input count=6
+[aiScoring] match_id=odds-2ee1bb670b1468133897e4410de496b4 home=Collingwood Magpies away=Greater Western Sydney Giants diff=%.2f winner=27.29 confidence=%.2f volatility=away 71.69 medium
+[aiScoring] match_id=odds-66678cf64922f6dd88aa5110228c683c home=St Kilda Saints away=Brisbane Lions diff=%.2f winner=83.73 confidence=%.2f volatility=home 85.75 low
+[aiScoring] match_id=odds-becc99e004d8ffd3fe6ad06592ca4de5 home=Fremantle Dockers away=Richmond Tigers diff=%.2f winner=17.82 confidence=%.2f volatility=home 68.85 medium
+[aiScoring] match_id=odds-0fccd15fb6197a73902be76a2e54759d home=Essendon Bombers away=North Melbourne Kangaroos diff=%.2f winner=7.859999999999999 confidence=%.2f volatility=away 63.93 high
+[aiScoring] match_id=odds-5f6b0f095bf6ace242e18a9443bcd905 home=Port Adelaide Power away=West Coast Eagles diff=%.2f winner=13.259999999999998 confidence=%.2f volatility=away 66.63 high
+[aiScoring] match_id=odds-0c621cc426e978901144506f40979267 home=Carlton Blues away=Melbourne Demons diff=%.2f winner=40.379999999999995 confidence=%.2f volatility=home 77.08 low
+[filterEngine] raw_id=1076 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1076 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=71.69, market=1X2, volatility=medium)
+[filterEngine] raw_id=1077 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1077 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1078 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1078 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=68.85, market=1X2, volatility=medium)
+[filterEngine] raw_id=1079 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=63.93, market=1X2, volatility=high)
+[filterEngine] raw_id=1079 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=63.93, market=1X2, volatility=high)
+[filterEngine] raw_id=1080 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=66.63, market=1X2, volatility=high)
+[filterEngine] raw_id=1080 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=66.63, market=1X2, volatility=high)
+[filterEngine] raw_id=1081 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1081 tier=deep is_valid=true reason=null
+[aiPipeline] inserted_raw=6 filtered_valid=6 filtered_invalid=6
+[syncService] afl: pipeline complete for 6 matches
+[syncService] Fetching REAL matches for: afl...
+[API-Sports] afl: games { league: '2', season: '2024', date: '2026-03-26' }
+[API-Sports] afl: results=0
+[dataProvider] afl: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for afl right now.
+[syncService] Fetching REAL matches for: formula1...
+[API-Sports] formula1: races { season: '2024', date: '2026-03-26' }
+[API-Sports] formula1: results=0
+[dataProvider] formula1: 0 fixtures from API-Sports
+[syncService] No upcoming REAL matches found for formula1 right now.
+[syncService] Fetching REAL matches for: mma...
+[API-Sports] mma: fights { season: '2024', date: '2026-03-26' }
+[API-Sports] mma: results=0
+[dataProvider] mma: 0 fixtures from API-Sports
+[dataProvider] mma: trying Odds API fallback (mma_mixed_martial_arts)
+[syncService] Found 73 REAL matches for mma. Running AI Analysis...
+[aiPipeline] manual matches input count=73
+[aiScoring] match_id=odds-7a2cfd7ca182f6f643e1797684a54da1 home=Sidney Outlaw away=Davi Ramos diff=%.2f winner=50.209999999999994 confidence=%.2f volatility=away 79.04 low
+[aiScoring] match_id=odds-4602af4d3a458123916cddceaf69a94c home=Ernie Juarez away=Bruno Souza diff=%.2f winner=63.21 confidence=%.2f volatility=home 81.64 low
+[aiScoring] match_id=odds-14bdd6ac3a1553202995ae2845678a9b home=Guilherme Uriel away=Leonardo Fraga diff=%.2f winner=11.86 confidence=%.2f volatility=away 65.93 high
+[aiScoring] match_id=odds-a9d4e5ed4710b66744cb65eae388062f home=Alexei Pergande away=Julio Arce diff=%.2f winner=14.61999999999999 confidence=%.2f volatility=home 67.31 high
+[aiScoring] match_id=odds-b431812eafbd073055d85080eb3fbe33 home=Jack Shore away=Allan Begosso diff=%.2f winner=24.390000000000004 confidence=%.2f volatility=away 70.82 medium
+[aiScoring] match_id=odds-2bbc515ada62418fffde2f1d57ab7bd1 home=Sumiko Inaba away=Ariane Lipski diff=%.2f winner=33.879999999999995 confidence=%.2f volatility=home 75.78 low
+[aiScoring] match_id=odds-8d5efa80413d91644bf03449ba4b4292 home=Johnny Eblen away=Bryan Battle diff=%.2f winner=36.199999999999996 confidence=%.2f volatility=away 76.24 low
+[aiScoring] match_id=odds-0ef7bda991ed98ea8e7806ca883eafbf home=Dakota Bush away=Robert Watley diff=%.2f winner=51.74 confidence=%.2f volatility=home 79.35 low
+[aiScoring] match_id=odds-1ba6a6c09bab69e121cf9c53e974ec30 home=Masayuki Kikuiri away=Ernesto Rodriguez diff=%.2f winner=28.130000000000003 confidence=%.2f volatility=away 71.94 medium
+[aiScoring] match_id=odds-0ca4e7a79cf5bd6f9cf964ffe8b565f2 home=Jarrah Al-Silawi away=Josh Fremd diff=%.2f winner=91.22999999999999 confidence=%.2f volatility=home 87.25 low
+[aiScoring] match_id=odds-ac5076da606ea02cbabbd0d739d8513c home=Nick Fiore away=Richie Lewis diff=%.2f winner=7.069999999999993 confidence=%.2f volatility=home 63.54 high
+[aiScoring] match_id=odds-9b2b6fb6ab6b14936d0aedf7d1a07790 home=Ricky Simon away=Adrian Yanez diff=%.2f winner=55.5 confidence=%.2f volatility=away 80.1 low
+[aiScoring] match_id=odds-9e924d6ee575edae660b2abd3a0c3e44 home=Alexia Thainara away=Bruna Brasil diff=%.2f winner=19.110000000000007 confidence=%.2f volatility=away 69.23 medium
+[aiScoring] match_id=odds-0d43ac4177217637c1c66bb36834e8af home=Navajo Stirling away=Bruno Lopes diff=%.2f winner=41.85 confidence=%.2f volatility=away 77.37 low
+[aiScoring] match_id=odds-ef368ca8564794fae7df509600f424ba home=Casey O'Neill away=Gabriella Fernandes diff=%.2f winner=17.690000000000005 confidence=%.2f volatility=away 68.81 medium
+[aiScoring] match_id=odds-87b0419121d7219f6a07666c258b5627 home=Chase Hooper away=Lance Gibson Jr diff=%.2f winner=31.809999999999995 confidence=%.2f volatility=away 75.36 low
+[aiScoring] match_id=odds-6104a47fa74effc638e3c8603f215151 home=Ignacio Bahamondes away=Tofiq Musayev diff=%.2f winner=26.459999999999994 confidence=%.2f volatility=away 71.44 medium
+[aiScoring] match_id=odds-076599d0cdefad0d7df11137072efb97 home=Marcin Tybura away=Tyrell Fortune diff=%.2f winner=1.3199999999999932 confidence=%.2f volatility=away 60.66 high
+[aiScoring] match_id=odds-e3c53ded38f1db2d5c12e506348b8296 home=Joseph White away=Guilherme Viana diff=%.2f winner=64.69999999999999 confidence=%.2f volatility=away 81.94 low
+[aiScoring] match_id=odds-7b4802a4ce35e3aa6bab3e9515713707 home=Alexa Grasso away=Maycee Barber diff=%.2f winner=26.380000000000003 confidence=%.2f volatility=home 71.41 medium
+[aiScoring] match_id=odds-b0131f938ee4434e8912265c5b0fd168 home=Ethan Goss away=Frederik Dupras diff=%.2f winner=28.74000000000001 confidence=%.2f volatility=away 72.12 medium
+[aiScoring] match_id=odds-02af202154f1a343e5da93873e6a81d2 home=Julian Erosa away=Lerryan Douglas diff=%.2f winner=71.23 confidence=%.2f volatility=home 83.25 low
+[aiScoring] match_id=odds-89683f48291cb4731d1ac324427a862a home=Terrance Mckinney away=Kyle Nelson diff=%.2f winner=38.379999999999995 confidence=%.2f volatility=home 76.68 low
+[aiScoring] match_id=odds-b6269d8deac247ffdcc8e1b1ddd411b3 home=Mansur Abdul-Malik away=Yousri Belgaroui diff=%.2f winner=93.4 confidence=%.2f volatility=away 87.68 low
+[aiScoring] match_id=odds-2ff2f78eff77b5220d2a9e753a026528 home=Michael Chiesa away=Niko Price diff=%.2f winner=12.25 confidence=%.2f volatility=away 66.13 high
+[aiScoring] match_id=odds-ee0f011bceb1a69a6cb9f333005446c1 home=Dalton Rosta away=Impa Kasanganay diff=%.2f winner=73.38 confidence=%.2f volatility=away 83.68 low
+[aiScoring] match_id=odds-1b24a2cbac1f82f12c754e2eefc5088d home=Israel Adesanya away=Joseph Pyfer diff=%.2f winner=19.700000000000003 confidence=%.2f volatility=home 69.41 medium
+[aiScoring] match_id=odds-415bd2bad31d513c9559bde06d080292 home=Guilherme Pat away=Thomas Petersen diff=%.2f winner=84.55 confidence=%.2f volatility=home 85.91 low
+[aiScoring] match_id=odds-8c582958da4de6eae549dd45c50a0208 home=Abdulrakhman Yakhyaev away=Brendson Ribeiro diff=%.2f winner=43.120000000000005 confidence=%.2f volatility=home 77.62 low
+[aiScoring] match_id=odds-df369b0ac479e698163cb6b4cab2a8ae home=Alessandro Costa away=Stewart Nicoll diff=%.2f winner=16.480000000000004 confidence=%.2f volatility=home 68.44 medium
+[aiScoring] match_id=odds-308e8a8b7e066fc6edf88c1521ed4140 home=Alice Pereira away=Hailey Cowan diff=%.2f winner=53.050000000000004 confidence=%.2f volatility=home 79.61 low
+[aiScoring] match_id=odds-79c27cf34debcf4ae5fc6b35f9947aa9 home=Azamat Bekoev away=Tresean Gore diff=%.2f winner=40.59 confidence=%.2f volatility=home 77.12 low
+[aiScoring] match_id=odds-1431a76f792ab61205c0d3abaf146aec home=Renato Moicano away=Chris Duncan diff=%.2f winner=75.49000000000001 confidence=%.2f volatility=away 84.1 low
+[aiScoring] match_id=odds-0e223c8849cda787d13a8ae8af1f535c home=Landon Vannata away=Darrius Flowers diff=%.2f winner=44.480000000000004 confidence=%.2f volatility=home 77.9 low
+[aiScoring] match_id=odds-4f5c1e9719770c34e1dfbd183c91f39b home=Dione Barbosa away=Melissa Gatto diff=%.2f winner=39.11 confidence=%.2f volatility=home 76.82 low
+[aiScoring] match_id=odds-4edd4e3314c2831c4f83fe51364ce492 home=Ethyn Ewing away=Rafael Estevam diff=%.2f winner=17.179999999999993 confidence=%.2f volatility=away 68.65 medium
+[aiScoring] match_id=odds-160b0f4eb66050b5b1edd81d92f42881 home=Jose Delano away=Robert Ruchala diff=%.2f winner=6.199999999999989 confidence=%.2f volatility=home 63.1 high
+[aiScoring] match_id=odds-1686af0ba3a6a304b230c7c6346dd17a home=Tommy McMillen away=Manolo Zecchini diff=%.2f winner=0.9899999999999949 confidence=%.2f volatility=away 60.5 high
+[aiScoring] match_id=odds-178b0d080f6f869504648833c996cb0f home=Virna Jandiroba away=Tabatha Ricci diff=%.2f winner=73.53999999999999 confidence=%.2f volatility=away 83.71 low
+[aiScoring] match_id=odds-287dd4cb65b383bfdb09f36108bd0cf5 home=Joshua Van away=Tatsuro Taira diff=%.2f winner=58.279999999999994 confidence=%.2f volatility=home 80.66 low
+[aiScoring] match_id=odds-6fe9759f877d00a6399d8e3d0a81b818 home=Jiri Prochazka away=Carlos Ulberg diff=%.2f winner=5.110000000000003 confidence=%.2f volatility=home 62.56 high
+[aiScoring] match_id=odds-ae22ee2cfaa7d47bdfbf58c00e46a7d7 home=Jack Della Maddalena away=Carlos Prates diff=%.2f winner=12.540000000000006 confidence=%.2f volatility=home 66.27 high
+[aiScoring] match_id=odds-9572ebf9d60e9a4a050db937e02dcf03 home=Khamzat Chimaev away=Sean Strickland diff=%.2f winner=53.8 confidence=%.2f volatility=home 79.76 low
+[aiScoring] match_id=odds-dc70600ccf557c5bce24b0f1e73fa45f home=Alexander Volkov away=Waldo Cortes-Acosta diff=%.2f winner=28.520000000000003 confidence=%.2f volatility=home 72.06 medium
+[aiScoring] match_id=odds-f7214563fa457f83d32ae08128c0dfa1 home=Bogdan Guskov away=Jan Blachowicz diff=%.2f winner=28.010000000000005 confidence=%.2f volatility=away 71.9 medium
+[aiScoring] match_id=odds-bca7261228cf53e0ef8c55e76cdf2138 home=King Green away=Jeremy Stephens diff=%.2f winner=35.69 confidence=%.2f volatility=away 76.14 low
+[aiScoring] match_id=odds-a2b05838698a5f914b569f502d372985 home=Sean Brady away=Joaquin Buckley diff=%.2f winner=8.27 confidence=%.2f volatility=away 64.14 high
+[aiScoring] match_id=odds-1b275b79bdfb54ec649b1c4a1cd01b60 home=Francis Ngannou away=Philipe Lins diff=%.2f winner=45.24 confidence=%.2f volatility=away 78.05 low
+[aiScoring] match_id=odds-a39fe54b3c38dbba822aaa3d29cca5dd home=Ronda Rousey away=Gina Carano diff=%.2f winner=5.529999999999998 confidence=%.2f volatility=away 62.77 high
+[aiScoring] match_id=odds-0068bfd36cef60b3e373c762b5b6338a home=Nate Diaz away=Mike Perry diff=%.2f winner=32.96 confidence=%.2f volatility=away 75.59 low
+[aiScoring] match_id=odds-f1fb488f82150df01e4c09f56f5efe09 home=Islam Makhachev away=Ilia Topuria diff=%.2f winner=19.00999999999999 confidence=%.2f volatility=away 69.2 medium
+[aiScoring] match_id=odds-c8dbccd9eda383d9c76dc15e4a3c96a7 home=Alex Pereira away=Carlos Ulberg diff=%.2f winner=52.239999999999995 confidence=%.2f volatility=home 79.45 low
+[aiScoring] match_id=odds-b1a902b892f239a0404c75781af22e87 home=Alex Pereira away=Jiri Prochazka diff=%.2f winner=47.129999999999995 confidence=%.2f volatility=home 78.43 low
+[aiScoring] match_id=odds-e7a638f5736f2d0edc762b56fc404f74 home=Alex Pereira away=Jon Jones diff=%.2f winner=54.459999999999994 confidence=%.2f volatility=home 79.89 low
+[aiScoring] match_id=odds-a3c203ddf1665927314db9cc73ede377 home=Magomed Ankalaev away=Carlos Ulberg diff=%.2f winner=9.280000000000001 confidence=%.2f volatility=home 64.64 high
+[aiScoring] match_id=odds-4b4920d2454497566b519a271f9e1e93 home=Diego Lopes away=Steve Garcia Jr. diff=%.2f winner=43.57 confidence=%.2f volatility=away 77.71 low
+[aiScoring] match_id=odds-9cf76c6ecde4824965ca04da644dfefa home=Bo Nickal away=Kyle Daukaus diff=%.2f winner=0.46000000000000085 confidence=%.2f volatility=away 60.23 high
+[aiScoring] match_id=odds-54eb45b661945af7aa7da285a12e835c home=Mauricio Ruffy away=Michael Chandler diff=%.2f winner=7.990000000000009 confidence=%.2f volatility=home 64 high
+[aiScoring] match_id=odds-20d0d02349fe04d63631b1e3f1879fa3 home=Sean O'Malley away=Aiemann Zahabi diff=%.2f winner=7.890000000000001 confidence=%.2f volatility=away 63.95 high
+[aiScoring] match_id=odds-1e972b73d422aa4cadb9185ca87c3c93 home=Alex Pereira away=Ciryl Gane diff=%.2f winner=11.210000000000008 confidence=%.2f volatility=away 65.61 high
+[aiScoring] match_id=odds-e34a17d5cf2a82a5161a54631e06770c home=Ilia Topuria away=Justin Gaethje diff=%.2f winner=9.579999999999998 confidence=%.2f volatility=home 64.79 high
+[aiScoring] match_id=odds-891965c02d665af81f9308428b8f33e7 home=Valentina Shevchenko away=Natalia Silva diff=%.2f winner=35.88999999999999 confidence=%.2f volatility=away 76.18 low
+[aiScoring] match_id=odds-ee37a39c1d8a992a65c6ff399fa48c63 home=Alexandre Pantoja away=Joshua Van diff=%.2f winner=17.28 confidence=%.2f volatility=home 68.68 medium
+[aiScoring] match_id=odds-1ca0b61248b7eb5feef12a04661003e0 home=Tom Aspinall away=Ciryl Gane diff=%.2f winner=3.049999999999997 confidence=%.2f volatility=away 61.53 high
+[aiScoring] match_id=odds-702055a9e35d07bddba5fd446eef719c home=Islam Makhachev away=Michael Morales diff=%.2f winner=10.820000000000007 confidence=%.2f volatility=home 65.41 high
+[aiScoring] match_id=odds-ee6203b3168fb34a63a60ad51dd01050 home=Weili Zhang away=Mackenzie Dern diff=%.2f winner=20.82 confidence=%.2f volatility=away 69.75 medium
+[aiScoring] match_id=odds-05b3dc3515568962c8e7351c06ff69c0 home=Merab Dvalishvili away=Petr Yan diff=%.2f winner=29.490000000000002 confidence=%.2f volatility=away 72.35 medium
+[aiScoring] match_id=odds-f09d8755975042bcd105a5ab258253ff home=Ilia Topuria away=Arman Tsarukyan diff=%.2f winner=60.14999999999999 confidence=%.2f volatility=home 81.03 low
+[aiScoring] match_id=odds-944dd8a4945ba0df2c4370de73387c5d home=Conor McGregor away=Jorge Masvidal diff=%.2f winner=16.22 confidence=%.2f volatility=away 68.37 medium
+[aiScoring] match_id=odds-96b5f4dba85f6b98816b6660cf21241d home=Michael Chandler away=Conor McGregor diff=%.2f winner=5.739999999999995 confidence=%.2f volatility=home 62.87 high
+[aiScoring] match_id=odds-b40b838fc3b12e959a10d678ed58321f home=Islam Makhachev away=Kamaru Usman diff=%.2f winner=2.8499999999999943 confidence=%.2f volatility=away 61.43 high
+[aiScoring] match_id=odds-fa2d7e022c2c47e0855f04084d08f163 home=Tom Aspinall away=Ciryl Gane diff=%.2f winner=3.049999999999997 confidence=%.2f volatility=away 61.53 high
+[aiScoring] match_id=odds-fcee675894f8285afc8daf0808198b74 home=Islam Makhachev away=Kamaru Usman diff=%.2f winner=2.8499999999999943 confidence=%.2f volatility=away 61.43 high
+[filterEngine] raw_id=1082 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1082 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1083 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1083 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1084 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=65.93, market=1X2, volatility=high)
+[filterEngine] raw_id=1084 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=65.93, market=1X2, volatility=high)
+[filterEngine] raw_id=1085 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=67.31, market=1X2, volatility=high)
+[filterEngine] raw_id=1085 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=67.31, market=1X2, volatility=high)
+[filterEngine] raw_id=1086 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1086 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=70.82, market=1X2, volatility=medium)
+[filterEngine] raw_id=1087 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1087 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1088 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1088 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1089 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1089 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1090 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1090 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=71.94, market=1X2, volatility=medium)
+[filterEngine] raw_id=1091 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1091 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1092 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=63.54, market=1X2, volatility=high)
+[filterEngine] raw_id=1092 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=63.54, market=1X2, volatility=high)
+[filterEngine] raw_id=1093 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1093 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1094 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1094 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=69.23, market=1X2, volatility=medium)
+[filterEngine] raw_id=1095 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1095 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1096 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1096 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=68.81, market=1X2, volatility=medium)
+[filterEngine] raw_id=1097 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1097 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1098 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1098 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=71.44, market=1X2, volatility=medium)
+[filterEngine] raw_id=1099 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=60.66, market=1X2, volatility=high)
+[filterEngine] raw_id=1099 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=60.66, market=1X2, volatility=high)
+[filterEngine] raw_id=1100 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1100 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1101 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1101 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=71.41, market=1X2, volatility=medium)
+[filterEngine] raw_id=1102 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1102 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=72.12, market=1X2, volatility=medium)
+[filterEngine] raw_id=1103 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1103 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1104 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1104 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1105 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1105 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1106 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=66.13, market=1X2, volatility=high)
+[filterEngine] raw_id=1106 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=66.13, market=1X2, volatility=high)
+[filterEngine] raw_id=1107 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1107 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1108 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1108 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=69.41, market=1X2, volatility=medium)
+[filterEngine] raw_id=1109 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1109 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1110 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1110 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1111 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1111 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=68.44, market=1X2, volatility=medium)
+[filterEngine] raw_id=1112 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1112 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1113 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1113 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1114 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1114 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1115 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1115 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1116 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1116 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1117 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1117 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=68.65, market=1X2, volatility=medium)
+[filterEngine] raw_id=1118 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=63.1, market=1X2, volatility=high)
+[filterEngine] raw_id=1118 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=63.1, market=1X2, volatility=high)
+[filterEngine] raw_id=1119 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=60.5, market=1X2, volatility=high)
+[filterEngine] raw_id=1119 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=60.5, market=1X2, volatility=high)
+[filterEngine] raw_id=1120 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1120 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1121 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1121 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1122 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=62.56, market=1X2, volatility=high)
+[filterEngine] raw_id=1122 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=62.56, market=1X2, volatility=high)
+[filterEngine] raw_id=1123 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=66.27, market=1X2, volatility=high)
+[filterEngine] raw_id=1123 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=66.27, market=1X2, volatility=high)
+[filterEngine] raw_id=1124 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1124 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1125 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1125 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=72.06, market=1X2, volatility=medium)
+[filterEngine] raw_id=1126 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1126 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=71.9, market=1X2, volatility=medium)
+[filterEngine] raw_id=1127 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1127 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1128 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=64.14, market=1X2, volatility=high)
+[filterEngine] raw_id=1128 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=64.14, market=1X2, volatility=high)
+[filterEngine] raw_id=1129 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1129 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1130 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=62.77, market=1X2, volatility=high)
+[filterEngine] raw_id=1130 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=62.77, market=1X2, volatility=high)
+[filterEngine] raw_id=1131 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1131 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1132 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1132 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=69.2, market=1X2, volatility=medium)
+[filterEngine] raw_id=1133 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1133 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1134 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1134 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1135 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1135 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1136 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=64.64, market=1X2, volatility=high)
+[filterEngine] raw_id=1136 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=64.64, market=1X2, volatility=high)
+[filterEngine] raw_id=1137 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1137 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1138 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=60.23, market=1X2, volatility=high)
+[filterEngine] raw_id=1138 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=60.23, market=1X2, volatility=high)
+[filterEngine] raw_id=1139 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=64, market=1X2, volatility=high)
+[filterEngine] raw_id=1139 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=64, market=1X2, volatility=high)
+[filterEngine] raw_id=1140 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=63.95, market=1X2, volatility=high)
+[filterEngine] raw_id=1140 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=63.95, market=1X2, volatility=high)
+[filterEngine] raw_id=1141 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=65.61, market=1X2, volatility=high)
+[filterEngine] raw_id=1141 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=65.61, market=1X2, volatility=high)
+[filterEngine] raw_id=1142 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=64.79, market=1X2, volatility=high)
+[filterEngine] raw_id=1142 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=64.79, market=1X2, volatility=high)
+[filterEngine] raw_id=1143 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1143 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1144 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1144 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=68.68, market=1X2, volatility=medium)
+[filterEngine] raw_id=1145 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=61.53, market=1X2, volatility=high)
+[filterEngine] raw_id=1145 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=61.53, market=1X2, volatility=high)
+[filterEngine] raw_id=1146 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=65.41, market=1X2, volatility=high)
+[filterEngine] raw_id=1146 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=65.41, market=1X2, volatility=high)
+[filterEngine] raw_id=1147 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1147 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=69.75, market=1X2, volatility=medium)
+[filterEngine] raw_id=1148 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1148 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=72.35, market=1X2, volatility=medium)
+[filterEngine] raw_id=1149 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1149 tier=deep is_valid=true reason=null
+[filterEngine] raw_id=1150 tier=normal is_valid=true reason=null
+[filterEngine] raw_id=1150 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=68.37, market=1X2, volatility=medium)
+[filterEngine] raw_id=1151 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=62.87, market=1X2, volatility=high)
+[filterEngine] raw_id=1151 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=62.87, market=1X2, volatility=high)
+[filterEngine] raw_id=1152 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=61.43, market=1X2, volatility=high)
+[filterEngine] raw_id=1152 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=61.43, market=1X2, volatility=high)
+[filterEngine] raw_id=1153 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=61.53, market=1X2, volatility=high)
+[filterEngine] raw_id=1153 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=61.53, market=1X2, volatility=high)
+[filterEngine] raw_id=1154 tier=normal is_valid=false reason=[tier=normal] Volatility not allowed by tier_rules (confidence=61.43, market=1X2, volatility=high)
+[filterEngine] raw_id=1154 tier=deep is_valid=false reason=[tier=deep] Confidence below min_confidence (75) (confidence=61.43, market=1X2, volatility=high)
+[aiPipeline] inserted_raw=73 filtered_valid=83 filtered_invalid=63
+[syncService] mma: pipeline complete for 73 matches
+[syncService] Sync successful. Rebuilding final outputs for the website...
+[accaBuilder] tier=normal singles=30 accas=0
+[accaBuilder] tier=deep singles=30 accas=0
+[syncService] Master sync complete! Real data is now live.
+[syncService] Manual process finished.

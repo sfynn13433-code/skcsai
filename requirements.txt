@@ -1,0 +1,9 @@
+requests
+supabase
+pydantic
+python-dotenv
+nfl_data_py
+nba_api
+pandas
+scikit-learn
+numpy

@@ -320,6 +320,9 @@ app.get('/api/accuracy', async (req, res) => {
             timestamp: new Date().toISOString()
         };
 
+        // Ensure overall.winRate exists even if 0
+        if (!accuracyData.overall.winRate) accuracyData.overall.winRate = 0;
+
         res.status(200).json(accuracyData);
 
     } catch (err) {

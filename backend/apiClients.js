@@ -4,9 +4,7 @@ const config = require('./config');
 class APISportsClient {
     constructor() {
         this.apiKey = config.apiSportsKey;
-        this.headers = {
-            'x-apisports-key': this.apiKey
-        };
+        this.maxKeySlots = 10;
     }
 
     getBaseUrl(sport) {
@@ -27,6 +25,97 @@ class APISportsClient {
         return urls[sport] || urls.football;
     }
 
+    getHostForSport(sport) {
+        return this.getBaseUrl(sport).replace(/^https?:\/\//, '');
+    }
+
+    getEnvPrefixForSport(sport) {
+        const prefixes = {
+            football: 'API_FOOTBALL_KEY',
+            basketball: 'API_BASKETBALL_KEY',
+            nba: 'API_NBA_KEY',
+            afl: 'API_AFL_KEY',
+            baseball: 'API_BASEBALL_KEY',
+            formula1: 'API_FORMULA1_KEY',
+            handball: 'API_HANDBALL_KEY',
+            hockey: 'API_HOCKEY_KEY',
+            mma: 'API_MMA_KEY',
+            american_football: 'API_NFL_KEY',
+            rugby: 'API_RUGBY_KEY',
+            volleyball: 'API_VOLLEYBALL_KEY'
+        };
+        return prefixes[sport] || 'API_FOOTBALL_KEY';
+    }
+
+    getKeysForSport(sport) {
+        const prefix = this.getEnvPrefixForSport(sport);
+        const keys = [];
+
+        for (let i = 1; i <= this.maxKeySlots; i += 1) {
+            const value = process.env[`${prefix}_${i}`];
+            if (value && String(value).trim()) {
+                keys.push(String(value).trim());
+            }
+        }
+
+        if (this.apiKey && String(this.apiKey).trim()) {
+            keys.push(String(this.apiKey).trim());
+        }
+
+        return [...new Set(keys)];
+    }
+
+    hasQuotaErrorPayload(data) {
+        const errors = data && data.errors ? data.errors : null;
+        if (!errors || typeof errors !== 'object') return false;
+        return Boolean(errors.requests || errors.token);
+    }
+
+    async requestWithRotation(sport, endpoint, params) {
+        const baseUrl = this.getBaseUrl(sport);
+        const keys = this.getKeysForSport(sport);
+
+        if (!keys.length) {
+            throw new Error(`No API keys configured for sport=${sport}`);
+        }
+
+        let lastError = null;
+        for (let i = 0; i < keys.length; i += 1) {
+            const key = keys[i];
+            const headers = {
+                'x-apisports-key': key,
+                'x-rapidapi-host': this.getHostForSport(sport)
+            };
+
+            try {
+                const response = await axios.get(`${baseUrl}/${endpoint}`, {
+                    headers,
+                    params
+                });
+
+                if (this.hasQuotaErrorPayload(response.data)) {
+                    console.warn(`[API-Sports] ${sport} key ${i + 1} exhausted. Rotating...`);
+                    lastError = new Error(`Quota/token exhausted for key index ${i + 1}`);
+                    continue;
+                }
+
+                return response.data;
+            } catch (error) {
+                const payload = error.response && error.response.data ? error.response.data : null;
+                if (this.hasQuotaErrorPayload(payload)) {
+                    console.warn(`[API-Sports] ${sport} key ${i + 1} exhausted via error payload. Rotating...`);
+                    lastError = error;
+                    continue;
+                }
+                lastError = error;
+            }
+        }
+
+        throw new Error(
+            `[API-Sports] all keys exhausted/failed for ${sport}: ${lastError ? lastError.message : 'unknown error'}`
+        );
+    }
+
     getEndpoint(sport) {
         const endpoints = {
             football:         'fixtures',
@@ -38,7 +127,6 @@ class APISportsClient {
 
     async getFixtures(leagueId, season, options = {}, sport = 'football') {
         try {
-            const baseUrl = this.getBaseUrl(sport);
             const endpoint = this.getEndpoint(sport);
             const params = {};
 
@@ -49,19 +137,15 @@ class APISportsClient {
             if (options.date) params.date = options.date;
             if (options.page) params.page = options.page;
 
-            console.log(`[API-Sports] ${sport}: ${baseUrl}/${endpoint}`, params);
+            console.log(`[API-Sports] ${sport}: ${endpoint}`, params);
+            const data = await this.requestWithRotation(sport, endpoint, params);
 
-            const response = await axios.get(`${baseUrl}/${endpoint}`, {
-                headers: this.headers,
-                params
-            });
-
-            console.log(`[API-Sports] ${sport}: status=${response.status} results=${response.data.results || 0}`);
-            if (response.data.errors && Object.keys(response.data.errors).length > 0) {
-                console.warn(`[API-Sports] ${sport} errors:`, response.data.errors);
+            console.log(`[API-Sports] ${sport}: results=${data.results || 0}`);
+            if (data.errors && Object.keys(data.errors).length > 0) {
+                console.warn(`[API-Sports] ${sport} errors:`, data.errors);
             }
 
-            return response.data;
+            return data;
         } catch (error) {
             console.error(`[API-Sports] ${sport} error:`, error.message);
             if (error.response) {
@@ -74,23 +158,17 @@ class APISportsClient {
     // NEW: Get teams for a league and season
     async getTeams(leagueId, season, sport = 'football') {
         try {
-            const baseUrl = this.getBaseUrl(sport);
             const params = { league: leagueId, season };
 
-            console.log(`🌐 Calling API: ${baseUrl}/teams`, params);
+            console.log(`🌐 Calling API: ${sport}/teams`, params);
+            const data = await this.requestWithRotation(sport, 'teams', params);
 
-            const response = await axios.get(`${baseUrl}/teams`, {
-                headers: this.headers,
-                params
-            });
-
-            console.log(`✅ API response status: ${response.status}`);
-            if (response.data.errors && Object.keys(response.data.errors).length > 0) {
-                console.log('⚠️ API errors:', response.data.errors);
+            if (data.errors && Object.keys(data.errors).length > 0) {
+                console.log('⚠️ API errors:', data.errors);
             }
-            console.log(`📊 Results count: ${response.data.results || 0}`);
+            console.log(`📊 Results count: ${data.results || 0}`);
 
-            return response.data;
+            return data;
         } catch (error) {
             console.error('❌ API-Sports teams error:', error.message);
             if (error.response) {
@@ -102,12 +180,11 @@ class APISportsClient {
 
     async getTeamStats(leagueId, season, teamId, sport = 'football') {
         try {
-            const baseUrl = this.getBaseUrl(sport);
-            const response = await axios.get(`${baseUrl}/teams/statistics`, {
-                headers: this.headers,
-                params: { league: leagueId, season, team: teamId }
+            return await this.requestWithRotation(sport, 'teams/statistics', {
+                league: leagueId,
+                season,
+                team: teamId
             });
-            return response.data;
         } catch (error) {
             console.error('API-Sports team stats error:', error.message);
             return null;
@@ -116,12 +193,10 @@ class APISportsClient {
 
     async getInjuries(leagueId, season, sport = 'football') {
         try {
-            const baseUrl = this.getBaseUrl(sport);
-            const response = await axios.get(`${baseUrl}/injuries`, {
-                headers: this.headers,
-                params: { league: leagueId, season }
+            return await this.requestWithRotation(sport, 'injuries', {
+                league: leagueId,
+                season
             });
-            return response.data;
         } catch (error) {
             console.error('API-Sports injuries error:', error.message);
             return null;

@@ -45,6 +45,7 @@ function buildRawPredictionFromProviderItem(item) {
             provider: item.provider || null,
             home_team: item.home_team || null,
             away_team: item.away_team || null,
+            match_time: item.date || item.commence_time || item.kickoff || null,
             ai: {
                 winner: scoring.winner
             }
