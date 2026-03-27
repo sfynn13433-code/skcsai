@@ -231,39 +231,29 @@ app.post('/api/refresh-predictions', async (req, res) => {
 // -------------------------------------------------
 app.get('/api/accuracy', async (req, res) => {
     try {
-        // Return mock accuracy data for now
-        // In production, this would query resolved predictions from database
+        // Return mock accuracy data matching frontend expectations
         const accuracyData = {
-            overall_accuracy: 67.4,
-            normal_system: 65.2,
-            deep_system: 71.8,
-            total_predictions: 1250,
-            total_wins: 843,
-            by_sport: {
-                football: 55.0,
-                basketball: 68.5,
-                hockey: 72.3,
-                baseball: 61.2,
-                rugby: 70.1,
-                cricket: 74.8,
-                mma: 74.8,
-                formula1: 69.5,
-                afl: 65.3,
-                handball: 71.2,
-                volleyball: 79.2
+            overall: {
+                winRate: 67.4,
+                wins: 843,
+                total: 1250
             },
-            weekly_performance: {
-                'week_1': { accuracy: 65.5, wins: 32, total: 49 },
-                'week_2': { accuracy: 68.2, wins: 35, total: 51 },
-                'week_3': { accuracy: 69.1, wins: 38, total: 55 },
-                'week_4': { accuracy: 71.3, wins: 42, total: 59 }
-            },
-            missed_reasons: [
-                { reason: 'Red Card', count: 45 },
-                { reason: 'Injury', count: 38 },
-                { reason: 'Weather', count: 22 },
-                { reason: 'Team Unrest', count: 18 },
-                { reason: 'Referee Error', count: 12 }
+            byTier: [
+                { tier: 'Normal', winRate: 65.2, wins: 325, total: 500 },
+                { tier: 'Deep', winRate: 71.8, wins: 518, total: 750 }
+            ],
+            bySport: [
+                { sport: 'football', winRate: 55.0, wins: 110, total: 200 },
+                { sport: 'basketball', winRate: 68.5, wins: 137, total: 200 },
+                { sport: 'hockey', winRate: 72.3, wins: 145, total: 200 },
+                { sport: 'baseball', winRate: 61.2, wins: 122, total: 200 },
+                { sport: 'rugby', winRate: 70.1, wins: 140, total: 200 },
+                { sport: 'cricket', winRate: 74.8, wins: 150, total: 200 },
+                { sport: 'mma', winRate: 74.8, wins: 150, total: 200 },
+                { sport: 'formula1', winRate: 69.5, wins: 139, total: 200 },
+                { sport: 'afl', winRate: 65.3, wins: 131, total: 200 },
+                { sport: 'handball', winRate: 71.2, wins: 142, total: 200 },
+                { sport: 'volleyball', winRate: 79.2, wins: 158, total: 200 }
             ],
             timestamp: new Date().toISOString()
         };
