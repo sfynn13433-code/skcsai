@@ -227,6 +227,56 @@ app.post('/api/refresh-predictions', async (req, res) => {
 });
 
 // -------------------------------------------------
+//  Accuracy Dashboard endpoint
+// -------------------------------------------------
+app.get('/api/accuracy', async (req, res) => {
+    try {
+        // Return mock accuracy data for now
+        // In production, this would query resolved predictions from database
+        const accuracyData = {
+            overall_accuracy: 67.4,
+            normal_system: 65.2,
+            deep_system: 71.8,
+            total_predictions: 1250,
+            total_wins: 843,
+            by_sport: {
+                football: 55.0,
+                basketball: 68.5,
+                hockey: 72.3,
+                baseball: 61.2,
+                rugby: 70.1,
+                cricket: 74.8,
+                mma: 74.8,
+                formula1: 69.5,
+                afl: 65.3,
+                handball: 71.2,
+                volleyball: 79.2
+            },
+            weekly_performance: {
+                'week_1': { accuracy: 65.5, wins: 32, total: 49 },
+                'week_2': { accuracy: 68.2, wins: 35, total: 51 },
+                'week_3': { accuracy: 69.1, wins: 38, total: 55 },
+                'week_4': { accuracy: 71.3, wins: 42, total: 59 }
+            },
+            missed_reasons: [
+                { reason: 'Red Card', count: 45 },
+                { reason: 'Injury', count: 38 },
+                { reason: 'Weather', count: 22 },
+                { reason: 'Team Unrest', count: 18 },
+                { reason: 'Referee Error', count: 12 }
+            ],
+            timestamp: new Date().toISOString()
+        };
+
+        res.status(200).json(accuracyData);
+
+    } catch (err) {
+        console.error('ACCURACY ERROR:', err);
+        res.status(500).json({ error: 'Failed to fetch accuracy data' });
+    }
+});
+
+// -------------------------------------------------
 //  Subscription endpoint (legacy)
 // -------------------------------------------------
 app.post('/api/subscribe', requireSupabaseUser, async (req, res) => {
