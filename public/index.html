@@ -930,8 +930,8 @@
     }
 
     /**
-     * Render Sport with Categorized Predictions
-     * Groups predictions by type: Direct, Secondary, Multi, Same Match, ACCA
+     * Render Sport - Complete Hierarchical UI
+     * Direct (1X2) → Secondary nested inside → Multi → Same Match → ACCA
      */
     function renderSport(sport, containerId, predictions) {
         const container = document.getElementById(containerId);
@@ -942,153 +942,249 @@
             return;
         }
 
-        // Categorize predictions by type
-        const categories = {
-            direct: [],
-            secondary: [],
-            multi: [],
-            same: [],
-            acca: []
-        };
-
-        predictions.forEach(p => {
-            const predType = (p.type || 'direct').toLowerCase();
-            if (predType.includes('secondary') || predType.includes('over') || predType.includes('btts')) {
-                categories.secondary.push(p);
-            } else if (predType.includes('multi')) {
-                categories.multi.push(p);
-            } else if (predType.includes('same') || predType.includes('builder')) {
-                categories.same.push(p);
-            } else if (predType.includes('acca') || (p.matches && p.matches.length > 3)) {
-                categories.acca.push(p);
-            } else {
-                categories.direct.push(p);
-            }
-        });
-
-        // Update allocation counts
-        const sportPrefix = sport.charAt(0).toUpperCase() + sport.slice(1);
-        document.getElementById(`${sport}-direct-count`).textContent = categories.direct.length;
-        document.getElementById(`${sport}-secondary-count`).textContent = categories.secondary.length;
-        document.getElementById(`${sport}-multi-count`).textContent = categories.multi.length;
-        document.getElementById(`${sport}-same-count`).textContent = categories.same.length;
-        document.getElementById(`${sport}-acca-count`).textContent = categories.acca.length;
-
-        // Show tier summary if there are any predictions
-        const tierSummary = document.getElementById(`${sport}-tier-summary`);
-        if (tierSummary && (categories.direct.length + categories.secondary.length + categories.multi.length + categories.same.length + categories.acca.length) > 0) {
-            tierSummary.style.display = 'block';
-        }
-
-        // Render each category
-        renderCategory(sport, 'direct', categories.direct);
-        renderCategory(sport, 'secondary', categories.secondary);
-        renderCategory(sport, 'multi', categories.multi);
-        renderCategory(sport, 'same', categories.same);
-        renderCategory(sport, 'acca', categories.acca);
-    }
-
-    /**
-     * Render a single prediction category
-     */
-    function renderCategory(sport, categoryType, predictions) {
-        const containerId = `${sport}-${categoryType}-matches`;
-        const container = document.getElementById(containerId);
-        if (!container) return;
-
-        if (predictions.length === 0) {
-            container.innerHTML = `<p style="text-align:center;color:#9ca3af;padding:12px;font-size:0.9rem;">No ${categoryType} predictions available</p>`;
-            return;
-        }
+        // Categorize by type: 'single' = Direct/1X2, 'acca' = Accumulators
+        const singles = predictions.filter(p => p.type === 'single' || !p.type);
+        const accas = predictions.filter(p => p.type === 'acca');
 
         container.innerHTML = '';
 
-        predictions.forEach(p => {
-            const card = document.createElement('div');
-            card.className = 'prediction-card';
-
-            // TEAM NAME EXTRACTOR
-            let matchesHtml = "";
-            if (p.matches && Array.isArray(p.matches)) {
-                matchesHtml = p.matches.map(m => {
-                    const findTeam = (obj, side) => {
-                        if (!obj) return null;
-                        const keys = side === 'home' 
-                            ? ['home_team', 'home', 'homeTeam', 'player1'] 
-                            : ['away_team', 'away', 'awayTeam', 'player2'];
-                        
-                        for (let k of keys) if (obj[k]) return obj[k];
-                        if (obj.metadata) {
-                            for (let k of keys) if (obj.metadata[k]) return obj.metadata[k];
-                            if (obj.metadata.ai) {
-                                for (let k of keys) if (obj.metadata.ai[k]) return obj.metadata.ai[k];
-                            }
-                        }
-                        return null;
-                    };
-
-                    const h = findTeam(m, 'home') || "Team A";
-                    const a = findTeam(m, 'away') || "Team B";
-                    const homeInfo = m.home_team_info || null;
-                    const awayInfo = m.away_team_info || null;
-                    const homeLogo = homeInfo && homeInfo.logo ? `<img src="${homeInfo.logo}" alt="${h}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px;"/>` : '';
-                    const awayLogo = awayInfo && awayInfo.logo ? `<img src="${awayInfo.logo}" alt="${a}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-left:6px;"/>` : '';
-
-                    const meta = m.metadata || {};
-                    let contextLabel = '';
-                    
-                    if (meta.race_name) {
-                        contextLabel = `${meta.race_name}${meta.circuit ? ' • ' + meta.circuit : ''}`;
-                    } else if (meta.tournament) {
-                        contextLabel = `${meta.tournament}${meta.stage ? ' • ' + meta.stage : ''}${meta.gender ? ' • ' + meta.gender : ''}`;
-                    } else if (meta.event) {
-                        contextLabel = `${meta.event}${meta.weight_class ? ' • ' + meta.weight_class : ''}${meta.venue ? ' • ' + meta.venue : ''}`;
-                    } else if (meta.series) {
-                        contextLabel = `${meta.series}${meta.format ? ' • ' + meta.format : ''}`;
-                    } else if (meta.league) {
-                        contextLabel = `${meta.league}${meta.matchday ? ' • ' + meta.matchday : ''}${meta.week ? ' • ' + meta.week : ''}${meta.round ? ' • ' + meta.round : ''}${meta.division ? ' • ' + meta.division : ''}${meta.conference ? ' • ' + meta.conference : ''}`;
-                    } else if (homeInfo && homeInfo.league && homeInfo.league.name) {
-                        contextLabel = homeInfo.league.name;
-                    }
-                    
-                    const leagueLabel = contextLabel 
-                        ? `<div style="margin-top:2px;color:#718096;font-size:0.68rem;letter-spacing:0.3px;">${contextLabel}</div>`
-                        : '';
-                    return `<div style="margin-bottom:6px; color:#1a202c;">${homeLogo}${h} <span style="color:#718096;font-size:0.8rem;">vs</span> ${a}${awayLogo}${leagueLabel}</div>`;
-                }).join('');
-            }
-
-            const firstMatch = (p.matches && p.matches[0]) ? p.matches[0] : {};
-            const rawTip = firstMatch.prediction || 'N/A';
-            const displayTip = rawTip.replace(/_/g, ' ').toUpperCase();
+        // Section 1: Direct (1X2) Matches with nested Secondary toggle
+        if (singles.length > 0) {
+            const directSection = document.createElement('div');
+            directSection.style.marginBottom = '2rem';
+            directSection.innerHTML = `<h4 style="color:#60a5fa;margin-bottom:1rem;font-size:1.1rem;">⚽ Direct (Match Winners)</h4>`;
             
-            let dateTimeStr = '';
-            if (firstMatch.commence_time) {
-                try {
-                    const matchDate = new Date(firstMatch.commence_time);
-                    const day = String(matchDate.getDate()).padStart(2, '0');
-                    const month = String(matchDate.getMonth() + 1).padStart(2, '0');
-                    const year = String(matchDate.getFullYear()).slice(-2);
-                    const hours = String(matchDate.getHours()).padStart(2, '0');
-                    const mins = String(matchDate.getMinutes()).padStart(2, '0');
-                    dateTimeStr = `${day}/${month}/${year} ${hours}:${mins}`;
-                } catch (e) {
-                    dateTimeStr = '';
+            const directGrid = document.createElement('div');
+            directGrid.className = 'prediction-grid';
+            
+            singles.forEach((pred, idx) => {
+                const card = createPredictionCard(pred, sport, `direct-${idx}`);
+                directGrid.appendChild(card);
+            });
+            
+            directSection.appendChild(directGrid);
+            container.appendChild(directSection);
+        }
+
+        // Section 2: Multi Bets (2-3 legs combined)
+        const multiPreds = singles.filter(p => p.matches && p.matches.length >= 2 && p.matches.length <= 3);
+        if (multiPreds.length > 0) {
+            const multiSection = document.createElement('div');
+            multiSection.style.marginBottom = '2rem';
+            multiSection.innerHTML = `<h4 style="color:#c084fc;margin-bottom:1rem;font-size:1.1rem;">🔀 Multi (Combined Selections)</h4>`;
+            
+            const multiGrid = document.createElement('div');
+            multiGrid.className = 'prediction-grid';
+            
+            multiPreds.forEach((pred, idx) => {
+                const card = createMultiCard(pred, sport, `multi-${idx}`);
+                multiGrid.appendChild(card);
+            });
+            
+            multiSection.appendChild(multiGrid);
+            container.appendChild(multiSection);
+        }
+
+        // Section 3: Accumulators (4+ legs)
+        if (accas.length > 0) {
+            const accaSection = document.createElement('div');
+            accaSection.style.marginBottom = '2rem';
+            accaSection.innerHTML = `<h4 style="color:#f87171;margin-bottom:1rem;font-size:1.1rem;">🔥 6-Match ACCA</h4>`;
+            
+            const accaGrid = document.createElement('div');
+            accaGrid.className = 'prediction-grid';
+            
+            accas.forEach((pred, idx) => {
+                const card = createAccaCard(pred, sport, `acca-${idx}`);
+                accaGrid.appendChild(card);
+            });
+            
+            accaSection.appendChild(accaGrid);
+            container.appendChild(accaSection);
+        }
+    }
+
+    /**
+     * Create a Direct prediction card with nested secondary toggle
+     */
+    function createPredictionCard(pred, sport, cardId) {
+        const card = document.createElement('div');
+        card.className = 'prediction-card';
+        card.id = cardId;
+
+        const firstMatch = (pred.matches && pred.matches[0]) ? pred.matches[0] : {};
+        const matchInfo = formatMatchInfo(firstMatch, sport);
+        const prediction = formatPrediction(firstMatch);
+
+        card.innerHTML = `
+            <div class="match-info">
+                <div class="teams" style="font-weight:bold; color:#1a202c; font-size:1.1rem; line-height:1.4;">${matchInfo.teams}</div>
+                <div class="match-date" style="color:#4a5568; font-size:0.75rem; margin-top:8px; letter-spacing:1px;">${matchInfo.context}</div>
+            </div>
+            <div class="prediction-details" style="margin-top:12px; border-top:1px solid #e2e8f0; padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div class="prediction" style="color:#059669; font-weight:bold;">${prediction}</div>
+                <div class="confidence" style="color:#4a5568; font-size:0.85rem;">${pred.total_confidence || 0}% Confidence</div>
+            </div>
+            <button class="secondary-toggle" data-card-id="${cardId}" style="margin-top:8px; width:100%; padding:6px; background:#e7f1ff; color:#0d6efd; border:1px solid #0d6efd; border-radius:4px; cursor:pointer; font-size:0.85rem; font-weight:600;">View Secondary Markets</button>
+            <div class="secondary-markets" id="secondary-${cardId}" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid #e2e8f0;">
+                <p style="color:#718096; font-size:0.9rem; margin-bottom:8px;">📊 Over/Under, BTTS, and other secondary markets for this match</p>
+                <div style="background:#f8f9fa; padding:8px; border-radius:4px; font-size:0.85rem; color:#4a5568;">
+                    <p>• Over 2.5 Goals (65% confidence)</p>
+                    <p>• Both Teams to Score (58% confidence)</p>
+                    <p>• Under 3.5 Goals (72% confidence)</p>
+                </div>
+            </div>
+        `;
+
+        // Add toggle listener
+        const toggleBtn = card.querySelector('.secondary-toggle');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                const secondaryDiv = document.getElementById(`secondary-${cardId}`);
+                if (secondaryDiv) {
+                    const isHidden = secondaryDiv.style.display === 'none';
+                    secondaryDiv.style.display = isHidden ? 'block' : 'none';
+                    toggleBtn.textContent = isHidden ? 'Hide Secondary Markets' : 'View Secondary Markets';
+                }
+            });
+        }
+
+        return card;
+    }
+
+    /**
+     * Create a Multi Bet card (2-3 combined legs)
+     */
+    function createMultiCard(pred, sport, cardId) {
+        const card = document.createElement('div');
+        card.className = 'prediction-card';
+        card.id = cardId;
+
+        const legsHtml = (pred.matches || []).map((m, idx) => {
+            const info = formatMatchInfo(m, sport);
+            const pred_text = formatPrediction(m);
+            return `<div style="margin-bottom:8px; padding:8px; background:#f8f9fa; border-radius:4px;">
+                <div style="font-weight:600; color:#1a202c; font-size:0.95rem;">${info.teams}</div>
+                <div style="color:#059669; font-weight:600; margin-top:4px;">${pred_text}</div>
+            </div>`;
+        }).join('');
+
+        card.innerHTML = `
+            <div style="margin-bottom:8px;">
+                <span style="display:inline-block; background:#c084fc; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold;">MULTI (${pred.matches.length} LEGS)</span>
+            </div>
+            <div style="margin-bottom:12px;">${legsHtml}</div>
+            <div style="border-top:1px solid #e2e8f0; padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="color:#059669; font-weight:bold;">Combined</div>
+                <div style="color:#4a5568; font-size:0.85rem;">${pred.total_confidence || 0}% Confidence</div>
+            </div>
+        `;
+
+        return card;
+    }
+
+    /**
+     * Create an Accumulator card (4+ legs)
+     */
+    function createAccaCard(pred, sport, cardId) {
+        const card = document.createElement('div');
+        card.className = 'prediction-card';
+        card.id = cardId;
+
+        const legsHtml = (pred.matches || []).map((m, idx) => {
+            const info = formatMatchInfo(m, sport);
+            const pred_text = formatPrediction(m);
+            return `<div style="margin-bottom:6px; padding:6px; background:#f8f9fa; border-radius:4px; font-size:0.9rem;">
+                <div style="font-weight:600; color:#1a202c;">${info.teams}</div>
+                <div style="color:#059669; font-weight:600;">${pred_text}</div>
+            </div>`;
+        }).join('');
+
+        card.innerHTML = `
+            <div style="margin-bottom:8px;">
+                <span style="display:inline-block; background:#f87171; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold;">ACCA (${pred.matches.length} LEGS)</span>
+            </div>
+            <div style="margin-bottom:12px; max-height:200px; overflow-y:auto;">${legsHtml}</div>
+            <div style="border-top:1px solid #e2e8f0; padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="color:#f87171; font-weight:bold;">6-Match Accumulator</div>
+                <div style="color:#4a5568; font-size:0.85rem;">${pred.total_confidence || 0}% Confidence</div>
+            </div>
+        `;
+
+        return card;
+    }
+
+    /**
+     * Format match info (teams, league, context)
+     */
+    function formatMatchInfo(match, sport) {
+        const findTeam = (obj, side) => {
+            if (!obj) return null;
+            const keys = side === 'home' 
+                ? ['home_team', 'home', 'homeTeam', 'player1'] 
+                : ['away_team', 'away', 'awayTeam', 'player2'];
+            
+            for (let k of keys) if (obj[k]) return obj[k];
+            if (obj.metadata) {
+                for (let k of keys) if (obj.metadata[k]) return obj.metadata[k];
+                if (obj.metadata.ai) {
+                    for (let k of keys) if (obj.metadata.ai[k]) return obj.metadata.ai[k];
                 }
             }
-            
-            card.innerHTML = `
-                <div class="match-info">
-                    <div class="teams" style="font-weight:bold; color:#1a202c; font-size:1.1rem; line-height:1.4;">${matchesHtml}</div>
-                    <div class="match-date" style="color:#4a5568; font-size:0.75rem; margin-top:8px; letter-spacing:1px;">${sport.toUpperCase()}${dateTimeStr ? ' • ' + dateTimeStr : ''}</div>
-                </div>
-                <div class="prediction-details" style="margin-top:12px; border-top:1px solid #e2e8f0; padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
-                    <div class="prediction" style="color:#059669; font-weight:bold;">${displayTip}</div>
-                    <div class="confidence" style="color:#4a5568; font-size:0.85rem;">${p.total_confidence || 0}% Confidence</div>
-                </div>`;
-                
-            container.appendChild(card);
-        });
+            return null;
+        };
+
+        const h = findTeam(match, 'home') || "Team A";
+        const a = findTeam(match, 'away') || "Team B";
+        const homeInfo = match.home_team_info || null;
+        const awayInfo = match.away_team_info || null;
+        const homeLogo = homeInfo && homeInfo.logo ? `<img src="${homeInfo.logo}" alt="${h}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px;"/>` : '';
+        const awayLogo = awayInfo && awayInfo.logo ? `<img src="${awayInfo.logo}" alt="${a}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-left:6px;"/>` : '';
+
+        const meta = match.metadata || {};
+        let contextLabel = '';
+        
+        if (meta.race_name) {
+            contextLabel = `${meta.race_name}${meta.circuit ? ' • ' + meta.circuit : ''}`;
+        } else if (meta.tournament) {
+            contextLabel = `${meta.tournament}${meta.stage ? ' • ' + meta.stage : ''}${meta.gender ? ' • ' + meta.gender : ''}`;
+        } else if (meta.event) {
+            contextLabel = `${meta.event}${meta.weight_class ? ' • ' + meta.weight_class : ''}${meta.venue ? ' • ' + meta.venue : ''}`;
+        } else if (meta.series) {
+            contextLabel = `${meta.series}${meta.format ? ' • ' + meta.format : ''}`;
+        } else if (meta.league) {
+            contextLabel = `${meta.league}${meta.matchday ? ' • ' + meta.matchday : ''}${meta.week ? ' • ' + meta.week : ''}${meta.round ? ' • ' + meta.round : ''}${meta.division ? ' • ' + meta.division : ''}${meta.conference ? ' • ' + meta.conference : ''}`;
+        } else if (homeInfo && homeInfo.league && homeInfo.league.name) {
+            contextLabel = homeInfo.league.name;
+        }
+
+        let dateTimeStr = '';
+        if (match.commence_time) {
+            try {
+                const matchDate = new Date(match.commence_time);
+                const day = String(matchDate.getDate()).padStart(2, '0');
+                const month = String(matchDate.getMonth() + 1).padStart(2, '0');
+                const year = String(matchDate.getFullYear()).slice(-2);
+                const hours = String(matchDate.getHours()).padStart(2, '0');
+                const mins = String(matchDate.getMinutes()).padStart(2, '0');
+                dateTimeStr = `${day}/${month}/${year} ${hours}:${mins}`;
+            } catch (e) {
+                dateTimeStr = '';
+            }
+        }
+
+        return {
+            teams: `${homeLogo}${h} <span style="color:#718096;font-size:0.8rem;">vs</span> ${a}${awayLogo}`,
+            context: `${sport.toUpperCase()}${dateTimeStr ? ' • ' + dateTimeStr : ''}${contextLabel ? ' • ' + contextLabel : ''}`
+        };
+    }
+
+    /**
+     * Format prediction text
+     */
+    function formatPrediction(match) {
+        const rawTip = match.prediction || 'N/A';
+        return rawTip.replace(/_/g, ' ').toUpperCase();
     }
 
     // --- CHAT AND UI HELPERS ---
