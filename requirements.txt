@@ -2,8 +2,15 @@ requests
 supabase
 pydantic
 python-dotenv
-nfl_data_py
+
+# sports data
 nba_api
-pandas
-scikit-learn
-numpy
+
+# data + ML (LOCKED — VERY IMPORTANT)
+numpy==1.26.4
+pandas==2.2.2
+scikit-learn==1.4.2
+
+# build stability
+setuptools>=70.0.0
+wheel
