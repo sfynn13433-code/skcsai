@@ -904,25 +904,74 @@
             container.innerHTML = '<p style="text-align:center;color:#4a5568;padding:20px;">Updating SKCS Predictions...</p>';
         }
 
+        async function fetchFromSupabase() {
+            try {
+                const supabaseUrl = (window.SUPABASE_URL || '').replace(/\/+$/,'');
+                const anon = window.SUPABASE_ANON_KEY || '';
+                if (!supabaseUrl || !anon) return [];
+
+                const res = await fetch(`${supabaseUrl}/rest/v1/predictions_final?select=*&order=created_at.desc`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': anon,
+                        'Authorization': `Bearer ${anon}`
+                    }
+                });
+                if (!res.ok) return [];
+                const rows = await res.json();
+                const filtered = (rows || []).filter(r => {
+                    const rowTier = (r.tier || 'normal').toString();
+                    if (rowTier !== tier) return false;
+                    const matches = Array.isArray(r.matches) ? r.matches : [];
+                    return matches.some(m => String((m.sport || '')).toLowerCase().includes(String(sport).toLowerCase()));
+                });
+                return filtered;
+            } catch (e) {
+                console.warn('[Supabase fallback] error:', e.message || e);
+                return [];
+            }
+        }
+
         try {
             let url = `${SKCS_BACKEND}/api/predictions?tier=${tier}&sport=${sport}`;
-            
+
             let response = await fetch(url, {
                 method: 'GET',
-                headers: { 
-                    'x-api-key': 'skcs_user_12345', 
-                    'Content-Type': 'application/json' 
+                headers: {
+                    'x-api-key': 'skcs_user_12345',
+                    'Content-Type': 'application/json'
                 }
             });
 
-            let data = await response.json();
+            let data = null;
+            try { data = await response.json(); } catch (e) { data = null; }
 
-            if (!response.ok || data.error) throw new Error(data.error || `HTTP ${response.status}`);
-            
-            renderSport(sport, sport + '-matches', data.predictions || []);
+            // If backend returned predictions use them
+            if (response.ok && data && Array.isArray(data.predictions) && data.predictions.length > 0) {
+                renderSport(sport, sport + '-matches', data.predictions || []);
+                return;
+            }
+
+            // Backend returned no predictions or errored: try Supabase fallback
+            const supaPreds = await fetchFromSupabase();
+            if (supaPreds && supaPreds.length > 0) {
+                renderSport(sport, sport + '-matches', supaPreds);
+                return;
+            }
+
+            // Nothing found - show friendly message
+            if (container) {
+                container.innerHTML = `<p style="text-align:center;color:#4a5568;padding:20px;">No new ${sport} predictions available.</p>`;
+            }
 
         } catch (error) {
             console.error("SKCS Fetch error:", error);
+            // Try Supabase fallback on error
+            const supaPreds = await fetchFromSupabase();
+            if (supaPreds && supaPreds.length > 0) {
+                renderSport(sport, sport + '-matches', supaPreds);
+                return;
+            }
             if (container) {
                 container.innerHTML = `<p style="color:#e53e3e;text-align:center;padding:20px;">Connection Error: Check if ${SKCS_BACKEND} is live.</p>`;
             }

@@ -4,6 +4,8 @@ const express = require('express');
 const { query } = require('../db');
 const { rebuildFinalOutputs } = require('../services/aiPipeline');
 const { requireRole } = require('../utils/auth');
+const config = require('../config');
+const { createClient } = require('@supabase/supabase-js');
 
 const router = express.Router();
 
@@ -89,7 +91,37 @@ router.get('/', requireRole('user'), async (req, res) => {
         queryStr += ` ORDER BY created_at DESC LIMIT 20;`;
 
         const dbRes = await query(queryStr, queryParams);
-        const predictions = dbRes.rows;
+        let predictions = dbRes.rows || [];
+
+        // If DB returned no predictions, attempt Supabase fallback (useful when Supabase is the source)
+        try {
+            if ((!predictions || predictions.length === 0) && config.supabase && config.supabase.url && config.supabase.anonKey) {
+                console.log('[predictions] DB empty - attempting Supabase fallback');
+                const sb = createClient(config.supabase.url, config.supabase.anonKey);
+                const { data, error } = await sb.from('predictions_final').select('*').order('created_at', { ascending: false }).limit(100);
+                if (!error && Array.isArray(data) && data.length > 0) {
+                    // Filter Supabase rows by tier and sport
+                    const tierKey = String(tier || 'normal');
+                    const sportVals = (sportFilterValues || []).map(s => String(s).toLowerCase());
+                    const filtered = data.filter(r => {
+                        try {
+                            const rowTier = String(r.tier || 'normal');
+                            if (rowTier !== tierKey) return false;
+                            const matches = Array.isArray(r.matches) ? r.matches : [];
+                            if (sportVals.length === 0) return true;
+                            return matches.some(m => sportVals.includes(String(m.sport || '').toLowerCase()));
+                        } catch (e) {
+                            return false;
+                        }
+                    });
+                    predictions = filtered;
+                } else if (error) {
+                    console.warn('[predictions] Supabase fallback error:', error.message || error);
+                }
+            }
+        } catch (fbErr) {
+            console.warn('[predictions] Supabase fallback failed:', fbErr.message || fbErr);
+        }
 
         const teamNames = extractTeamNames(predictions).map(n => n.toLowerCase());
         const teamInfoByName = new Map();
