@@ -415,24 +415,25 @@ async function getPredictionsByTier(tier, date) {
     const tierConfig = require('./config').tiers[tier];
     if (!tierConfig) throw new Error('Invalid tier');
 
-    const tierField = tierConfig.deep ? 'deep_tier' : 'normal_tier';
-    const startDate = new Date(date);
-    startDate.setHours(0, 0, 0, 0);
-    const endDate = new Date(date);
-    endDate.setHours(23, 59, 59, 999);
-
+    const tierDb = tierConfig.deep ? 'deep' : 'normal';
+    // Calendar day in UTC: prefer kickoff stored on first leg (metadata.match_time), else fall back to row created_at
     const res = await pool.query(
         `SELECT p.*, 
-            (p.matches->>'home_team')::text as home_team_name,
-            (p.matches->>'away_team')::text as away_team_name,
-            (p.matches->>'sport')::text as sport,
-            (p.matches->>'match_date')::timestamp as match_date
+            (p.matches->0->'metadata'->>'home_team')::text as home_team_name,
+            (p.matches->0->'metadata'->>'away_team')::text as away_team_name,
+            (p.matches->0->>'sport')::text as sport,
+            NULL::timestamp as match_date
         FROM predictions_final p
         WHERE p.tier = $1
-          AND p.created_at BETWEEN $2 AND $3
+          AND (
+            COALESCE(
+              (NULLIF(TRIM(p.matches->0->'metadata'->>'match_time'), '')::timestamptz AT TIME ZONE 'UTC')::date,
+              (p.created_at AT TIME ZONE 'UTC')::date
+            ) = $2::date
+          )
         ORDER BY p.total_confidence DESC
-        LIMIT $4`,
-        [tierConfig.deep ? 'deep' : 'normal', startDate.toISOString(), endDate.toISOString(), tierConfig.daily]
+        LIMIT $3`,
+        [tierDb, date, tierConfig.daily]
     );
 
     // Flatten match data from JSONB array for frontend compatibility

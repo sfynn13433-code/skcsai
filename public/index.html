@@ -899,31 +899,98 @@
      * Fetch Predictions
      * Updated to handle the 'type' column instead of 'sport'
      */
-    async function fetchPredictions(sport, tier = 'normal') {
+    async function fetchPredictions(sport, tier = 'deep') {
         const container = document.getElementById(sport + '-matches');
         if (container) {
             container.innerHTML = '<p style="text-align:center;color:#4a5568;padding:20px;">Updating SKCS Predictions...</p>';
         }
 
+        async function fetchFromSupabase() {
+            try {
+                const supabaseUrl = (window.SUPABASE_URL || '').replace(/\/+$/,'');
+                const anon = window.SUPABASE_ANON_KEY || '';
+                if (!supabaseUrl || !anon) return [];
+
+                const res = await fetch(`${supabaseUrl}/rest/v1/predictions_final?select=*&order=created_at.desc`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': anon,
+                        'Authorization': `Bearer ${anon}`
+                    }
+                });
+                if (!res.ok) return [];
+                const rows = await res.json();
+                const filtered = (rows || []).filter(r => {
+                    const rowTier = (r.tier || 'normal').toString();
+                    if (rowTier !== tier) return false;
+                    const matches = Array.isArray(r.matches) ? r.matches : [];
+                    return matches.some(m => String((m.sport || '')).toLowerCase().includes(String(sport).toLowerCase()));
+                });
+                return filtered;
+            } catch (e) {
+                console.warn('[Supabase fallback] error:', e.message || e);
+                return [];
+            }
+        }
+
         try {
             let url = `${SKCS_BACKEND}/api/predictions?tier=${tier}&sport=${sport}`;
-            
+
             let response = await fetch(url, {
                 method: 'GET',
-                headers: { 
-                    'x-api-key': 'skcs_user_12345', 
-                    'Content-Type': 'application/json' 
+                headers: {
+                    'x-api-key': 'skcs_user_12345',
+                    'Content-Type': 'application/json'
                 }
             });
 
-            let data = await response.json();
+            let data = null;
+            try { data = await response.json(); } catch (e) { data = null; }
 
-            if (!response.ok || data.error) throw new Error(data.error || `HTTP ${response.status}`);
-            
-            renderSport(sport, sport + '-matches', data.predictions || []);
+            let preds = (response.ok && data && Array.isArray(data.predictions)) ? data.predictions : [];
+
+            if (preds.length === 0 && tier === 'deep') {
+                const urlN = `${SKCS_BACKEND}/api/predictions?tier=normal&sport=${sport}`;
+                const r2 = await fetch(urlN, {
+                    method: 'GET',
+                    headers: {
+                        'x-api-key': 'skcs_user_12345',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                let d2 = null;
+                try { d2 = await r2.json(); } catch (e) { d2 = null; }
+                if (r2.ok && d2 && Array.isArray(d2.predictions) && d2.predictions.length > 0) {
+                    preds = d2.predictions;
+                }
+            }
+
+            // If backend returned predictions use them
+            if (preds.length > 0) {
+                renderSport(sport, sport + '-matches', preds);
+                return;
+            }
+
+            // Backend returned no predictions or errored: try Supabase fallback
+            const supaPreds = await fetchFromSupabase();
+            if (supaPreds && supaPreds.length > 0) {
+                renderSport(sport, sport + '-matches', supaPreds);
+                return;
+            }
+
+            // Nothing found - show friendly message
+            if (container) {
+                container.innerHTML = `<p style="text-align:center;color:#4a5568;padding:20px;">No new ${sport} predictions available.</p>`;
+            }
 
         } catch (error) {
             console.error("SKCS Fetch error:", error);
+            // Try Supabase fallback on error
+            const supaPreds = await fetchFromSupabase();
+            if (supaPreds && supaPreds.length > 0) {
+                renderSport(sport, sport + '-matches', supaPreds);
+                return;
+            }
             if (container) {
                 container.innerHTML = `<p style="color:#e53e3e;text-align:center;padding:20px;">Connection Error: Check if ${SKCS_BACKEND} is live.</p>`;
             }
@@ -949,8 +1016,10 @@
 
         container.innerHTML = '';
 
-        // Section 1: Direct (1X2) Matches with nested Secondary toggle
-        if (singles.length > 0) {
+        const directSingles = singles.filter(p => Array.isArray(p.matches) && p.matches.length === 1);
+
+        // Section 1: Direct (1X2) — only true single-match rows (multi-leg lives under Multi)
+        if (directSingles.length > 0) {
             const directSection = document.createElement('div');
             directSection.style.marginBottom = '2rem';
             directSection.innerHTML = `<h4 style="color:#60a5fa;margin-bottom:1rem;font-size:1.1rem;">⚽ Direct (Match Winners)</h4>`;
@@ -958,7 +1027,7 @@
             const directGrid = document.createElement('div');
             directGrid.className = 'prediction-grid';
             
-            singles.forEach((pred, idx) => {
+            directSingles.forEach((pred, idx) => {
                 const card = createPredictionCard(pred, sport, `direct-${idx}`);
                 directGrid.appendChild(card);
             });
