@@ -10,7 +10,17 @@ const { createClient } = require('@supabase/supabase-js');
 const router = express.Router();
 
 const SPORT_FILTER_MAP = {
-    football: ['football', 'soccer_epl', 'soccer_england_efl_cup', 'soccer_uefa_champs_league'],
+    football: [
+        'football',
+        'soccer_epl',
+        'soccer_england_efl_cup',
+        'soccer_uefa_champs_league',
+        'soccer_spain_la_liga',
+        'soccer_germany_bundesliga',
+        'soccer_italy_serie_a',
+        'soccer_france_ligue_one',
+        'soccer_uefa_europa_league'
+    ],
     basketball: ['basketball', 'nba', 'basketball_nba', 'basketball_euroleague'],
     nfl: ['nfl', 'american_football', 'americanfootball_nfl'],
     rugby: ['rugby', 'rugbyunion_international', 'rugbyunion_six_nations'],
@@ -63,11 +73,10 @@ function buildPlayersByTeam(rows) {
 }
 
 // GET /api/predictions
-// Simplified: always returns data, default tier = 'normal'
+// Default tier = deep (elite pool); subscription limits use /api/user/predictions
 router.get('/', requireRole('user'), async (req, res) => {
     try {
-        // Use 'normal' as default if tier is missing
-        const tier = req.query.tier || 'normal';
+        const tier = req.query.tier || 'deep';
         const sport = req.query.sport;
         const sportFilterValues = getSportFilterValues(sport);
 
@@ -101,7 +110,7 @@ router.get('/', requireRole('user'), async (req, res) => {
                 const { data, error } = await sb.from('predictions_final').select('*').order('created_at', { ascending: false }).limit(100);
                 if (!error && Array.isArray(data) && data.length > 0) {
                     // Filter Supabase rows by tier and sport
-                    const tierKey = String(tier || 'normal');
+                    const tierKey = String(tier || 'deep');
                     const sportVals = (sportFilterValues || []).map(s => String(s).toLowerCase());
                     const filtered = data.filter(r => {
                         try {
