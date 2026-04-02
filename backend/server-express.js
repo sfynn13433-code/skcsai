@@ -453,6 +453,85 @@ app.get('/api/health-check', async (req, res) => {
 });
 
 // -------------------------------------------------
+//  Master LLM Keys Diagnostic
+// -------------------------------------------------
+app.get('/api/test-llm-keys', async (req, res) => {
+    const providers = [
+        {
+            name: "OpenAI",
+            key: process.env.OPENAI_KEY,
+            url: "https://api.openai.com/v1/models",
+            headers: { "Authorization": `Bearer ${process.env.OPENAI_KEY}` }
+        },
+        {
+            name: "Groq",
+            key: process.env.GROQ_KEY,
+            url: "https://api.groq.com/openai/v1/models",
+            headers: { "Authorization": `Bearer ${process.env.GROQ_KEY}` }
+        },
+        {
+            name: "DeepSeek",
+            key: process.env.DEEPSEEK_API_KEY,
+            url: "https://api.deepseek.com/models",
+            headers: { "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}` }
+        },
+        {
+            name: "OpenRouter",
+            key: process.env.OPENROUTER_KEY,
+            url: "https://openrouter.ai/api/v1/models",
+            headers: { "Authorization": `Bearer ${process.env.OPENROUTER_KEY}` }
+        },
+        {
+            name: "Gemini",
+            key: process.env.GEMINI_API_KEY,
+            url: `https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`,
+            headers: {}
+        }
+    ];
+
+    const results = {};
+
+    for (const provider of providers) {
+        if (!provider.key) {
+            results[provider.name] = "❌ Key Missing in Render Environment";
+            continue;
+        }
+
+        try {
+            const response = await fetch(provider.url, {
+                method: "GET",
+                headers: provider.headers,
+                timeout: 5000
+            });
+
+            if (response.ok) {
+                results[provider.name] = "✅ Active & Verified";
+            } else {
+                results[provider.name] = `⚠️ API Rejected Key (Status: ${response.status})`;
+            }
+        } catch (error) {
+            results[provider.name] = `🚨 Network/Fetch Error: ${error.message}`;
+        }
+    }
+
+    // Check for additional keys
+    const additionalKeys = {
+        "Cohere": process.env.COHERE_API_KEY ? "✅ Key Present" : "❌ Missing",
+        "HuggingFace": process.env.HUGGINGFACE_KEY ? "✅ Key Present" : "❌ Missing",
+        "LongCat": process.env.LONG_CAT_KEY ? "✅ Key Present" : "❌ Missing",
+        "ConsoleAPI": process.env.CONSOLEAPI_KEY ? "✅ Key Present" : "❌ Missing"
+    };
+
+    Object.assign(results, additionalKeys);
+
+    res.status(200).json({
+        message: "SKCS AI Master Key Diagnostic Run Complete",
+        timestamp: new Date().toISOString(),
+        report: results
+    });
+});
+
+// -------------------------------------------------
 //  404 handler
 // -------------------------------------------------
 app.use((req, res) => {
