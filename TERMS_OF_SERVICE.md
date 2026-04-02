@@ -54,7 +54,7 @@ We may suspend or terminate your access immediately, without refund, if you brea
 7. Privacy and Data Protection
 - Privacy Policy: Our Privacy Policy explains what personal information we collect, how we use it, and your rights under the South African Protection of Personal Information Act (POPIA) and the EU/UK General Data Protection Regulation (GDPR).
 - Cookies and Analytics: We use cookies and similar technologies to remember your preferences and improve the Service. By using our site, you consent to our cookie practices as described in our Cookie Policy.
-- Data Subject Rights: To exercise your rights regarding personal data, please contact us at privacy@skcsai.co.za.
+- Data Subject Rights: To exercise your rights regarding personal data, please contact us at privacy@skcs.co.za.
 - International Transfers: We may transfer personal data outside of South Africa to support our operations. When we do so, we take appropriate safeguards to protect your information.
 
 8. Intellectual Property
