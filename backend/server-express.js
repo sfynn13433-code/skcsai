@@ -76,44 +76,41 @@ app.use(
 );
 
 // -----------------  CORS configuration  -----------------
+const allowedOrigins = [
+  "https://skcsaiedge.onrender.com",
+  "http://localhost:3000"
+];
+
 app.use(cors({
-    origin: function (origin, callback) {
-        // Allow requests with no origin (curl, mobile apps, etc.)
-        if (!origin) return callback(null, true);
-
-        const allowedOrigins = [
-            'http://localhost:3000',
-            'http://localhost:5173',
-            'http://127.0.0.1:3000',
-            'http://127.0.0.1:5173',
-            'https://skcsai.vercel.app',
-            'https://skcsaisports.vercel.app',
-            'https://skcsaiedge.onrender.com',
-            'https://www.skcsaisportspredictions.co.za',
-            'https://skcsaisportspredictions.co.za'
-        ];
-
-        const isAllowed = allowedOrigins.includes(origin);
-        const isVercelPreview = origin.endsWith('.vercel.app') &&
-                                origin.includes('stephens-projects');
-
-        if (isAllowed || isVercelPreview) {
-            callback(null, true);
-        } else {
-            console.log('CORS blocked for origin:', origin);
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: false,
-    allowedHeaders: [
-        'Content-Type',
-        'Authorization',
-        'x-api-key',
-        'X-Requested-With'
-    ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS not allowed"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
-app.options('*', cors()); // pre-flight
+
+// 🧩 STEP 4 — HANDLE PREFLIGHT (CRITICAL FIX)
+app.options('*', cors());
+
+// 🧩 STEP 5 — SAFETY FALLBACK (RENDER BUG PROTECTION)
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+
+  next();
+});
 
 app.use(morgan('combined'));
 
