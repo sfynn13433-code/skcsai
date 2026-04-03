@@ -67,15 +67,7 @@ const app = express();
 
 app.disable('x-powered-by');
 
-// -----------------  Security middleware  -----------------
-app.use(
-    helmet({
-        contentSecurityPolicy: false,
-        crossOriginEmbedderPolicy: false
-    })
-);
-
-// -----------------  CORS configuration  -----------------
+// -----------------  CORS configuration (MOVED TO TOP)  -----------------
 const allowedOrigins = [
   "https://skcsaiedge.onrender.com",
   "http://localhost:3000"
@@ -97,20 +89,41 @@ app.use(cors({
 // 🧩 STEP 4 — HANDLE PREFLIGHT (CRITICAL FIX)
 app.options('*', cors());
 
-// 🧩 STEP 5 — SAFETY FALLBACK (RENDER BUG PROTECTION)
+// 🧩 STEP 5 — ROBUST SAFETY FALLBACK (RENDER BUG PROTECTION)
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-
+  
+  console.log(`[CORS DEBUG] Request origin: ${origin}`);
+  console.log(`[CORS DEBUG] Allowed origins: ${allowedOrigins.join(', ')}`);
+  
   if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    console.log(`[CORS DEBUG] Set Allow-Origin header for: ${origin}`);
+  } else {
+    console.log(`[CORS DEBUG] Origin not in allowed list: ${origin}`);
   }
-
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-
+  
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  
+  console.log(`[CORS DEBUG] Headers set: ${JSON.stringify({
+    origin: res.getHeader('Access-Control-Allow-Origin'),
+    methods: res.getHeader('Access-Control-Allow-Methods'),
+    headers: res.getHeader('Access-Control-Allow-Headers'),
+    credentials: res.getHeader('Access-Control-Allow-Credentials')
+  })}`);
+  
   next();
 });
+
+// -----------------  Security middleware  -----------------
+app.use(
+    helmet({
+        contentSecurityPolicy: false,
+        crossOriginEmbedderPolicy: false
+    })
+);
 
 app.use(morgan('combined'));
 
