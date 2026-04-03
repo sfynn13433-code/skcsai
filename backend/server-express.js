@@ -67,61 +67,33 @@ const app = express();
 
 app.disable('x-powered-by');
 
-// -----------------  CORS configuration (MOVED TO TOP)  -----------------
+// -----------------  CORS configuration (UNIFIED OPTIONS)  -----------------
 const allowedOrigins = [
   "https://skcs-sports-edge.github.io",
   "https://skcsaiedge.onrender.com",
   "http://localhost:3000"
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("CORS not allowed"));
-    }
+const corsOptions = {
+  origin: function (origin, cb) {
+    if (!origin) return cb(null, true); // non-browser clients
+    if (allowedOrigins.includes(origin)) return cb(null, origin);
+    return cb(new Error("CORS not allowed"));
   },
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  allowedHeaders: ["Content-Type", "Authorization", "x-api-key"],
+  optionsSuccessStatus: 204,
+};
 
-// 🧩 STEP 4 — HANDLE PREFLIGHT (CRITICAL FIX)
-app.options('*', cors());
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
-// 🧩 STEP 5 — ROBUST SAFETY FALLBACK (RENDER BUG PROTECTION)
+// -----------------  CORS Debug Logging  -----------------
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  
-  console.log(`[CORS DEBUG] Request origin: ${origin}`);
-  console.log(`[CORS DEBUG] Allowed origins: ${allowedOrigins.join(', ')}`);
-  
-  // Set headers for all requests (including OPTIONS)
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    console.log(`[CORS DEBUG] Set Allow-Origin header for: ${origin}`);
-  } else if (!origin) {
-    // Allow requests with no origin (curl, mobile apps, etc.)
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    console.log(`[CORS DEBUG] Set wildcard origin for no-origin request`);
-  } else {
-    console.log(`[CORS DEBUG] Origin not in allowed list: ${origin}`);
-  }
-  
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-api-key, X-Requested-With');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Max-Age', '86400'); // Cache preflight for 24 hours
-  
-  console.log(`[CORS DEBUG] Headers set: ${JSON.stringify({
-    origin: res.getHeader('Access-Control-Allow-Origin'),
-    methods: res.getHeader('Access-Control-Allow-Methods'),
-    headers: res.getHeader('Access-Control-Allow-Headers'),
-    credentials: res.getHeader('Access-Control-Allow-Credentials'),
-    maxAge: res.getHeader('Access-Control-Max-Age')
-  })}`);
-  
+  console.log(`[CORS DEBUG] ${req.method} ${req.url} from origin: ${origin}`);
+  console.log(`[CORS DEBUG] Request headers: x-api-key=${req.headers['x-api-key'] ? 'present' : 'missing'}`);
   next();
 });
 
