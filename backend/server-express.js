@@ -79,21 +79,25 @@ const allowedOrigins = new Set([
 
 const corsOptions = {
   origin(origin, cb) {
-    // Allow non-browser / server-to-server calls
+    // Allow non-browser / server-to-server calls (curl, Postman, etc.)
     if (!origin) return cb(null, true);
 
-    if (allowedOrigins.has(origin)) return cb(null, origin);
+    if (allowedOrigins.has(origin)) {
+      console.log(`[CORS] Approved origin: ${origin}`);
+      return cb(null, origin);
+    }
 
-    // Important for debugging: return a controlled error
-    console.log(`[CORS] Blocked origin: ${origin}`);
-    return cb(new Error(`CORS blocked for origin: ${origin}`));
+    // Return a controlled error for unapproved origins to prevent silent failures
+    console.log(`[CORS] BLOCKED origin: ${origin}`);
+    console.log(`[CORS] Allowed origins: ${Array.from(allowedOrigins).join(', ')}`);
+    return cb(new Error(`CORS policy blocked access from origin: ${origin}`));
   },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  // Explicit headers for known custom headers (safest approach)
+  // Explicit headers for known custom headers (safest approach per W3C spec)
   allowedHeaders: ["Content-Type", "Authorization", "x-api-key"],
-  credentials: false, // Set true only if you truly use cookies/auth across origins
-  optionsSuccessStatus: 204,
-  maxAge: 86400, // Cache preflight when possible
+  credentials: false, // Critical: Set to true ONLY if using cross-origin cookies
+  optionsSuccessStatus: 204, // Standard 204 No Content for preflights (IE11 compatible)
+  maxAge: 86400, // Cache preflight results for 24 hours to reduce network overhead
 };
 
 app.use(cors(corsOptions));
