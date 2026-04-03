@@ -899,7 +899,7 @@
      * Fetch Predictions
      * Updated to handle the 'type' column instead of 'sport'
      */
-    async function fetchPredictions(sport, tier = 'deep') {
+    async function fetchPredictions(sport, userPlanId = 'elite_30day_deep_vip') {
         const container = document.getElementById(sport + '-matches');
         if (container) {
             container.innerHTML = '<p style="text-align:center;color:#4a5568;padding:20px;">Updating SKCS Predictions...</p>';
@@ -934,7 +934,7 @@
         }
 
         try {
-            let url = `${SKCS_BACKEND}/api/predictions?tier=${tier}&sport=${sport}`;
+            let url = `${SKCS_BACKEND}/api/predictions?plan_id=${userPlanId}&sport=${sport}`;
 
             let response = await fetch(url, {
                 method: 'GET',
@@ -949,8 +949,8 @@
 
             let preds = (response.ok && data && Array.isArray(data.predictions)) ? data.predictions : [];
 
-            if (preds.length === 0 && tier === 'deep') {
-                const urlN = `${SKCS_BACKEND}/api/predictions?tier=normal&sport=${sport}`;
+            if (preds.length === 0 && userPlanId.includes('elite')) {
+                const urlN = `${SKCS_BACKEND}/api/predictions?plan_id=core_30day_limitless&sport=${sport}`;
                 const r2 = await fetch(urlN, {
                     method: 'GET',
                     headers: {
