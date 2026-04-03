@@ -67,23 +67,33 @@ const app = express();
 
 app.disable('x-powered-by');
 
-// -----------------  CORS configuration (UNIFIED OPTIONS)  -----------------
-const allowedOrigins = [
-  "https://skcs-sports-edge.github.io",
+// -----------------  CORS configuration (HARDENED)  -----------------
+const allowedOrigins = new Set([
   "https://skcsaiedge.onrender.com",
-  "http://localhost:3000"
-];
+  "https://skcs-sports-edge.github.io",
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:5173"
+]);
 
 const corsOptions = {
-  origin: function (origin, cb) {
-    if (!origin) return cb(null, true); // non-browser clients
-    if (allowedOrigins.includes(origin)) return cb(null, origin);
-    return cb(new Error("CORS not allowed"));
+  origin(origin, cb) {
+    // Allow non-browser / server-to-server calls
+    if (!origin) return cb(null, true);
+
+    if (allowedOrigins.has(origin)) return cb(null, origin);
+
+    // Important for debugging: return a controlled error
+    console.log(`[CORS] Blocked origin: ${origin}`);
+    return cb(new Error(`CORS blocked for origin: ${origin}`));
   },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  // Explicit headers for known custom headers (safest approach)
   allowedHeaders: ["Content-Type", "Authorization", "x-api-key"],
+  credentials: false, // Set true only if you truly use cookies/auth across origins
   optionsSuccessStatus: 204,
+  maxAge: 86400, // Cache preflight when possible
 };
 
 app.use(cors(corsOptions));
@@ -527,12 +537,41 @@ app.get('/api/test-llm-keys', async (req, res) => {
     });
 });
 
+// -----------------  Health check endpoint (Render requires this)  -----------------
+app.get('/health', (req, res) => {
+    res.status(200).json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        port: PORT,
+        uptime: process.uptime(),
+        cors: 'enabled',
+        origins: Array.from(allowedOrigins)
+    });
+});
+
+// -----------------  Simple CORS test endpoint  -----------------
+app.get('/cors-test', (req, res) => {
+    const origin = req.headers.origin;
+    res.status(200).json({ 
+        message: 'CORS test successful',
+        origin: origin,
+        timestamp: new Date().toISOString(),
+        headers: {
+            'x-api-key': req.headers['x-api-key'] ? 'present' : 'missing'
+        }
+    });
+});
+
 // -------------------------------------------------
-//  404 handler
+//  API info endpoint
 // -------------------------------------------------
-app.use((req, res) => {
-    console.log('[404]', req.method, req.url);
-    res.status(404).json({ error: 'Route not found', path: req.url });
+app.get('/api', (req, res) => {
+    res.status(200).json({ 
+        message: 'SKCS Backend API',
+        status: 'running',
+        version: '1.0.0',
+        endpoints: ['/api/predictions', '/api/user', '/api/pipeline', '/api/chat', '/health', '/cors-test']
+    });
 });
 
 // -------------------------------------------------
