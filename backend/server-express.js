@@ -16,6 +16,10 @@ const cron         = require('node-cron');
 const { syncAllSports }      = require('./services/syncService');
 const { bootstrap }          = require('./dbBootstrap');
 
+// NEW: Import subscription matrix and date normalization
+const { getPlanCapabilities, filterPredictionsForPlan } = require('./config/subscriptionMatrix');
+const { normalizeFixtureDate, getPredictionWindow, isFixtureEligibleForPrediction } = require('./utils/dateNormalization');
+
 // -------------------------------------------------
 //  Database bootstrap - ensure tables + seed data
 // -------------------------------------------------

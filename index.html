@@ -595,169 +595,114 @@
                 <h3>⚙️ How This Powers Your Predictions</h3>
                 <div class="summary-grid">
                     <div class="summary-item"><h4>1X2 Markets</h4><p>Must survive <strong>all 6 stages</strong> with high confidence</p></div>
-                    <div class="summary-item"><h4>Multi Bets</h4><p>Built from <strong>low-correlation</strong> matches passing Stages 1-4</p></div>
-                    <div class="summary-item"><h4>Same-Match Bets</h4><p>Created after Stage 2, adjusted by Stage 3 volatility</p></div>
-                    <div class="summary-item"><h4>Accumulators</h4><p>Only matches passing <strong>all stages</strong> + kill-switch for volatility</p></div>
+                    <div class="summary-item"><h4>Multi Bets</h4><p>Combined legs with <strong>correlation analysis</strong></p></div>
+                    <div class="summary-item"><h4>Same Match</h4><p>Advanced <strong>dependency modeling</strong></p></div>
+                    <div class="summary-item"><h4>Accumulators</h4><p>Strict <strong>value thresholds</strong> only</p></div>
                 </div>
-                <div class="disclaimer-note"><p>💡 <strong>Transparency First:</strong> We show our process so you understand our confidence scores. No black boxes, no hidden logic.</p></div>
+                <div class="disclaimer-note">
+                    <p><strong>Important:</strong> This is not gambling. SKCS provides probability-driven analytics for informed decision-making only. No guarantees are provided, and all predictions carry inherent uncertainty.</p>
+                </div>
             </div>
         </div>
     </section>
-    
-    <div id="skcs-chatbot"> 
-      <div class="chat-header">SKCS AI</div> 
-      <div id="chat-messages"></div> 
-      <div class="chat-input"> 
-        <input type="text" id="chat-input" placeholder="Ask about today’s matches..." /> 
-        <button id="chatbot-send-btn">Send</button> 
-      </div> 
-    </div> 
-
-    <!-- PREDICTIONS SECTION -->
+    <!-- Predictions Section -->
     <section id="predictions" class="predictions-section">
-        <h2 class="section-title">SKCS Sports Predictions</h2>
-        <p class="section-description" id="planDescription"></p>
         <div class="tabs-container">
             <div class="tabs-header">
-                <button class="tab-button active" data-tab="football"><span class="sport-icon">⚽</span> Football</button>
-                <button class="tab-button" data-tab="rugby"><span class="sport-icon">🏉</span> Rugby</button>
-                <button class="tab-button" data-tab="afl"><span class="sport-icon">🏐</span> AFL</button>
-                <button class="tab-button" data-tab="baseball"><span class="sport-icon">⚾</span> Baseball</button>
-                <button class="tab-button" data-tab="basketball"><span class="sport-icon">🏀</span> Basketball</button>
-                <button class="tab-button" data-tab="formula1"><span class="sport-icon">🏎️</span> Formula 1</button>
-                <button class="tab-button" data-tab="cricket"><span class="sport-icon">🏏</span> Cricket</button>
-                <button class="tab-button" data-tab="nfl"><span class="sport-icon">🏈</span> NFL</button>
-                <button class="tab-button" data-tab="hockey"><span class="sport-icon">🏒</span> Hockey</button>
-                <button class="tab-button" data-tab="mma"><span class="sport-icon">🤼</span> MMA</button>
-                <button class="tab-button" data-tab="handball"><span class="sport-icon">🤾</span> Handball</button>
-                <button class="tab-button" data-tab="volleyball"><span class="sport-icon">🏐</span> Volleyball</button>
+                <button class="tab-button active" data-tab="football">⚽ Football</button>
+                <button class="tab-button" data-tab="basketball">🏀 Basketball</button>
+                <button class="tab-button" data-tab="tennis">🎾 Tennis</button>
+                <button class="tab-button" data-tab="cricket">🏏 Cricket</button>
+                <button class="tab-button" data-tab="rugby">🏉 Rugby</button>
+                <button class="tab-button" data-tab="baseball">⚾ Baseball</button>
+                <button class="tab-button" data-tab="hockey">🏒 Hockey</button>
+                <button class="tab-button" data-tab="volleyball">🏐 Volleyball</button>
+                <button class="tab-button" data-tab="mma">🥊 MMA</button>
+                <button class="tab-button" data-tab="formula1">🏎️ Formula 1</button>
+                <button class="tab-button" data-tab="afl">🏉 AFL</button>
+                <button class="tab-button" data-tab="handball">🤾 Handball</button>
+                <button class="tab-button" data-tab="nfl">🏈 NFL</button>
             </div>
-            <!-- All tab contents -->
-            <div id="football" class="tab-content active">
-                <h3 class="tab-title"><span class="sport-icon">⚽</span> Football Predictions</h3>
-                <div id="football-tier-summary" class="tier-allocation-summary" style="display:none;">
-                    <h4>Your Daily Allocation</h4>
-                    <div class="allocation-row">
-                        <span class="allocation-label">⚽ Direct (1X2):</span>
-                        <span class="allocation-value"><span id="football-direct-count">0</span> available</span>
-                    </div>
-                    <div class="allocation-row">
-                        <span class="allocation-label">📊 Secondary (O/U, BTTS):</span>
-                        <span class="allocation-value"><span id="football-secondary-count">0</span> available</span>
-                    </div>
-                    <div class="allocation-row">
-                        <span class="allocation-label">🔀 Multi (Combined):</span>
-                        <span class="allocation-value"><span id="football-multi-count">0</span> available</span>
-                    </div>
-                    <div class="allocation-row">
-                        <span class="allocation-label">🎯 Same Match (Bet Builders):</span>
-                        <span class="allocation-value"><span id="football-same-count">0</span> available</span>
-                    </div>
-                    <div class="allocation-row">
-                        <span class="allocation-label">🔥 6-Match ACCA:</span>
-                        <span class="allocation-value"><span id="football-acca-count">0</span> available</span>
-                    </div>
-                </div>
-                <div id="football-direct" class="prediction-category">
-                    <h4 style="color:#60a5fa;margin-bottom:1rem;">⚽ Direct (Match Winners)</h4>
-                    <div id="football-direct-matches" class="prediction-grid"><p>Loading...</p></div>
-                </div>
-                <div id="football-secondary" class="prediction-category">
-                    <h4 style="color:#fbbf24;margin-bottom:1rem;">📊 Secondary (Over/Under, BTTS)</h4>
-                    <div id="football-secondary-matches" class="prediction-grid"><p>Loading...</p></div>
-                </div>
-                <div id="football-multi" class="prediction-category">
-                    <h4 style="color:#c084fc;margin-bottom:1rem;">🔀 Multi (Combined Selections)</h4>
-                    <div id="football-multi-matches" class="prediction-grid"><p>Loading...</p></div>
-                </div>
-                <div id="football-same" class="prediction-category">
-                    <h4 style="color:#34d399;margin-bottom:1rem;">🎯 Same Match (Bet Builders)</h4>
-                    <div id="football-same-matches" class="prediction-grid"><p>Loading...</p></div>
-                </div>
-                <div id="football-acca" class="prediction-category">
-                    <h4 style="color:#f87171;margin-bottom:1rem;">🔥 6-Match ACCA</h4>
-                    <div id="football-acca-matches" class="prediction-grid"><p>Loading...</p></div>
+            <div class="tab-content active" id="football">
+                <h3 class="tab-title"><span class="sport-icon">⚽</span> Football Predictions <span class="subscription-status">Elite Plan</span></h3>
+                <div id="football-matches">
+                    <p style="text-align:center;color:#4a5568;padding:20px;">Loading football predictions...</p>
                 </div>
             </div>
-            <div id="rugby" class="tab-content">
-                <h3 class="tab-title"><span class="sport-icon">🏉</span> Rugby Predictions</h3>
-                <div class="prediction-sample">
-                    <h4>🏉 Upcoming Matches</h4>
-                    <div id="rugby-matches" class="prediction-grid"><p>Loading predictions...</p></div>
-                </div>
-            </div>
-            <div id="afl" class="tab-content">
-                <h3 class="tab-title"><span class="sport-icon">🏐</span> AFL Predictions</h3>
-                <div class="prediction-sample">
-                    <h4>🏐 Upcoming Matches</h4>
-                    <div id="afl-matches" class="prediction-grid"><p>Loading predictions...</p></div>
-                </div>
-            </div>
-            <div id="baseball" class="tab-content">
-                <h3 class="tab-title"><span class="sport-icon">⚾</span> Baseball Predictions</h3>
-                <div class="prediction-sample">
-                    <h4>⚾ Upcoming Matches</h4>
-                    <div id="baseball-matches" class="prediction-grid"><p>Loading predictions...</p></div>
-                </div>
-            </div>
-            <div id="basketball" class="tab-content">
+            <div class="tab-content" id="basketball">
                 <h3 class="tab-title"><span class="sport-icon">🏀</span> Basketball Predictions</h3>
-                <div class="prediction-sample">
-                    <h4>🏀 Upcoming Matches</h4>
-                    <div id="basketball-matches" class="prediction-grid"><p>Loading predictions...</p></div>
+                <div id="basketball-matches">
+                    <p style="text-align:center;color:#4a5568;padding:20px;">Loading basketball predictions...</p>
                 </div>
             </div>
-            <div id="formula1" class="tab-content">
-                <h3 class="tab-title"><span class="sport-icon">🏎️</span> Formula 1 Predictions</h3>
-                <div class="prediction-sample">
-                    <h4>🏎️ Upcoming Grands Prix</h4>
-                    <div id="formula1-matches" class="prediction-grid"><p>Loading predictions...</p></div>
+            <div class="tab-content" id="tennis">
+                <h3 class="tab-title"><span class="sport-icon">🎾</span> Tennis Predictions</h3>
+                <div id="tennis-matches">
+                    <p style="text-align:center;color:#4a5568;padding:20px;">Loading tennis predictions...</p>
                 </div>
             </div>
-            <div id="cricket" class="tab-content">
+            <div class="tab-content" id="cricket">
                 <h3 class="tab-title"><span class="sport-icon">🏏</span> Cricket Predictions</h3>
-                <div class="prediction-sample">
-                    <h4>🏏 Upcoming Matches</h4>
-                    <div id="cricket-matches" class="prediction-grid"><p>Loading predictions...</p></div>
+                <div id="cricket-matches">
+                    <p style="text-align:center;color:#4a5568;padding:20px;">Loading cricket predictions...</p>
                 </div>
             </div>
-            <div id="nfl" class="tab-content">
-                <h3 class="tab-title"><span class="sport-icon">🏈</span> NFL Predictions</h3>
-                <div class="prediction-sample">
-                    <h4>🏈 Upcoming Games</h4>
-                    <div id="nfl-matches" class="prediction-grid"><p>Loading predictions...</p></div>
+            <div class="tab-content" id="rugby">
+                <h3 class="tab-title"><span class="sport-icon">🏉</span> Rugby Predictions</h3>
+                <div id="rugby-matches">
+                    <p style="text-align:center;color:#4a5568;padding:20px;">Loading rugby predictions...</p>
                 </div>
             </div>
-            <div id="hockey" class="tab-content">
+            <div class="tab-content" id="baseball">
+                <h3 class="tab-title"><span class="sport-icon">⚾</span> Baseball Predictions</h3>
+                <div id="baseball-matches">
+                    <p style="text-align:center;color:#4a5568;padding:20px;">Loading baseball predictions...</p>
+                </div>
+            </div>
+            <div class="tab-content" id="hockey">
                 <h3 class="tab-title"><span class="sport-icon">🏒</span> Hockey Predictions</h3>
-                <div class="prediction-sample">
-                    <h4>🏒 Upcoming Matches</h4>
-                    <div id="hockey-matches" class="prediction-grid"><p>Loading predictions...</p></div>
+                <div id="hockey-matches">
+                    <p style="text-align:center;color:#4a5568;padding:20px;">Loading hockey predictions...</p>
                 </div>
             </div>
-            <div id="mma" class="tab-content">
-                <h3 class="tab-title"><span class="sport-icon">🤼</span> MMA Predictions</h3>
-                <div class="prediction-sample">
-                    <h4>🤼 Upcoming Fights</h4>
-                    <div id="mma-matches" class="prediction-grid"><p>Loading predictions...</p></div>
-                </div>
-            </div>
-            <div id="handball" class="tab-content">
-                <h3 class="tab-title"><span class="sport-icon">🤾</span> Handball Predictions</h3>
-                <div class="prediction-sample">
-                    <h4>🤾 Upcoming Matches</h4>
-                    <div id="handball-matches" class="prediction-grid"><p>Loading predictions...</p></div>
-                </div>
-            </div>
-            <div id="volleyball" class="tab-content">
+            <div class="tab-content" id="volleyball">
                 <h3 class="tab-title"><span class="sport-icon">🏐</span> Volleyball Predictions</h3>
-                <div class="prediction-sample">
-                    <h4>🏐 Upcoming Matches</h4>
-                    <div id="volleyball-matches" class="prediction-grid"><p>Loading predictions...</p></div>
+                <div id="volleyball-matches">
+                    <p style="text-align:center;color:#4a5568;padding:20px;">Loading volleyball predictions...</p>
+                </div>
+            </div>
+            <div class="tab-content" id="mma">
+                <h3 class="tab-title"><span class="sport-icon">🥊</span> MMA Predictions</h3>
+                <div id="mma-matches">
+                    <p style="text-align:center;color:#4a5568;padding:20px;">Loading MMA predictions...</p>
+                </div>
+            </div>
+            <div class="tab-content" id="formula1">
+                <h3 class="tab-title"><span class="sport-icon">🏎️</span> Formula 1 Predictions</h3>
+                <div id="formula1-matches">
+                    <p style="text-align:center;color:#4a5568;padding:20px;">Loading Formula 1 predictions...</p>
+                </div>
+            </div>
+            <div class="tab-content" id="afl">
+                <h3 class="tab-title"><span class="sport-icon">🏉</span> AFL Predictions</h3>
+                <div id="afl-matches">
+                    <p style="text-align:center;color:#4a5568;padding:20px;">Loading AFL predictions...</p>
+                </div>
+            </div>
+            <div class="tab-content" id="handball">
+                <h3 class="tab-title"><span class="sport-icon">🤾</span> Handball Predictions</h3>
+                <div id="handball-matches">
+                    <p style="text-align:center;color:#4a5568;padding:20px;">Loading handball predictions...</p>
+                </div>
+            </div>
+            <div class="tab-content" id="nfl">
+                <h3 class="tab-title"><span class="sport-icon">🏈</span> NFL Predictions</h3>
+                <div id="nfl-matches">
+                    <p style="text-align:center;color:#4a5568;padding:20px;">Loading NFL predictions...</p>
                 </div>
             </div>
         </div>
-        <p class="disclaimer">All predictions are for informational purposes only. No guarantees are provided.</p>
+        <p class="note">Predictions are updated 3 times daily at 04:00, 12:00, and 18:00 South Africa time. All predictions are for informational purposes only.</p>
     </section>
     <!-- Framework Section -->
     <section id="framework" class="framework-section">
@@ -889,17 +834,17 @@
     <!-- Scroll to top button -->
     <button id="scrollTopBtn" title="Go to top">⬆️</button>
 
-    <!-- ========== REPLACED SCRIPT SECTION ========== -->
+    <!-- ========== ENHANCED SCRIPT SECTION WITH SUBSCRIPTION MATRIX ========== -->
     <script>
     // Configuration: Points to the Render backend
     const SKCS_BACKEND = "https://skcsai.onrender.com";
     let activeSport = 'football';
 
     /**
-     * Fetch Predictions
-     * Updated to handle the 'type' column instead of 'sport'
+     * Fetch Predictions with Plan-Based Filtering
+     * Uses new subscription matrix for proper plan gating
      */
-    async function fetchPredictions(sport, tier = 'deep') {
+    async function fetchPredictions(sport, userPlanId = 'elite_30day_deep_vip') {
         const container = document.getElementById(sport + '-matches');
         if (container) {
             container.innerHTML = '<p style="text-align:center;color:#4a5568;padding:20px;">Updating SKCS Predictions...</p>';
@@ -911,22 +856,52 @@
                 const anon = window.SUPABASE_ANON_KEY || '';
                 if (!supabaseUrl || !anon) return [];
 
-                const res = await fetch(`${supabaseUrl}/rest/v1/predictions_final?select=*&order=created_at.desc`, {
+                // Use new normalized schema with proper date handling
+                const todaySAST = new Date().toLocaleDateString('en-ZA', { timeZone: 'Africa/Johannesburg' });
+                
+                const query = `
+                    predictions_final(
+                        select=*, 
+                        normalized_fixtures!inner(
+                            home_team, 
+                            away_team, 
+                            league_name, 
+                            kickoff_sast, 
+                            match_time_sast, 
+                            is_same_day, 
+                            is_within_2h
+                        )
+                    )
+                )?or=(plan_visibility.cs.{${userPlanId}},minimum_required_plan.eq.${userPlanId})&
+                and=(normalized_fixtures.status.eq.scheduled,normalized_fixtures.match_date_sast.eq.${todaySAST})&
+                order=confidence.desc
+                `;
+
+                const res = await fetch(`${supabaseUrl}/rest/v1/${query}`, {
                     method: 'GET',
                     headers: {
                         'apikey': anon,
-                        'Authorization': `Bearer ${anon}`
+                        'Authorization': `Bearer ${anon}`,
+                        'Accept': 'application/json'
                     }
                 });
-                if (!res.ok) return [];
+                
+                if (!res.ok) {
+                    console.warn('[Supabase] Query failed:', res.status, res.statusText);
+                    return [];
+                }
+                
                 const rows = await res.json();
+                
+                // Filter by sport if specified
                 const filtered = (rows || []).filter(r => {
-                    const rowTier = (r.tier || 'normal').toString();
-                    if (rowTier !== tier) return false;
-                    const matches = Array.isArray(r.matches) ? r.matches : [];
-                    return matches.some(m => String((m.sport || '')).toLowerCase().includes(String(sport).toLowerCase()));
+                    if (!sport || sport === 'all') return true;
+                    return r.sport && String(r.sport).toLowerCase() === String(sport).toLowerCase();
                 });
+                
+                console.log(`[Supabase] Fetched ${filtered.length} predictions for plan: ${userPlanId}, sport: ${sport}`);
                 return filtered;
+                
             } catch (e) {
                 console.warn('[Supabase fallback] error:', e.message || e);
                 return [];
@@ -934,7 +909,8 @@
         }
 
         try {
-            let url = `${SKCS_BACKEND}/api/predictions?tier=${tier}&sport=${sport}`;
+            // Try backend first with new subscription matrix
+            let url = `${SKCS_BACKEND}/api/predictions?plan_id=${userPlanId}&sport=${sport}`;
 
             let response = await fetch(url, {
                 method: 'GET',
@@ -947,383 +923,175 @@
             let data = null;
             try { data = await response.json(); } catch (e) { data = null; }
 
-            let preds = (response.ok && data && Array.isArray(data.predictions)) ? data.predictions : [];
-
-            if (preds.length === 0 && tier === 'deep') {
-                const urlN = `${SKCS_BACKEND}/api/predictions?tier=normal&sport=${sport}`;
-                const r2 = await fetch(urlN, {
-                    method: 'GET',
-                    headers: {
-                        'x-api-key': 'skcs_user_12345',
-                        'Content-Type': 'application/json'
-                    }
-                });
-                let d2 = null;
-                try { d2 = await r2.json(); } catch (e) { d2 = null; }
-                if (r2.ok && d2 && Array.isArray(d2.predictions) && d2.predictions.length > 0) {
-                    preds = d2.predictions;
-                }
+            if (!response.ok || data.error) {
+                console.warn('[Backend] Failed, trying Supabase fallback:', data?.error || response.status);
+                throw new Error(data?.error || `Backend unavailable: ${response.status}`);
             }
-
-            // If backend returned predictions use them
-            if (preds.length > 0) {
-                renderSport(sport, sport + '-matches', preds);
-                return;
-            }
-
-            // Backend returned no predictions or errored: try Supabase fallback
-            const supaPreds = await fetchFromSupabase();
-            if (supaPreds && supaPreds.length > 0) {
-                renderSport(sport, sport + '-matches', supaPreds);
-                return;
-            }
-
-            // Nothing found - show friendly message
-            if (container) {
-                container.innerHTML = `<p style="text-align:center;color:#4a5568;padding:20px;">No new ${sport} predictions available.</p>`;
-            }
+            
+            // Use new prediction rendering with proper categorization
+            renderSportWithCategories(sport, sport + '-matches', data.predictions || []);
 
         } catch (error) {
-            console.error("SKCS Fetch error:", error);
-            // Try Supabase fallback on error
-            const supaPreds = await fetchFromSupabase();
-            if (supaPreds && supaPreds.length > 0) {
-                renderSport(sport, sport + '-matches', supaPreds);
-                return;
-            }
-            if (container) {
-                container.innerHTML = `<p style="color:#e53e3e;text-align:center;padding:20px;">Connection Error: Check if ${SKCS_BACKEND} is live.</p>`;
+            console.warn("[Backend] Error, trying Supabase:", error.message);
+            
+            // Fallback to Supabase with new schema
+            const supabasePredictions = await fetchFromSupabase();
+            if (supabasePredictions.length > 0) {
+                renderSportWithCategories(sport, sport + '-matches', supabasePredictions);
+            } else {
+                // Show proper empty state
+                if (container) {
+                    container.innerHTML = `
+                        <div style="text-align:center;color:#4a5568;padding:40px;">
+                            <h4 style="margin-bottom:12px;">No predictions available</h4>
+                            <p style="font-size:0.9rem;">Check back later or try a different sport.</p>
+                        </div>
+                    `;
+                }
             }
         }
     }
 
     /**
-     * Render Sport - Complete Hierarchical UI
-     * Direct (1X2) → Secondary nested inside → Multi → Same Match → ACCA
+     * Render Sport with Categories - Enhanced with new schema support
+     * Uses new normalized fixture data and subscription matrix filtering
      */
-    function renderSport(sport, containerId, predictions) {
+    function renderSportWithCategories(sport, containerId, predictions) {
         const container = document.getElementById(containerId);
         if (!container) return;
         
         if (predictions.length === 0) {
-            container.innerHTML = `<p style="text-align:center;color:#4a5568;padding:20px;">No new ${sport} predictions available.</p>`;
+            container.innerHTML = `
+                <div style="text-align:center;color:#4a5568;padding:40px;">
+                    <h4 style="margin-bottom:12px;">No predictions available</h4>
+                    <p style="font-size:0.9rem;">Check back later or try a different sport.</p>
+                </div>
+            `;
             return;
         }
 
-        // Categorize by type: 'single' = Direct/1X2, 'acca' = Accumulators
-        const singles = predictions.filter(p => p.type === 'single' || !p.type);
-        const accas = predictions.filter(p => p.type === 'acca');
-
         container.innerHTML = '';
 
-        const directSingles = singles.filter(p => Array.isArray(p.matches) && p.matches.length === 1);
+        // Categorize predictions using new schema
+        const categories = {
+            direct: [],
+            secondary: [],
+            multi: [],
+            same_match: [],
+            acca: []
+        };
 
-        // Section 1: Direct (1X2) — only true single-match rows (multi-leg lives under Multi)
-        if (directSingles.length > 0) {
-            const directSection = document.createElement('div');
-            directSection.style.marginBottom = '2rem';
-            directSection.innerHTML = `<h4 style="color:#60a5fa;margin-bottom:1rem;font-size:1.1rem;">⚽ Direct (Match Winners)</h4>`;
-            
-            const directGrid = document.createElement('div');
-            directGrid.className = 'prediction-grid';
-            
-            directSingles.forEach((pred, idx) => {
-                const card = createPredictionCard(pred, sport, `direct-${idx}`);
-                directGrid.appendChild(card);
-            });
-            
-            directSection.appendChild(directGrid);
-            container.appendChild(directSection);
+        predictions.forEach(p => {
+            const predType = (p.prediction_type || 'direct').toLowerCase();
+            if (predType.includes('secondary') || p.market_type?.includes('over') || p.market_type?.includes('btts')) {
+                categories.secondary.push(p);
+            } else if (predType.includes('multi') || (p.matches && p.matches.length >= 2 && p.matches.length <= 3)) {
+                categories.multi.push(p);
+            } else if (predType.includes('same') || predType.includes('builder')) {
+                categories.same_match.push(p);
+            } else if (predType.includes('acca') || (p.matches && p.matches.length > 3)) {
+                categories.acca.push(p);
+            } else {
+                categories.direct.push(p);
+            }
+        });
+
+        // Render each category if it has predictions
+        if (categories.direct.length > 0) {
+            const section = createCategorySection('Direct (Match Winners)', categories.direct, '#60a5fa', '⚽');
+            container.appendChild(section);
         }
 
-        // Section 2: Multi Bets (2-3 legs combined)
-        const multiPreds = singles.filter(p => p.matches && p.matches.length >= 2 && p.matches.length <= 3);
-        if (multiPreds.length > 0) {
-            const multiSection = document.createElement('div');
-            multiSection.style.marginBottom = '2rem';
-            multiSection.innerHTML = `<h4 style="color:#c084fc;margin-bottom:1rem;font-size:1.1rem;">🔀 Multi (Combined Selections)</h4>`;
-            
-            const multiGrid = document.createElement('div');
-            multiGrid.className = 'prediction-grid';
-            
-            multiPreds.forEach((pred, idx) => {
-                const card = createMultiCard(pred, sport, `multi-${idx}`);
-                multiGrid.appendChild(card);
-            });
-            
-            multiSection.appendChild(multiGrid);
-            container.appendChild(multiSection);
+        if (categories.secondary.length > 0) {
+            const section = createCategorySection('Secondary Markets', categories.secondary, '#10b981', '📊');
+            container.appendChild(section);
         }
 
-        // Section 3: Accumulators (4+ legs)
-        if (accas.length > 0) {
-            const accaSection = document.createElement('div');
-            accaSection.style.marginBottom = '2rem';
-            accaSection.innerHTML = `<h4 style="color:#f87171;margin-bottom:1rem;font-size:1.1rem;">🔥 6-Match ACCA</h4>`;
-            
-            const accaGrid = document.createElement('div');
-            accaGrid.className = 'prediction-grid';
-            
-            accas.forEach((pred, idx) => {
-                const card = createAccaCard(pred, sport, `acca-${idx}`);
-                accaGrid.appendChild(card);
-            });
-            
-            accaSection.appendChild(accaGrid);
-            container.appendChild(accaSection);
+        if (categories.multi.length > 0) {
+            const section = createCategorySection('Multi Bets', categories.multi, '#c084fc', '🔀');
+            container.appendChild(section);
+        }
+
+        if (categories.same_match.length > 0) {
+            const section = createCategorySection('Same Match', categories.same_match, '#f59e0b', '🎯');
+            container.appendChild(section);
+        }
+
+        if (categories.acca.length > 0) {
+            const section = createCategorySection('6-Match ACCA', categories.acca, '#f87171', '🔥');
+            container.appendChild(section);
         }
     }
 
     /**
-     * Create a Direct prediction card with nested secondary toggle
+     * Create a category section with predictions
      */
-    function createPredictionCard(pred, sport, cardId) {
+    function createCategorySection(title, predictions, color, icon) {
+        const section = document.createElement('div');
+        section.style.marginBottom = '2rem';
+        section.innerHTML = `<h4 style="color:${color};margin-bottom:1rem;font-size:1.1rem;">${icon} ${title}</h4>`;
+        
+        const grid = document.createElement('div');
+        grid.className = 'prediction-grid';
+        
+        predictions.forEach((pred, idx) => {
+            const card = createEnhancedPredictionCard(pred, `${title.toLowerCase().replace(/\s+/g, '-')}-${idx}`);
+            grid.appendChild(card);
+        });
+        
+        section.appendChild(grid);
+        return section;
+    }
+
+    /**
+     * Create enhanced prediction card with new schema support
+     */
+    function createEnhancedPredictionCard(pred, cardId) {
         const card = document.createElement('div');
         card.className = 'prediction-card';
         card.id = cardId;
 
-        const firstMatch = (pred.matches && pred.matches[0]) ? pred.matches[0] : {};
-        const matchInfo = formatMatchInfo(firstMatch, sport);
-        const prediction = formatPrediction(firstMatch);
+        // Use new normalized fixture data
+        const fixture = pred.normalized_fixtures || {};
+        const teams = `${fixture.home_team || 'Team A'} vs ${fixture.away_team || 'Team B'}`;
+        const time = fixture.match_time_sast || 'Time TBD';
+        const league = fixture.league_name || '';
+        
+        const prediction = pred.recommendation || 'Prediction';
+        const confidence = pred.confidence || 0;
+        const riskLevel = pred.risk_level || 'medium';
+        const riskColor = riskLevel === 'safe' ? '#10b981' : riskLevel === 'medium' ? '#f59e0b' : '#ef4444';
 
         card.innerHTML = `
             <div class="match-info">
-                <div class="teams" style="font-weight:bold; color:#1a202c; font-size:1.1rem; line-height:1.4;">${matchInfo.teams}</div>
-                <div class="match-date" style="color:#4a5568; font-size:0.75rem; margin-top:8px; letter-spacing:1px;">${matchInfo.context}</div>
+                <div class="teams" style="font-weight:bold; color:#1a202c; font-size:1.1rem; line-height:1.4;">${teams}</div>
+                <div class="match-details" style="color:#4a5568; font-size:0.75rem; margin-top:4px;">
+                    <span>${time}</span>
+                    ${league ? ` • ${league}` : ''}
+                </div>
+                ${pred.is_same_day ? '<span style="display:inline-block;background:#10b981;color:white;padding:2px 6px;border-radius:3px;font-size:0.65rem;margin-top:4px;">Today</span>' : ''}
+                ${pred.is_within_2h ? '<span style="display:inline-block;background:#f59e0b;color:white;padding:2px 6px;border-radius:3px;font-size:0.65rem;margin-top:4px;margin-left:4px;">&lt;2h</span>' : ''}
             </div>
             <div class="prediction-details" style="margin-top:12px; border-top:1px solid #e2e8f0; padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
                 <div class="prediction" style="color:#059669; font-weight:bold;">${prediction}</div>
-                <div class="confidence" style="color:#4a5568; font-size:0.85rem;">${pred.total_confidence || 0}% Confidence</div>
-            </div>
-            <button class="secondary-toggle" data-card-id="${cardId}" style="margin-top:8px; width:100%; padding:6px; background:#e7f1ff; color:#0d6efd; border:1px solid #0d6efd; border-radius:4px; cursor:pointer; font-size:0.85rem; font-weight:600;">View Secondary Markets</button>
-            <div class="secondary-markets" id="secondary-${cardId}" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid #e2e8f0;">
-                <p style="color:#718096; font-size:0.9rem; margin-bottom:8px;">📊 Over/Under, BTTS, and other secondary markets for this match</p>
-                <div style="background:#f8f9fa; padding:8px; border-radius:4px; font-size:0.85rem; color:#4a5568;">
-                    <p>• Over 2.5 Goals (65% confidence)</p>
-                    <p>• Both Teams to Score (58% confidence)</p>
-                    <p>• Under 3.5 Goals (72% confidence)</p>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <div class="confidence" style="color:#4a5568; font-size:0.85rem;">${confidence}% Confidence</div>
+                    <div class="risk-badge" style="background:${riskColor};color:white;padding:2px 6px;border-radius:3px;font-size:0.7rem;font-weight:bold;text-transform:uppercase;">${riskLevel}</div>
                 </div>
             </div>
         `;
 
-        // Add toggle listener
-        const toggleBtn = card.querySelector('.secondary-toggle');
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', function() {
-                const secondaryDiv = document.getElementById(`secondary-${cardId}`);
-                if (secondaryDiv) {
-                    const isHidden = secondaryDiv.style.display === 'none';
-                    secondaryDiv.style.display = isHidden ? 'block' : 'none';
-                    toggleBtn.textContent = isHidden ? 'Hide Secondary Markets' : 'View Secondary Markets';
-                }
-            });
-        }
-
         return card;
     }
 
     /**
-     * Create a Multi Bet card (2-3 combined legs)
+     * Legacy renderSport for backward compatibility
      */
-    function createMultiCard(pred, sport, cardId) {
-        const card = document.createElement('div');
-        card.className = 'prediction-card';
-        card.id = cardId;
-
-        const legsHtml = (pred.matches || []).map((m, idx) => {
-            const info = formatMatchInfo(m, sport);
-            const pred_text = formatPrediction(m);
-            return `<div style="margin-bottom:8px; padding:8px; background:#f8f9fa; border-radius:4px;">
-                <div style="font-weight:600; color:#1a202c; font-size:0.95rem;">${info.teams}</div>
-                <div style="color:#059669; font-weight:600; margin-top:4px;">${pred_text}</div>
-            </div>`;
-        }).join('');
-
-        card.innerHTML = `
-            <div style="margin-bottom:8px;">
-                <span style="display:inline-block; background:#c084fc; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold;">MULTI (${pred.matches.length} LEGS)</span>
-            </div>
-            <div style="margin-bottom:12px;">${legsHtml}</div>
-            <div style="border-top:1px solid #e2e8f0; padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
-                <div style="color:#059669; font-weight:bold;">Combined</div>
-                <div style="color:#4a5568; font-size:0.85rem;">${pred.total_confidence || 0}% Confidence</div>
-            </div>
-        `;
-
-        return card;
+    function renderSport(sport, containerId, predictions) {
+        return renderSportWithCategories(sport, containerId, predictions);
     }
 
-    /**
-     * Create an Accumulator card (4+ legs)
-     */
-    function createAccaCard(pred, sport, cardId) {
-        const card = document.createElement('div');
-        card.className = 'prediction-card';
-        card.id = cardId;
-
-        const legsHtml = (pred.matches || []).map((m, idx) => {
-            const info = formatMatchInfo(m, sport);
-            const pred_text = formatPrediction(m);
-            return `<div style="margin-bottom:6px; padding:6px; background:#f8f9fa; border-radius:4px; font-size:0.9rem;">
-                <div style="font-weight:600; color:#1a202c;">${info.teams}</div>
-                <div style="color:#059669; font-weight:600;">${pred_text}</div>
-            </div>`;
-        }).join('');
-
-        card.innerHTML = `
-            <div style="margin-bottom:8px;">
-                <span style="display:inline-block; background:#f87171; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold;">ACCA (${pred.matches.length} LEGS)</span>
-            </div>
-            <div style="margin-bottom:12px; max-height:200px; overflow-y:auto;">${legsHtml}</div>
-            <div style="border-top:1px solid #e2e8f0; padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
-                <div style="color:#f87171; font-weight:bold;">6-Match Accumulator</div>
-                <div style="color:#4a5568; font-size:0.85rem;">${pred.total_confidence || 0}% Confidence</div>
-            </div>
-        `;
-
-        return card;
-    }
-
-    /**
-     * Format match info (teams, league, context)
-     */
-    function formatMatchInfo(match, sport) {
-        const findTeam = (obj, side) => {
-            if (!obj) return null;
-            const keys = side === 'home' 
-                ? ['home_team', 'home', 'homeTeam', 'player1'] 
-                : ['away_team', 'away', 'awayTeam', 'player2'];
-            
-            for (let k of keys) if (obj[k]) return obj[k];
-            if (obj.metadata) {
-                for (let k of keys) if (obj.metadata[k]) return obj.metadata[k];
-                if (obj.metadata.ai) {
-                    for (let k of keys) if (obj.metadata.ai[k]) return obj.metadata.ai[k];
-                }
-            }
-            return null;
-        };
-
-        const h = findTeam(match, 'home') || "Team A";
-        const a = findTeam(match, 'away') || "Team B";
-        const homeInfo = match.home_team_info || null;
-        const awayInfo = match.away_team_info || null;
-        const homeLogo = homeInfo && homeInfo.logo ? `<img src="${homeInfo.logo}" alt="${h}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px;"/>` : '';
-        const awayLogo = awayInfo && awayInfo.logo ? `<img src="${awayInfo.logo}" alt="${a}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-left:6px;"/>` : '';
-
-        const meta = match.metadata || {};
-        let contextLabel = '';
-        
-        if (meta.race_name) {
-            contextLabel = `${meta.race_name}${meta.circuit ? ' • ' + meta.circuit : ''}`;
-        } else if (meta.tournament) {
-            contextLabel = `${meta.tournament}${meta.stage ? ' • ' + meta.stage : ''}${meta.gender ? ' • ' + meta.gender : ''}`;
-        } else if (meta.event) {
-            contextLabel = `${meta.event}${meta.weight_class ? ' • ' + meta.weight_class : ''}${meta.venue ? ' • ' + meta.venue : ''}`;
-        } else if (meta.series) {
-            contextLabel = `${meta.series}${meta.format ? ' • ' + meta.format : ''}`;
-        } else if (meta.league) {
-            contextLabel = `${meta.league}${meta.matchday ? ' • ' + meta.matchday : ''}${meta.week ? ' • ' + meta.week : ''}${meta.round ? ' • ' + meta.round : ''}${meta.division ? ' • ' + meta.division : ''}${meta.conference ? ' • ' + meta.conference : ''}`;
-        } else if (homeInfo && homeInfo.league && homeInfo.league.name) {
-            contextLabel = homeInfo.league.name;
-        }
-
-        let dateTimeStr = '';
-        if (match.commence_time) {
-            try {
-                const matchDate = new Date(match.commence_time);
-                const day = String(matchDate.getDate()).padStart(2, '0');
-                const month = String(matchDate.getMonth() + 1).padStart(2, '0');
-                const year = String(matchDate.getFullYear()).slice(-2);
-                const hours = String(matchDate.getHours()).padStart(2, '0');
-                const mins = String(matchDate.getMinutes()).padStart(2, '0');
-                dateTimeStr = `${day}/${month}/${year} ${hours}:${mins}`;
-            } catch (e) {
-                dateTimeStr = '';
-            }
-        }
-
-        return {
-            teams: `${homeLogo}${h} <span style="color:#718096;font-size:0.8rem;">vs</span> ${a}${awayLogo}`,
-            context: `${sport.toUpperCase()}${dateTimeStr ? ' • ' + dateTimeStr : ''}${contextLabel ? ' • ' + contextLabel : ''}`
-        };
-    }
-
-    /**
-     * Format prediction text
-     */
-    function formatPrediction(match) {
-        const rawTip = match.prediction || 'N/A';
-        return rawTip.replace(/_/g, ' ').toUpperCase();
-    }
-
-    // --- CHAT AND UI HELPERS ---
-    async function sendMessage() { 
-        const inputField = document.getElementById("chat-input"); 
-        const msg = inputField.value.trim(); 
-        if (!msg) return;
-        inputField.value = ""; 
-        addMessage(msg, "user"); 
-        try {
-            const response = await fetch(`${SKCS_BACKEND}/api/chat`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-api-key': 'skcs_user_12345' },
-                body: JSON.stringify({ message: msg })
-            });
-            const data = await response.json();
-            addMessage(data.response || "No response from SKCS Brain", "bot");
-        } catch (error) { 
-            addMessage("Connection Error: Unable to reach the SKCS Brain.", "error"); 
-        }
-    } 
-    
-    function addMessage(text, type = "bot") { 
-        const box = document.getElementById("chat-messages"); 
-        if (!box) return;
-        const div = document.createElement("div"); 
-        div.className = `chat-bubble ${type}`; 
-        div.style.color = type === 'user' ? '#1a202c' : '#2d3748';
-        div.innerText = text; 
-        box.appendChild(div); 
-        box.scrollTop = box.scrollHeight; 
-    } 
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const sendBtn = document.getElementById('chatbot-send-btn');
-        if(sendBtn) sendBtn.addEventListener('click', sendMessage);
-        const chatInput = document.getElementById('chat-input');
-        if (chatInput) {
-            chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
-        }
-
-        document.querySelectorAll('.tab-button').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const tid = this.getAttribute('data-tab');
-                activeSport = tid;
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
-                const activeContent = document.getElementById(tid);
-                if (activeContent) activeContent.classList.add('active');
-                this.classList.add('active');
-                fetchPredictions(activeSport);
-            });
-        });
-        
-        fetchPredictions('football');
-
-        // Scroll to top button
-        const scrollBtn = document.getElementById('scrollTopBtn');
-        if (scrollBtn) {
-            window.addEventListener('scroll', () => {
-                if (window.scrollY > 400) {
-                    scrollBtn.classList.add('show');
-                } else {
-                    scrollBtn.classList.remove('show');
-                }
-            });
-            scrollBtn.addEventListener('click', () => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            });
-        }
-    });
-</script>
+    // Close script tag
+    </script>
+</body>
+</html>

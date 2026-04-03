@@ -7,6 +7,9 @@ const { requireRole } = require('../utils/auth');
 const config = require('../config');
 const { createClient } = require('@supabase/supabase-js');
 
+const { getPlanCapabilities, filterPredictionsForPlan } = require('../config/subscriptionMatrix');
+const { getPredictionWindow } = require('../utils/dateNormalization');
+
 const router = express.Router();
 
 const SPORT_FILTER_MAP = {
@@ -76,23 +79,30 @@ function buildPlayersByTeam(rows) {
 // Default tier = deep (elite pool); subscription limits use /api/user/predictions
 router.get('/', requireRole('user'), async (req, res) => {
     try {
-        const tier = req.query.tier || 'deep';
+        // NEW: Use subscription matrix instead of tier
+        const planId = req.query.plan_id || 'elite_30day_deep_vip';
         const sport = req.query.sport;
         const sportFilterValues = getSportFilterValues(sport);
 
-        console.log(`[PREDICTIONS] Request for Tier: ${tier}, Sport: ${sport || 'all'}`);
+        console.log(`[PREDICTIONS] Request for Plan: ${planId}, Sport: ${sport || 'all'}`);
+
+        // Get plan capabilities from subscription matrix
+        const planCapabilities = getPlanCapabilities(planId);
+        if (!planCapabilities) {
+            return res.status(400).json({ error: 'Invalid plan ID' });
+        }
 
         let queryStr = `
             SELECT id, tier, type, matches, total_confidence, risk_level, created_at
             FROM predictions_final
-            WHERE tier = $1
+            WHERE tier IN (${planCapabilities.tiers.map(t => `'${t}'`).join(',')})
         `;
-        const queryParams = [tier];
+        const queryParams = [];
 
         if (sportFilterValues.length > 0) {
             queryStr += ` AND EXISTS (
                 SELECT 1 FROM jsonb_array_elements(matches) AS m 
-                WHERE LOWER(m->>'sport') = ANY($2::text[])
+                WHERE LOWER(m->>'sport') = ANY($1::text[])
             )`;
             queryParams.push(sportFilterValues);
         }
@@ -109,13 +119,13 @@ router.get('/', requireRole('user'), async (req, res) => {
                 const sb = createClient(config.supabase.url, config.supabase.anonKey);
                 const { data, error } = await sb.from('predictions_final').select('*').order('created_at', { ascending: false }).limit(100);
                 if (!error && Array.isArray(data) && data.length > 0) {
-                    // Filter Supabase rows by tier and sport
-                    const tierKey = String(tier || 'deep');
+                    // Filter Supabase rows by plan capabilities and sport
                     const sportVals = (sportFilterValues || []).map(s => String(s).toLowerCase());
                     const filtered = data.filter(r => {
                         try {
+                            // Check if prediction tier is in plan's allowed tiers
                             const rowTier = String(r.tier || 'normal');
-                            if (rowTier !== tierKey) return false;
+                            if (!planCapabilities.tiers.includes(rowTier)) return false;
                             const matches = Array.isArray(r.matches) ? r.matches : [];
                             if (sportVals.length === 0) return true;
                             return matches.some(m => sportVals.includes(String(m.sport || '').toLowerCase()));
@@ -226,7 +236,7 @@ router.get('/', requireRole('user'), async (req, res) => {
         });
 
         res.status(200).json({
-            tier,
+            plan_id: planId,
             sport: sport || 'all',
             count: enrichedPredictions.length,
             predictions: enrichedPredictions
