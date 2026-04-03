@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKCS - Login / Register</title>
+    <link rel="icon" href="data:,">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: url('login.jpg') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            position: relative;
+        }
+        /* Dark overlay for better contrast */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 0;
+        }
+        .auth-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 450px;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+        h1 {
+            text-align: center;
+            color: #0d6efd;
+            margin-bottom: 0.5rem;
+            font-size: 2rem;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 2rem;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 0.8rem;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: #0d6efd;
+            color: white;
+        }
+        .form {
+            display: none;
+        }
+        .form.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        input:focus {
+            outline: none;
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13,110,253,0.1);
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background: #0d6efd;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .submit-btn:hover {
+            background: #0b5ed7;
+        }
+        .message {
+            margin-top: 1rem;
+            padding: 0.8rem;
+            border-radius: 6px;
+            text-align: center;
+            display: none;
+        }
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #0d6efd;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h1>SKCS AI</h1>
+        <p class="subtitle">Sign in to access your predictions</p>
+
+        <div class="tab-buttons">
+            <button id="loginTab" class="tab-btn active">Login</button>
+            <button id="registerTab" class="tab-btn">Register</button>
+        </div>
+
+        <!-- Login Form -->
+        <div id="loginForm" class="form active">
+            <div class="form-group">
+                <label for="loginEmail">Email</label>
+                <input type="email" id="loginEmail" placeholder="your@email.com" autocomplete="email" required>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required>
+            </div>
+            <button id="loginBtn" class="submit-btn">Login</button>
+            <div id="loginMessage" class="message"></div>
+        </div>
+
+        <!-- Register Form -->
+        <div id="registerForm" class="form">
+            <div class="form-group">
+                <label for="registerEmail">Email</label>
+                <input type="email" id="registerEmail" placeholder="your@email.com" autocomplete="email" required>
+            </div>
+            <div class="form-group">
+                <label for="registerPassword">Password</label>
+                <input type="password" id="registerPassword" placeholder="••••••••" autocomplete="new-password" required>
+            </div>
+            <button id="registerBtn" class="submit-btn">Register</button>
+            <div id="registerMessage" class="message"></div>
+        </div>
+
+        <a href="index.html" class="back-link">← Back to home</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script>
+        const API_BASE_URL = window.API_BASE_URL || '';
+
+        const SUPABASE_URL = window.SUPABASE_URL || '';
+        const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || '';
+
+        const supabaseClient = (SUPABASE_URL && SUPABASE_ANON_KEY)
+            ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+            : null;
+
+        // Tab switching
+        const loginTab = document.getElementById('loginTab');
+        const registerTab = document.getElementById('registerTab');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+
+        loginTab.addEventListener('click', () => {
+            loginTab.classList.add('active');
+            registerTab.classList.remove('active');
+            loginForm.classList.add('active');
+            registerForm.classList.remove('active');
+        });
+
+        registerTab.addEventListener('click', () => {
+            registerTab.classList.add('active');
+            loginTab.classList.remove('active');
+            registerForm.classList.add('active');
+            loginForm.classList.remove('active');
+        });
+
+        (function applyQueryParams() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('register') === '1') {
+                    registerTab.click();
+                }
+                const next = params.get('next');
+                if (next) {
+                    sessionStorage.setItem('skcs_after_auth', next);
+                }
+            } catch (e) { /* ignore */ }
+        })();
+
+        // Login handler
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const messageDiv = document.getElementById('loginMessage');
+
+            if (!email || !password) {
+                messageDiv.className = 'message error';
+                messageDiv.textContent = 'Please fill in all fields';
+                return;
+            }
+
+            try {
+                if (!supabaseClient) {
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = 'Supabase Auth is not configured.';
+                    return;
+                }
+
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+                if (error) {
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = error.message || 'Login failed';
+                    return;
+                }
+
+                if (!data?.session) {
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = 'No session returned. Please verify your email and try again.';
+                    return;
+                }
+
+                const dest = sessionStorage.getItem('skcs_after_auth') || 'index.html';
+                sessionStorage.removeItem('skcs_after_auth');
+                window.location.href = dest;
+            } catch (error) {
+                messageDiv.className = 'message error';
+                messageDiv.textContent = 'Connection error';
+            }
+        });
+
+        // Register handler
+        document.getElementById('registerBtn').addEventListener('click', async () => {
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const messageDiv = document.getElementById('registerMessage');
+
+            if (!email || !password) {
+                messageDiv.className = 'message error';
+                messageDiv.textContent = 'Please fill in all fields';
+                return;
+            }
+            if (password.length < 6) {
+                messageDiv.className = 'message error';
+                messageDiv.textContent = 'Password must be at least 6 characters';
+                return;
+            }
+
+            try {
+                if (!supabaseClient) {
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = 'Supabase Auth is not configured.';
+                    return;
+                }
+
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email,
+                    password
+                });
+
+                if (error) {
+                    messageDiv.className = 'message error';
+                    messageDiv.textContent = error.message || 'Registration failed';
+                    return;
+                }
+
+                if (data?.session) {
+                    messageDiv.className = 'message success';
+                    messageDiv.textContent = 'Account created. Redirecting…';
+                    const dest = sessionStorage.getItem('skcs_after_auth') || 'index.html';
+                    sessionStorage.removeItem('skcs_after_auth');
+                    window.location.href = dest;
+                    return;
+                }
+
+                messageDiv.className = 'message success';
+                messageDiv.textContent = 'Check your email to confirm your account, then sign in.';
+            } catch (error) {
+                messageDiv.className = 'message error';
+                messageDiv.textContent = 'Connection error';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SKCS Pricing</title>
+<link rel="icon" href="data:,">
+
+<style>
+body { font-family: Arial, sans-serif; background:#0f172a; color:white; margin:0; padding:0; }
+.container { max-width:1200px; margin:auto; padding:20px; }
+
+h1 { text-align:center; color:#fff; margin-bottom:30px; font-weight: bold; }
+
+.tabs {
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:30px;
+}
+
+.tab {
+  padding:12px 24px;
+  cursor:pointer;
+  border-radius:6px;
+  background:#1e293b;
+  transition: all 0.3s ease;
+  font-weight: bold;
+}
+
+.tab.active-core { background:#22c55e; box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); }
+.tab.active-elite { background:#3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+
+.grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap:20px;
+}
+
+.card {
+  background:#1e293b;
+  padding:20px;
+  border-radius:10px;
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+.card h3 { margin-top:0; font-size:1.4rem; color:#fff; }
+.card .price { font-size:2.2rem; font-weight:bold; color:#fff; margin:10px 0; }
+
+.skcs-list {
+  list-style:none;
+  padding:0;
+  margin:0 0 20px;
+  flex-grow: 1;
+}
+.skcs-list li {
+  padding:10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.skcs-list li:last-child { border-bottom: none; }
+.skcs-list li strong { color: #94a3b8; display: block; margin-bottom: 4px; }
+
+button {
+  width:100%;
+  padding:12px;
+  margin-top:auto;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  transition: opacity 0.3s;
+}
+button:hover { opacity: 0.9; }
+
+.core-btn { background:#22c55e; color: white; }
+.elite-btn { background:#3b82f6; color: white; }
+
+.skcs-chatbot {
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #94a3b8;
+  text-align: center;
+  padding: 8px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 4px;
+}
+
+/* CATEGORY COLORS */ 
+.skcs-direct { color: #60a5fa; font-weight: bold; } 
+.skcs-secondary { color: #fbbf24; font-weight: bold; } 
+.skcs-multi { color: #c084fc; font-weight: bold; } 
+.skcs-same { color: #34d399; font-weight: bold; } 
+.skcs-acca { color: #f87171; font-weight: bold; } 
+
+/* TOOLTIP */ 
+.skcs-tooltip { 
+  position: relative; 
+  cursor: help; 
+} 
+
+.skcs-tooltip:hover::after { 
+  content: attr(data-tip); 
+  position: absolute; 
+  bottom: 120%; 
+  left: 50%; 
+  transform: translateX(-50%); 
+  background: #020617; 
+  color: #fff; 
+  padding: 8px 10px; 
+  font-size: 12px; 
+  border-radius: 6px; 
+  white-space: nowrap; 
+  border: 1px solid rgba(255,255,255,0.2); 
+  z-index: 10; 
+  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+} 
+
+/* TODAY FOCUS BAR */ 
+.skcs-focus-bar { 
+  max-width: 1200px; 
+  margin: 0 auto 25px auto; 
+  padding: 12px; 
+  text-align: center; 
+  background: linear-gradient(90deg, #1e3a8a, #020617); 
+  border: 1px solid rgba(96,165,250,0.4); 
+  border-radius: 8px; 
+  font-weight: bold; 
+  color: #e0f2fe; 
+  box-shadow: 0 0 10px rgba(96,165,250,0.3); 
+} 
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div style="display: flex; align-items: center; margin-bottom: 20px;">
+  <button onclick="goBack()" style="width: auto; padding: 8px 16px; background: #64748b; margin-right: 10px; margin-top: 0;">← Back</button>
+  <h1 style="margin: 0; flex-grow: 1;">Choose Your Plan</h1>
+</div>
+
+<div class="tabs">
+  <div id="tabCore" class="tab active-core" onclick="showCore()">🟢 SKCS Core</div>
+  <div id="tabElite" class="tab" onclick="showElite()">🔵 SKCS Elite</div>
+</div>
+
+<div class="skcs-focus-bar"> 
+  🔥 TODAY'S FOCUS: Full Global Coverage — Maximum volume across all sports 
+</div> 
+
+<!-- CORE -->
+<div id="corePlans" class="grid">
+
+  <!-- Core 4-Day -->
+  <div class="card">
+    <h3>4-Day Sprint</h3>
+    <div class="price">£3.99</div>
+    <ul class="skcs-list">
+      <li><strong>Mon (Soccer Focus):</strong>
+        <span class="skcs-direct skcs-tooltip" data-tip="1X2 match outcomes">⚽ 6 Direct</span> | 
+        <span class="skcs-secondary skcs-tooltip" data-tip="Over/Under, BTTS, etc">📊 4 Secondary</span> | 
+        <span class="skcs-multi skcs-tooltip" data-tip="Combined outcome selections">🔀 2 Multi</span> | 
+        <span class="skcs-same skcs-tooltip" data-tip="Same match structured bets">🎯 2 Same Match</span> | 
+        <span class="skcs-acca skcs-tooltip" data-tip="6-match accumulator">🔥 1 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Tue (Soccer Focus):</strong>
+        <span class="skcs-direct">⚽ 6 Direct</span> | <span class="skcs-secondary">📊 4 Secondary</span> | <span class="skcs-multi">🔀 2 Multi</span> | <span class="skcs-same">🎯 2 Same Match</span> | <span class="skcs-acca">🔥 1 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Wed (Soccer + 5 Sports):</strong>
+        <span class="skcs-direct">⚽ 8 Direct</span> | <span class="skcs-secondary">📊 5 Secondary</span> | <span class="skcs-multi">🔀 3 Multi</span> | <span class="skcs-same">🎯 2 Same Match</span> | <span class="skcs-acca">🔥 1 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Thu (Soccer + 5 Sports):</strong>
+        <span class="skcs-direct">⚽ 8 Direct</span> | <span class="skcs-secondary">📊 5 Secondary</span> | <span class="skcs-multi">🔀 3 Multi</span> | <span class="skcs-same">🎯 2 Same Match</span> | <span class="skcs-acca">🔥 1 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Fri (Multi-Sport Mix):</strong>
+        <span class="skcs-direct">⚽ 10 Direct</span> | <span class="skcs-secondary">📊 6 Secondary</span> | <span class="skcs-multi">🔀 3 Multi</span> | <span class="skcs-same">🎯 3 Same Match</span> | <span class="skcs-acca">🔥 2 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sat (Full Global Coverage):</strong>
+        <span class="skcs-direct">⚽ 15 Direct</span> | <span class="skcs-secondary">📊 8 Secondary</span> | <span class="skcs-multi">🔀 5 Multi</span> | <span class="skcs-same">🎯 5 Same Match</span> | <span class="skcs-acca">🔥 3 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sun (Balanced Coverage):</strong>
+        <span class="skcs-direct">⚽ 12 Direct</span> | <span class="skcs-secondary">📊 7 Secondary</span> | <span class="skcs-multi">🔀 4 Multi</span> | <span class="skcs-same">🎯 4 Same Match</span> | <span class="skcs-acca">🔥 2 x 6-Match ACCA</span>
+      </li>
+    </ul>
+    <div class="skcs-chatbot">Chatbot Access: 2 Requests / Day</div>
+    <button class="core-btn" onclick="selectPlan('core_4day_sprint')">Select Plan</button>
+  </div>
+
+  <!-- Core 9-Day -->
+  <div class="card" style="border: 2px solid #22c55e;">
+    <h3>9-Day Run ⭐</h3>
+    <div class="price">£7.99</div>
+    <ul class="skcs-list">
+      <li><strong>Mon-Tue (Enhanced Focus):</strong>
+        <span class="skcs-direct">⚽ 8 Direct</span> | <span class="skcs-secondary">📊 5 Secondary</span> | <span class="skcs-multi">🔀 3 Multi</span> | <span class="skcs-same">🎯 3 Same Match</span> | <span class="skcs-acca">🔥 1 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Wed-Thu (Deep Coverage):</strong>
+        <span class="skcs-direct">⚽ 10 Direct</span> | <span class="skcs-secondary">📊 6 Secondary</span> | <span class="skcs-multi">🔀 4 Multi</span> | <span class="skcs-same">🎯 3 Same Match</span> | <span class="skcs-acca">🔥 2 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Fri (Pro Mix):</strong>
+        <span class="skcs-direct">⚽ 12 Direct</span> | <span class="skcs-secondary">📊 8 Secondary</span> | <span class="skcs-multi">🔀 4 Multi</span> | <span class="skcs-same">🎯 4 Same Match</span> | <span class="skcs-acca">🔥 2 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sat (Max Volume):</strong>
+        <span class="skcs-direct">⚽ 18 Direct</span> | <span class="skcs-secondary">📊 10 Secondary</span> | <span class="skcs-multi">🔀 6 Multi</span> | <span class="skcs-same">🎯 6 Same Match</span> | <span class="skcs-acca">🔥 4 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sun (Elite Balanced):</strong>
+        <span class="skcs-direct">⚽ 14 Direct</span> | <span class="skcs-secondary">📊 9 Secondary</span> | <span class="skcs-multi">🔀 5 Multi</span> | <span class="skcs-same">🎯 5 Same Match</span> | <span class="skcs-acca">🔥 3 x 6-Match ACCA</span>
+      </li>
+    </ul>
+    <div class="skcs-chatbot">Chatbot Access: 5 Requests / Day</div>
+    <button class="core-btn" onclick="selectPlan('core_9day_run')">Select Plan</button>
+  </div>
+
+  <!-- Core 14-Day -->
+  <div class="card">
+    <h3>14-Day Pro</h3>
+    <div class="price">£11.99</div>
+    <ul class="skcs-list">
+      <li><strong>Mon-Tue (Pro Volume):</strong>
+        <span class="skcs-direct">⚽ 9 Direct</span> | <span class="skcs-secondary">📊 6 Secondary</span> | <span class="skcs-multi">🔀 4 Multi</span> | <span class="skcs-same">🎯 4 Same Match</span> | <span class="skcs-acca">🔥 2 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Wed-Thu (Midweek Max):</strong>
+        <span class="skcs-direct">⚽ 12 Direct</span> | <span class="skcs-secondary">📊 8 Secondary</span> | <span class="skcs-multi">🔀 5 Multi</span> | <span class="skcs-same">🎯 4 Same Match</span> | <span class="skcs-acca">🔥 2 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Fri (Expert Selection):</strong>
+        <span class="skcs-direct">⚽ 15 Direct</span> | <span class="skcs-secondary">📊 10 Secondary</span> | <span class="skcs-multi">🔀 5 Multi</span> | <span class="skcs-same">🎯 5 Same Match</span> | <span class="skcs-acca">🔥 3 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sat (Global Coverage):</strong>
+        <span class="skcs-direct">⚽ 22 Direct</span> | <span class="skcs-secondary">📊 12 Secondary</span> | <span class="skcs-multi">🔀 8 Multi</span> | <span class="skcs-same">🎯 8 Same Match</span> | <span class="skcs-acca">🔥 5 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sun (Pro Finish):</strong>
+        <span class="skcs-direct">⚽ 18 Direct</span> | <span class="skcs-secondary">📊 11 Secondary</span> | <span class="skcs-multi">🔀 6 Multi</span> | <span class="skcs-same">🎯 6 Same Match</span> | <span class="skcs-acca">🔥 3 x 6-Match ACCA</span>
+      </li>
+    </ul>
+    <div class="skcs-chatbot">Chatbot Access: 10 Requests / Day</div>
+    <button class="core-btn" onclick="selectPlan('core_14day_pro')">Select Plan</button>
+  </div>
+
+  <!-- Core 30-Day -->
+  <div class="card">
+    <h3>30-Day Limitless</h3>
+    <div class="price">£34.99</div>
+    <ul class="skcs-list">
+      <li><strong>Mon-Tue (Max Core):</strong>
+        <span class="skcs-direct">⚽ 10 Direct</span> | <span class="skcs-secondary">📊 8 Secondary</span> | <span class="skcs-multi">🔀 5 Multi</span> | <span class="skcs-same">🎯 5 Same Match</span> | <span class="skcs-acca">🔥 3 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Wed-Thu (Midweek Elite):</strong>
+        <span class="skcs-direct">⚽ 15 Direct</span> | <span class="skcs-secondary">📊 10 Secondary</span> | <span class="skcs-multi">🔀 7 Multi</span> | <span class="skcs-same">🎯 6 Same Match</span> | <span class="skcs-acca">🔥 4 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Fri (Limitless Mix):</strong>
+        <span class="skcs-direct">⚽ 20 Direct</span> | <span class="skcs-secondary">📊 12 Secondary</span> | <span class="skcs-multi">🔀 8 Multi</span> | <span class="skcs-same">🎯 8 Same Match</span> | <span class="skcs-acca">🔥 5 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sat (Absolute Max):</strong>
+        <span class="skcs-direct">⚽ 30 Direct</span> | <span class="skcs-secondary">📊 15 Secondary</span> | <span class="skcs-multi">🔀 10 Multi</span> | <span class="skcs-same">🎯 10 Same Match</span> | <span class="skcs-acca">🔥 8 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sun (Full Coverage):</strong>
+        <span class="skcs-direct">⚽ 25 Direct</span> | <span class="skcs-secondary">📊 14 Secondary</span> | <span class="skcs-multi">🔀 9 Multi</span> | <span class="skcs-same">🎯 9 Same Match</span> | <span class="skcs-acca">🔥 6 x 6-Match ACCA</span>
+      </li>
+    </ul>
+    <div class="skcs-chatbot">Chatbot Access: 20 Requests / Day</div>
+    <button class="core-btn" onclick="selectPlan('core_30day_limitless')">Select Plan</button>
+  </div>
+
+</div>
+
+<!-- ELITE -->
+<div id="elitePlans" class="grid" style="display:none;">
+
+  <!-- Elite 4-Day -->
+  <div class="card">
+    <h3>4-Day Deep Dive</h3>
+    <div class="price">£7.99</div>
+    <ul class="skcs-list">
+      <li><strong>Mon-Tue (Deep Analysis):</strong>
+        <span class="skcs-direct">⚽ 8 Direct</span> | <span class="skcs-secondary">📊 5 Secondary</span> | <span class="skcs-multi">🔀 3 Multi</span> | <span class="skcs-same">🎯 3 Same Match</span> | <span class="skcs-acca">🔥 1 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Wed-Thu (Elite Focus):</strong>
+        <span class="skcs-direct">⚽ 10 Direct</span> | <span class="skcs-secondary">📊 7 Secondary</span> | <span class="skcs-multi">🔀 4 Multi</span> | <span class="skcs-same">🎯 3 Same Match</span> | <span class="skcs-acca">🔥 2 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Fri (Deep Strike):</strong>
+        <span class="skcs-direct">⚽ 14 Direct</span> | <span class="skcs-secondary">📊 8 Secondary</span> | <span class="skcs-multi">🔀 5 Multi</span> | <span class="skcs-same">🎯 5 Same Match</span> | <span class="skcs-acca">🔥 3 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sat (Max Confidence):</strong>
+        <span class="skcs-direct">⚽ 20 Direct</span> | <span class="skcs-secondary">📊 12 Secondary</span> | <span class="skcs-multi">🔀 8 Multi</span> | <span class="skcs-same">🎯 8 Same Match</span> | <span class="skcs-acca">🔥 5 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sun (Deep Balance):</strong>
+        <span class="skcs-direct">⚽ 16 Direct</span> | <span class="skcs-secondary">📊 10 Secondary</span> | <span class="skcs-multi">🔀 6 Multi</span> | <span class="skcs-same">🎯 6 Same Match</span> | <span class="skcs-acca">🔥 4 x 6-Match ACCA</span>
+      </li>
+    </ul>
+    <div class="skcs-chatbot">Chatbot: 10 Requests / Day</div>
+    <button class="elite-btn" onclick="selectPlan('elite_4day_deep_dive')">Select Plan</button>
+  </div>
+
+  <!-- Elite 9-Day -->
+  <div class="card" style="border: 2px solid #3b82f6;">
+    <h3>9-Day Deep Strike ⭐</h3>
+    <div class="price">£11.99</div>
+    <ul class="skcs-list">
+      <li><strong>Mon-Tue (Strike Volume):</strong>
+        <span class="skcs-direct">⚽ 10 Direct</span> | <span class="skcs-secondary">📊 7 Secondary</span> | <span class="skcs-multi">🔀 4 Multi</span> | <span class="skcs-same">🎯 4 Same Match</span> | <span class="skcs-acca">🔥 2 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Wed-Thu (Deep Intelligence):</strong>
+        <span class="skcs-direct">⚽ 14 Direct</span> | <span class="skcs-secondary">📊 9 Secondary</span> | <span class="skcs-multi">🔀 6 Multi</span> | <span class="skcs-same">🎯 5 Same Match</span> | <span class="skcs-acca">🔥 3 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Fri (Expert Strike):</strong>
+        <span class="skcs-direct">⚽ 18 Direct</span> | <span class="skcs-secondary">📊 11 Secondary</span> | <span class="skcs-multi">🔀 7 Multi</span> | <span class="skcs-same">🎯 7 Same Match</span> | <span class="skcs-acca">🔥 4 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sat (Strike Max):</strong>
+        <span class="skcs-direct">⚽ 28 Direct</span> | <span class="skcs-secondary">📊 15 Secondary</span> | <span class="skcs-multi">🔀 10 Multi</span> | <span class="skcs-same">🎯 10 Same Match</span> | <span class="skcs-acca">🔥 7 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sun (Elite Finish):</strong>
+        <span class="skcs-direct">⚽ 22 Direct</span> | <span class="skcs-secondary">📊 13 Secondary</span> | <span class="skcs-multi">🔀 8 Multi</span> | <span class="skcs-same">🎯 8 Same Match</span> | <span class="skcs-acca">🔥 5 x 6-Match ACCA</span>
+      </li>
+    </ul>
+    <div class="skcs-chatbot">Chatbot: 25 Requests / Day</div>
+    <button class="elite-btn" onclick="selectPlan('elite_9day_deep_strike')">Select Plan</button>
+  </div>
+
+  <!-- Elite 14-Day -->
+  <div class="card">
+    <h3>14-Day Deep Pro</h3>
+    <div class="price">£15.99</div>
+    <ul class="skcs-list">
+      <li><strong>Mon-Tue (Pro Intelligence):</strong>
+        <span class="skcs-direct">⚽ 12 Direct</span> | <span class="skcs-secondary">📊 9 Secondary</span> | <span class="skcs-multi">🔀 6 Multi</span> | <span class="skcs-same">🎯 6 Same Match</span> | <span class="skcs-acca">🔥 3 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Wed-Thu (Deep Coverage):</strong>
+        <span class="skcs-direct">⚽ 18 Direct</span> | <span class="skcs-secondary">📊 12 Secondary</span> | <span class="skcs-multi">🔀 8 Multi</span> | <span class="skcs-same">🎯 7 Same Match</span> | <span class="skcs-acca">🔥 4 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Fri (Elite Pro):</strong>
+        <span class="skcs-direct">⚽ 22 Direct</span> | <span class="skcs-secondary">📊 15 Secondary</span> | <span class="skcs-multi">🔀 10 Multi</span> | <span class="skcs-same">🎯 10 Same Match</span> | <span class="skcs-acca">🔥 6 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sat (Deep Pro Max):</strong>
+        <span class="skcs-direct">⚽ 35 Direct</span> | <span class="skcs-secondary">📊 20 Secondary</span> | <span class="skcs-multi">🔀 14 Multi</span> | <span class="skcs-same">🎯 14 Same Match</span> | <span class="skcs-acca">🔥 10 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sun (Ultimate Finish):</strong>
+        <span class="skcs-direct">⚽ 28 Direct</span> | <span class="skcs-secondary">📊 18 Secondary</span> | <span class="skcs-multi">🔀 12 Multi</span> | <span class="skcs-same">🎯 12 Same Match</span> | <span class="skcs-acca">🔥 8 x 6-Match ACCA</span>
+      </li>
+    </ul>
+    <div class="skcs-chatbot">Chatbot: 50 Requests / Day</div>
+    <button class="elite-btn" onclick="selectPlan('elite_14day_deep_pro')">Select Plan</button>
+  </div>
+
+  <!-- Elite 30-Day -->
+  <div class="card">
+    <h3>30-Day Deep VIP</h3>
+    <div class="price">£59.99</div>
+    <ul class="skcs-list">
+      <li><strong>Mon-Tue (VIP Status):</strong>
+        <span class="skcs-direct">⚽ 15 Direct</span> | <span class="skcs-secondary">📊 12 Secondary</span> | <span class="skcs-multi">🔀 8 Multi</span> | <span class="skcs-same">🎯 8 Same Match</span> | <span class="skcs-acca">🔥 5 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Wed-Thu (Deep VIP):</strong>
+        <span class="skcs-direct">⚽ 22 Direct</span> | <span class="skcs-secondary">📊 15 Secondary</span> | <span class="skcs-multi">🔀 10 Multi</span> | <span class="skcs-same">🎯 10 Same Match</span> | <span class="skcs-acca">🔥 7 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Fri (Ultimate VIP):</strong>
+        <span class="skcs-direct">⚽ 30 Direct</span> | <span class="skcs-secondary">📊 18 Secondary</span> | <span class="skcs-multi">🔀 12 Multi</span> | <span class="skcs-same">🎯 12 Same Match</span> | <span class="skcs-acca">🔥 10 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sat (VIP Absolute Max):</strong>
+        <span class="skcs-direct">⚽ 45 Direct</span> | <span class="skcs-secondary">📊 25 Secondary</span> | <span class="skcs-multi">🔀 18 Multi</span> | <span class="skcs-same">🎯 18 Same Match</span> | <span class="skcs-acca">🔥 15 x 6-Match ACCA</span>
+      </li>
+      <li><strong>Sun (VIP Full Coverage):</strong>
+        <span class="skcs-direct">⚽ 35 Direct</span> | <span class="skcs-secondary">📊 22 Secondary</span> | <span class="skcs-multi">🔀 15 Multi</span> | <span class="skcs-same">🎯 15 Same Match</span> | <span class="skcs-acca">🔥 12 x 6-Match ACCA</span>
+      </li>
+    </ul>
+    <div class="skcs-chatbot">Chatbot: 150 Requests / Day</div>
+    <button class="elite-btn" onclick="selectPlan('elite_30day_deep_vip')">Select Plan</button>
+  </div>
+
+</div>
+
+</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+<script>
+const SUPABASE_URL = "https://ghzjntdvaptuxfpvhybb.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdoempudGR2YXB0dXhmcHZoeWJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDAzNzIsImV4cCI6MjA4NzgxNjM3Mn0.nWxOY0lDIDDvexELk9De2aEfPfM5iJjoaW91tbL7YQk";
+
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+function showCore(){
+  document.getElementById('corePlans').style.display='grid';
+  document.getElementById('elitePlans').style.display='none';
+  document.getElementById('tabCore').classList.add('active-core');
+  document.getElementById('tabElite').classList.remove('active-elite');
+}
+
+function showElite(){
+  document.getElementById('corePlans').style.display='none';
+  document.getElementById('elitePlans').style.display='grid';
+  document.getElementById('tabCore').classList.remove('active-core');
+  document.getElementById('tabElite').classList.add('active-elite');
+}
+
+async function selectPlan(tierId) {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  
+  if (!session || !session.user) {
+    alert("Please sign in or register first, then choose a plan.");
+    window.location.href = "login.html?next=subscription.html&register=1";
+    return;
+  }
+
+  const SKCS_BACKEND = window.API_BASE_URL || "https://skcsai.onrender.com";
+  const token = session.access_token;
+
+  try {
+    const res = await fetch(SKCS_BACKEND + "/api/select-plan", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+      },
+      body: JSON.stringify({ tier_id: tierId })
+    });
+
+    const data = await res.json();
+    
+    if (res.ok && data.success) {
+      alert(`✅ Plan activated: ${data.tier_name || tierId}\nExpires: ${new Date(data.expires_at || data.expiresAt).toLocaleDateString()}`);
+      window.location.href = "index.html";
+    } else if (data.requires_payment) {
+      alert(data.message || "Payment is not enabled yet. Your account must be on the server free-pass list (SKCS_FREE_PASS_EMAILS), or use staging mode (SKCS_SUBSCRIBE_OPEN).");
+    } else {
+      alert(data.error || "Failed to select plan. Please try again.");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Connection error. Please try again.");
+  }
+}
+
+function goBack() {
+  window.history.back();
+}
+
+// Initialize
+if (typeof checkSession === 'function') {
+  checkSession();
+}
+</script>
+
+</body>
+</html>
