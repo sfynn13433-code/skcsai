@@ -8,6 +8,7 @@ const rateLimit    = require('express-rate-limit');
 const cors         = require('cors');
 const morgan       = require('morgan');
 const path         = require('path');
+const { query }            = require('./db');
 const { requireRole }        = require('./utils/auth');
 const { upsertProfile }     = require('./database');
 const { getPlan }           = require('./config/subscriptionPlans');
@@ -182,6 +183,22 @@ function subscriptionGateForEmail(email) {
     return { allowed: false, isFreePass: false };
 }
 
+function getBillingStatus() {
+    const open = process.env.SKCS_SUBSCRIBE_OPEN === '1' || process.env.SKCS_SUBSCRIBE_OPEN === 'true';
+    const freePassCount = getFreePassEmailSet().size;
+
+    return {
+        billing_enabled: false,
+        subscription_open: open,
+        access_mode: open ? 'staging-open' : 'invite-only',
+        free_pass_configured: freePassCount > 0,
+        free_pass_count: freePassCount,
+        message: open
+            ? 'Billing is not enabled. Plans can still be activated in staging-open mode.'
+            : 'Billing is not enabled. Access is currently limited to approved accounts.'
+    };
+}
+
 /**
  * Writes plan to Postgres `profiles` so /api/user/predictions and JWT middleware work.
  */
@@ -255,6 +272,10 @@ app.post('/api/select-plan', requireSupabaseUser, async (req, res) => {
         console.error('SELECT PLAN ERROR:', err);
         res.status(500).json({ error: 'Failed to select plan' });
     }
+});
+
+app.get('/api/billing-status', (_req, res) => {
+    res.status(200).json(getBillingStatus());
 });
 
 // -------------------------------------------------

@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('crypto');
 const predictionOutcomes = require('../config/predictionOutcomes');
 const { scoreMatch } = require('./aiScoring');
 
@@ -7,9 +8,65 @@ function clamp(n, min, max) {
     return Math.max(min, Math.min(max, n));
 }
 
-function pickFromOutcomes(outcomes) {
-    // Placeholder deterministic pick: first outcome
-    return Array.isArray(outcomes) && outcomes.length ? outcomes[0] : null;
+function hashToUnit(seed) {
+    const hash = crypto.createHash('sha256').update(String(seed)).digest('hex').slice(0, 8);
+    return parseInt(hash, 16) / 0xFFFFFFFF;
+}
+
+function normalizeSport(sport) {
+    const key = String(sport || '').toLowerCase();
+    if (key === 'mma') return 'combat_sports';
+    if (key === 'formula1') return 'motorsport';
+    if (key === 'nfl') return 'american_football';
+    return key;
+}
+
+function pickFromOutcomes(outcomes, matchData, market, scoring) {
+    if (!Array.isArray(outcomes) || outcomes.length === 0) return null;
+
+    const winner = scoring?.winner === 'away' ? 'AWAY' : 'HOME';
+    const diff = Number(scoring?.confidence || 50) - 60;
+    const balanceSeed = hashToUnit(`${matchData?.match_id || matchData?.home_team || 'home'}:${market}`);
+
+    switch (String(market || '').toUpperCase()) {
+        case 'MATCH_RESULT':
+            if (diff < 6 && outcomes.includes('DRAW') && balanceSeed < 0.22) return 'DRAW';
+            return outcomes.includes(winner) ? winner : outcomes[0];
+        case 'MATCH_WINNER':
+        case 'WINNER':
+            return outcomes.includes(winner) ? winner : outcomes[0];
+        case 'DOUBLE_CHANCE':
+            return winner === 'HOME' ? '1X' : 'X2';
+        case 'BTTS':
+            return diff < 10 ? 'YES' : 'NO';
+        case 'OVER_UNDER_2_5':
+        case 'OVER_UNDER_1_5':
+        case 'TOTAL_POINTS':
+        case 'TOTAL_GOALS':
+        case 'TOTAL_RUNS':
+        case 'TOTAL_GAMES':
+        case 'CORNERS_OVER_UNDER':
+            return balanceSeed >= 0.45 ? 'OVER' : 'UNDER';
+        case 'HANDICAP':
+        case 'SPREAD':
+        case 'SET_HANDICAP':
+            return winner === 'HOME' ? outcomes[0] : (outcomes[1] || outcomes[0]);
+        case 'METHOD':
+            if (diff >= 18 && outcomes.includes('KO')) return 'KO';
+            if (diff >= 10 && outcomes.includes('DECISION')) return 'DECISION';
+            return outcomes.includes('SUBMISSION') ? 'SUBMISSION' : outcomes[0];
+        case 'SET_BETTING':
+        case 'MAP_SCORE':
+            return diff >= 12 ? outcomes[0] : (outcomes[1] || outcomes[0]);
+        case 'RACE_WINNER':
+            return outcomes[0];
+        case 'PODIUM':
+            return outcomes.includes('TOP_3') ? 'TOP_3' : outcomes[0];
+        case 'TOP_10':
+            return balanceSeed >= 0.3 ? 'YES' : 'NO';
+        default:
+            return outcomes[0];
+    }
 }
 
 function marketTypePenalty(type) {
@@ -34,7 +91,7 @@ function outcomeUniverseToLegacyMarket(sport, market) {
 }
 
 function scoreMarkets(matchData) {
-    const sport = String(matchData?.sport || '').toLowerCase();
+    const sport = normalizeSport(matchData?.sport);
     const sportConfig = predictionOutcomes.getMarketsBySport(sport);
     if (!sportConfig) return [];
 
@@ -48,9 +105,10 @@ function scoreMarkets(matchData) {
     const baseConfidence = typeof scoring?.confidence === 'number' ? scoring.confidence : 50;
 
     return sportConfig.markets.map((m) => {
-        const pick = pickFromOutcomes(m.outcomes);
+        const pick = pickFromOutcomes(m.outcomes, matchData, m.market, scoring);
         const penalty = marketTypePenalty(m.type);
-        const confidence = clamp(Math.round((baseConfidence - penalty) * 100) / 100, 0, 100);
+        const marketBias = hashToUnit(`${matchData?.match_id || matchData?.home_team || 'match'}:${m.market}`);
+        const confidence = clamp(Math.round((baseConfidence - penalty - (marketBias * 4 - 2)) * 100) / 100, 0, 100);
 
         return {
             market: m.market,
@@ -66,4 +124,3 @@ function scoreMarkets(matchData) {
 module.exports = {
     scoreMarkets
 };
-

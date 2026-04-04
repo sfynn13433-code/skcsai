@@ -204,6 +204,7 @@ function getPlanCapabilities(planId) {
     
     return {
         ...plan,
+        tiers: plan.tier === 'elite' ? ['deep'] : ['normal'],
         capabilities,
         daily_limits: Object.keys(BASELINE_CAPABILITIES.daily_limits).reduce((acc, day) => {
             acc[day] = calculateDailyAllocations(planId, day);
@@ -220,7 +221,8 @@ function filterPredictionsForPlan(predictions, planId) {
     const plan = getPlanCapabilities(planId);
     if (!plan) return [];
     
-    const dailyLimits = calculateDailyAllocations(planId, new Date().toLocaleLowerCase('en-US', { weekday: 'long' }));
+    const dayOfWeek = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    const dailyLimits = calculateDailyAllocations(planId, dayOfWeek);
     if (!dailyLimits) return [];
     
     let filtered = [...predictions];

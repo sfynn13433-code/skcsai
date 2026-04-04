@@ -889,11 +889,16 @@
     <!-- Scroll to top button -->
     <button id="scrollTopBtn" title="Go to top">⬆️</button>
 
+    <script src="js/config.js"></script>
     <!-- ========== REPLACED SCRIPT SECTION ========== -->
     <script>
-    // Configuration: Points to the Render backend
-    const SKCS_BACKEND = "https://skcsai-z8cd.onrender.com";
+    // Configuration: use shared frontend config first, with a safe fallback.
+    const SKCS_BACKEND = window.API_BASE_URL || "https://skcsai.onrender.com";
     let activeSport = 'football';
+
+    function getPredictionTiersForPlan(planId) {
+        return String(planId || '').includes('elite') ? ['deep'] : ['normal'];
+    }
 
     /**
      * Fetch Predictions
@@ -920,9 +925,10 @@
                 });
                 if (!res.ok) return [];
                 const rows = await res.json();
+                const allowedTiers = getPredictionTiersForPlan(userPlanId);
                 const filtered = (rows || []).filter(r => {
-                    const rowTier = (r.tier || 'normal').toString();
-                    if (rowTier !== tier) return false;
+                    const rowTier = String(r.tier || 'normal').toLowerCase();
+                    if (!allowedTiers.includes(rowTier)) return false;
                     const matches = Array.isArray(r.matches) ? r.matches : [];
                     return matches.some(m => String((m.sport || '')).toLowerCase().includes(String(sport).toLowerCase()));
                 });
@@ -953,8 +959,7 @@
                 const r2 = await fetch(urlN, {
                     method: 'GET',
                     headers: {
-                        'x-api-key': 'skcs_user_12345',
-                        'Content-Type': 'application/json'
+                        'x-api-key': 'skcs_user_12345'
                     }
                 });
                 let d2 = null;

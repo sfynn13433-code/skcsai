@@ -152,18 +152,17 @@ router.get('/', requireRole('user'), async (req, res) => {
                     SELECT
                         t.id,
                         t.name,
-                        t.logo,
-                        t.country,
-                        l.id AS league_id,
-                        l.name AS league_name,
-                        l.country AS league_country,
-                        l.season AS league_season,
-                        s.id AS sport_id,
-                        s.slug AS sport_slug,
-                        s.name AS sport_name
+                        NULL::text AS logo,
+                        t.location AS country,
+                        NULL::int AS league_id,
+                        NULL::text AS league_name,
+                        NULL::text AS league_country,
+                        NULL::text AS league_season,
+                        s.sport_key AS sport_id,
+                        s.sport_key AS sport_slug,
+                        s.title AS sport_name
                     FROM teams t
-                    LEFT JOIN leagues l ON l.id = t.league_id
-                    LEFT JOIN sports s ON s.id = l.sport_id
+                    LEFT JOIN sports s ON s.sport_key = t.sport_key
                     WHERE LOWER(t.name) = ANY($1::text[])
                     `,
                     [teamNames]
@@ -178,7 +177,7 @@ router.get('/', requireRole('user'), async (req, res) => {
                 if (teamIds.length > 0) {
                     const playersRes = await query(
                         `
-                        SELECT id, team_id, name, age, number, position, photo
+                        SELECT id, team_id, full_name AS name, NULL::int AS age, NULL::int AS number, position, NULL::text AS photo
                         FROM players
                         WHERE team_id = ANY($1::int[])
                         ORDER BY team_id, name ASC

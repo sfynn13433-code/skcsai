@@ -43,17 +43,22 @@ function reEvaluatePredictions(predictions) {
             continue;
         }
 
-        // Re-score markets using placeholder scoring, then decide whether to keep/switch/remove
+        // Re-score markets using the deterministic market engine, then decide whether to keep/switch/remove.
         const matchData = p?.matchData || p?.match || null;
         const rescored = matchData ? scoreMarkets(matchData) : [];
 
-        // If confidence < 65 -> remove OR fallback (placeholder: attempt fallback to best market >= 65)
         const currentConfidence = typeof selection?.confidence === 'number'
             ? selection.confidence
             : (legs.length ? legs.reduce((acc, l) => acc + (l.confidence || 0), 0) / legs.length : null);
+        const primaryLeg = legs[0] || null;
+        const sameMarketAlternative = primaryLeg
+            ? rescored
+                .filter(m => String(m.market || '').toUpperCase() === String(primaryLeg.market || '').toUpperCase())
+                .sort((a, b) => b.confidence - a.confidence)[0]
+            : null;
 
         if (typeof currentConfidence === 'number' && currentConfidence < 65) {
-            const best = rescored
+            const best = sameMarketAlternative || rescored
                 .filter(m => typeof m.confidence === 'number' && m.confidence >= 65)
                 .sort((a, b) => b.confidence - a.confidence)[0];
 
@@ -70,8 +75,7 @@ function reEvaluatePredictions(predictions) {
             continue;
         }
 
-        // If better option exists -> replace (placeholder: pick higher confidence by +5 margin)
-        const best = rescored
+        const best = sameMarketAlternative || rescored
             .filter(m => typeof m.confidence === 'number')
             .sort((a, b) => b.confidence - a.confidence)[0];
 
@@ -94,4 +98,3 @@ function reEvaluatePredictions(predictions) {
 module.exports = {
     reEvaluatePredictions
 };
-
