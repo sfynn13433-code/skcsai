@@ -9,6 +9,18 @@
 <style>
 body { font-family: Arial, sans-serif; background:#0f172a; color:white; margin:0; padding:0; }
 .container { max-width:1200px; margin:auto; padding:20px; }
+.status-banner {
+  margin: 0 auto 20px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(59,130,246,0.14);
+  border: 1px solid rgba(96,165,250,0.45);
+  color: #dbeafe;
+  line-height: 1.5;
+}
+.status-banner strong {
+  color: #ffffff;
+}
 
 h1 { text-align:center; color:#fff; margin-bottom:30px; font-weight: bold; }
 
@@ -155,6 +167,10 @@ button:hover { opacity: 0.9; }
 <div class="tabs">
   <div id="tabCore" class="tab active-core" onclick="showCore()">🟢 SKCS Core</div>
   <div id="tabElite" class="tab" onclick="showElite()">🔵 SKCS Elite</div>
+</div>
+
+<div id="billingBanner" class="status-banner">
+  <strong>Plan access mode:</strong> Checking current billing status...
 </div>
 
 <div class="skcs-focus-bar"> 
@@ -383,13 +399,14 @@ button:hover { opacity: 0.9; }
 
 </div>
 
-  <script src="js/supabase-bundle.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
 <script>
 const SUPABASE_URL = "https://ghzjntdvaptuxfpvhybb.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdoempudGR2YXB0dXhmcHZoeWJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDAzNzIsImV4cCI6MjA4NzgxNjM3Mn0.nWxOY0lDIDDvexELk9De2aEfPfM5iJjoaW91tbL7YQk";
 
-const supabaseClient = window.SupabaseClient.init();
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let billingStatus = null;
 
 function showCore(){
   document.getElementById('corePlans').style.display='grid';
@@ -403,6 +420,33 @@ function showElite(){
   document.getElementById('elitePlans').style.display='grid';
   document.getElementById('tabCore').classList.remove('active-core');
   document.getElementById('tabElite').classList.add('active-elite');
+}
+
+async function loadBillingStatus() {
+  const banner = document.getElementById('billingBanner');
+  try {
+    const backend = window.API_BASE_URL || "https://skcsai.onrender.com";
+    const res = await fetch(backend + "/api/billing-status");
+    billingStatus = await res.json();
+
+    if (!banner || !billingStatus) return;
+
+    if (billingStatus.billing_enabled) {
+      banner.innerHTML = "<strong>Billing live:</strong> Plans can be purchased normally.";
+      return;
+    }
+
+    if (billingStatus.subscription_open) {
+      banner.innerHTML = "<strong>Staging-open mode:</strong> Billing is not live yet, but plan activation is currently enabled for testing.";
+      return;
+    }
+
+    banner.innerHTML = "<strong>Invite-only access:</strong> Billing is not live yet. Approved accounts can still receive access, but plan buttons do not process real payments.";
+  } catch (err) {
+    if (banner) {
+      banner.innerHTML = "<strong>Billing status unavailable:</strong> Plan activation may still work for approved accounts, but checkout is not live.";
+    }
+  }
 }
 
 async function selectPlan(tierId) {
@@ -428,12 +472,12 @@ async function selectPlan(tierId) {
     });
 
     const data = await res.json();
-    
+
     if (res.ok && data.success) {
       alert(`✅ Plan activated: ${data.tier_name || tierId}\nExpires: ${new Date(data.expires_at || data.expiresAt).toLocaleDateString()}`);
       window.location.href = "index.html";
     } else if (data.requires_payment) {
-      alert(data.message || "Payment is not enabled yet. Your account must be on the server free-pass list (SKCS_FREE_PASS_EMAILS), or use staging mode (SKCS_SUBSCRIBE_OPEN).");
+      alert(data.message || "Billing is not live yet. Access is currently limited to approved accounts or staging mode.");
     } else {
       alert(data.error || "Failed to select plan. Please try again.");
     }
@@ -451,6 +495,7 @@ function goBack() {
 if (typeof checkSession === 'function') {
   checkSession();
 }
+loadBillingStatus();
 </script>
 
 </body>
