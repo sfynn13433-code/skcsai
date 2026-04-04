@@ -147,100 +147,48 @@ const SUBSCRIPTION_TIERS = {
     'elite_30day_deep_vip': { name: '30-Day Deep VIP', tier: 'elite', duration_days: 30, price: 59.99 }
 };
 
-// Test emails that bypass payment (merge with SKCS_FREE_PASS_EMAILS on the server)
+// Test emails that bypass payment
 const TEST_EMAILS = ['sfynn13433@gmail.com', 'sfynn450@gmail.com'];
 
-function getFreePassEmailSet() {
-    const fromEnv = (process.env.SKCS_FREE_PASS_EMAILS || '')
-        .split(',')
-        .map((e) => e.trim().toLowerCase())
-        .filter(Boolean);
-    const hardcoded = TEST_EMAILS.map((e) => e.toLowerCase());
-    return new Set([...fromEnv, ...hardcoded]);
-}
-
-/** Payment gate: open mode for staging, or free-pass list, otherwise 402 until Stripe exists. */
-function subscriptionGateForEmail(email) {
-    const open = process.env.SKCS_SUBSCRIBE_OPEN === '1' || process.env.SKCS_SUBSCRIBE_OPEN === 'true';
-    if (open) {
-        return { allowed: true, isFreePass: false };
-    }
-    const em = String(email || '').toLowerCase().trim();
-    if (getFreePassEmailSet().has(em)) {
-        return { allowed: true, isFreePass: true };
-    }
-    return { allowed: false, isFreePass: false };
-}
-
-/**
- * Writes plan to Postgres `profiles` so /api/user/predictions and JWT middleware work.
- */
-async function tryActivatePlan(req, planId) {
-    if (!req.user?.id) {
-        return { status: 401, body: { error: 'Access token required' } };
-    }
-    if (!planId || typeof planId !== 'string') {
-        return { status: 400, body: { error: 'planId is required' } };
-    }
-
-    const plan = getPlan(planId);
-    if (!plan) {
-        return { status: 400, body: { error: 'Invalid plan selected' } };
-    }
-
-    const gate = subscriptionGateForEmail(req.user.email);
-    if (!gate.allowed) {
-        return {
-            status: 402,
-            body: {
-                success: false,
-                requires_payment: true,
-                message:
-                    'Payment is not enabled yet. Ask the admin to add your email to SKCS_FREE_PASS_EMAILS, or set SKCS_SUBSCRIBE_OPEN=true for staging.',
-                planId
-            }
-        };
-    }
-
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + plan.days);
-
-    const tierMeta = SUBSCRIPTION_TIERS[planId];
-
-    await upsertProfile({
-        id: req.user.id,
-        email: req.user.email,
-        subscription_status: 'active',
-        is_test_user: gate.isFreePass,
-        plan_id: planId,
-        plan_tier: plan.tier,
-        plan_expires_at: expiresAt
-    });
-
-    return {
-        status: 200,
-        body: {
-            success: true,
-            planId,
-            tier: plan.tier,
-            tier_id: planId,
-            tier_name: tierMeta?.name || planId,
-            expiresAt,
-            expires_at: expiresAt.toISOString(),
-            is_test_user: gate.isFreePass
-        }
-    };
-}
-
 // -------------------------------------------------
-//  Select Plan — requires Supabase session (same as subscribe)
+//  Select Plan endpoint (with auth bypass for test emails)
 // -------------------------------------------------
-app.post('/api/select-plan', requireSupabaseUser, async (req, res) => {
+app.post('/api/select-plan', async (req, res) => {
     try {
-        const tier_id = req.body?.tier_id;
-        const result = await tryActivatePlan(req, tier_id);
-        const status = result.status === 200 ? 201 : result.status;
-        res.status(status).json(result.body);
+        const { user_email, tier_id } = req.body || {};
+
+        if (!user_email || !tier_id) {
+            return res.status(400).json({ error: 'user_email and tier_id required' });
+        }
+
+        const tier = SUBSCRIPTION_TIERS[tier_id];
+        if (!tier) {
+            return res.status(400).json({ error: 'Invalid tier ID' });
+        }
+
+        // Check if user is in test email list (bypass payment)
+        if (TEST_EMAILS.includes(user_email)) {
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + tier.duration_days);
+
+            return res.status(201).json({
+                success: true,
+                message: `Access granted to ${tier.name}`,
+                tier_id: tier_id,
+                tier_name: tier.name,
+                expires_at: expiresAt.toISOString(),
+                is_test_user: true
+            });
+        }
+
+        // For non-test users, payment is required
+        return res.status(402).json({
+            success: false,
+            requires_payment: true,
+            message: 'Payment processing not yet implemented',
+            tier_id: tier_id
+        });
+
     } catch (err) {
         console.error('SELECT PLAN ERROR:', err);
         res.status(500).json({ error: 'Failed to select plan' });
@@ -405,13 +353,44 @@ app.get('/api/accuracy', async (req, res) => {
 });
 
 // -------------------------------------------------
-//  Subscription endpoint (writes profiles; same gate as select-plan)
+//  Subscription endpoint (legacy)
 // -------------------------------------------------
 app.post('/api/subscribe', requireSupabaseUser, async (req, res) => {
     try {
-        const { planId } = req.body || {};
-        const result = await tryActivatePlan(req, planId);
-        res.status(result.status).json(result.body);
+        if (!req.user?.id) {
+            return res.status(401).json({ error: 'Access token required' });
+        }
+
+        const { planId, email } = req.body || {};
+
+        if (!planId || typeof planId !== 'string') {
+            return res.status(400).json({ error: 'planId is required' });
+        }
+
+        const plan = getPlan(planId);
+        if (!plan) {
+            return res.status(400).json({ error: 'Invalid plan selected' });
+        }
+
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + plan.days);
+
+        await upsertProfile({
+            id: req.user.id,
+            email: typeof email === 'string' ? email : null,
+            subscription_status: 'active',
+            is_test_user: false,
+            plan_id: planId,
+            plan_tier: plan.tier,
+            plan_expires_at: expiresAt
+        });
+
+        res.status(200).json({
+            success: true,
+            planId,
+            tier: plan.tier,
+            expiresAt
+        });
     } catch (err) {
         console.error('SUBSCRIBE ERROR:', err);
         res.status(500).json({ error: 'Subscription failed' });
@@ -450,85 +429,6 @@ app.get('/api/health-check', async (req, res) => {
     };
     console.log('[HEALTH CHECK] requested');
     res.json(health);
-});
-
-// -------------------------------------------------
-//  Master LLM Keys Diagnostic
-// -------------------------------------------------
-app.get('/api/test-llm-keys', async (req, res) => {
-    const providers = [
-        {
-            name: "OpenAI",
-            key: process.env.OPENAI_KEY,
-            url: "https://api.openai.com/v1/models",
-            headers: { "Authorization": `Bearer ${process.env.OPENAI_KEY}` }
-        },
-        {
-            name: "Groq",
-            key: process.env.GROQ_KEY,
-            url: "https://api.groq.com/openai/v1/models",
-            headers: { "Authorization": `Bearer ${process.env.GROQ_KEY}` }
-        },
-        {
-            name: "DeepSeek",
-            key: process.env.DEEPSEEK_API_KEY,
-            url: "https://api.deepseek.com/models",
-            headers: { "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}` }
-        },
-        {
-            name: "OpenRouter",
-            key: process.env.OPENROUTER_KEY,
-            url: "https://openrouter.ai/api/v1/models",
-            headers: { "Authorization": `Bearer ${process.env.OPENROUTER_KEY}` }
-        },
-        {
-            name: "Gemini",
-            key: process.env.GEMINI_API_KEY,
-            url: `https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`,
-            headers: {}
-        }
-    ];
-
-    const results = {};
-
-    for (const provider of providers) {
-        if (!provider.key) {
-            results[provider.name] = "❌ Key Missing in Render Environment";
-            continue;
-        }
-
-        try {
-            const response = await fetch(provider.url, {
-                method: "GET",
-                headers: provider.headers,
-                timeout: 5000
-            });
-
-            if (response.ok) {
-                results[provider.name] = "✅ Active & Verified";
-            } else {
-                results[provider.name] = `⚠️ API Rejected Key (Status: ${response.status})`;
-            }
-        } catch (error) {
-            results[provider.name] = `🚨 Network/Fetch Error: ${error.message}`;
-        }
-    }
-
-    // Check for additional keys
-    const additionalKeys = {
-        "Cohere": process.env.COHERE_API_KEY ? "✅ Key Present" : "❌ Missing",
-        "HuggingFace": process.env.HUGGINGFACE_KEY ? "✅ Key Present" : "❌ Missing",
-        "LongCat": process.env.LONG_CAT_KEY ? "✅ Key Present" : "❌ Missing",
-        "ConsoleAPI": process.env.CONSOLEAPI_KEY ? "✅ Key Present" : "❌ Missing"
-    };
-
-    Object.assign(results, additionalKeys);
-
-    res.status(200).json({
-        message: "SKCS AI Master Key Diagnostic Run Complete",
-        timestamp: new Date().toISOString(),
-        report: results
-    });
 });
 
 // -------------------------------------------------

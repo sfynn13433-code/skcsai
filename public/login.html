@@ -147,7 +147,7 @@
 
         <div class="tab-buttons">
             <button id="loginTab" class="tab-btn active">Login</button>
-            <button id="registerTab" class="tab-btn">Register</button>
+            <button id="registerTab" class="tab-btn" style="display:none;">Register</button>
         </div>
 
         <!-- Login Form -->
@@ -165,7 +165,7 @@
         </div>
 
         <!-- Register Form -->
-        <div id="registerForm" class="form">
+        <div id="registerForm" class="form" style="display:none;">
             <div class="form-group">
                 <label for="registerEmail">Email</label>
                 <input type="email" id="registerEmail" placeholder="your@email.com" autocomplete="email" required>
@@ -206,25 +206,7 @@
             registerForm.classList.remove('active');
         });
 
-        registerTab.addEventListener('click', () => {
-            registerTab.classList.add('active');
-            loginTab.classList.remove('active');
-            registerForm.classList.add('active');
-            loginForm.classList.remove('active');
-        });
-
-        (function applyQueryParams() {
-            try {
-                const params = new URLSearchParams(window.location.search);
-                if (params.get('register') === '1') {
-                    registerTab.click();
-                }
-                const next = params.get('next');
-                if (next) {
-                    sessionStorage.setItem('skcs_after_auth', next);
-                }
-            } catch (e) { /* ignore */ }
-        })();
+        // Registration is disabled
 
         // Login handler
         document.getElementById('loginBtn').addEventListener('click', async () => {
@@ -262,9 +244,7 @@
                     return;
                 }
 
-                const dest = sessionStorage.getItem('skcs_after_auth') || 'index.html';
-                sessionStorage.removeItem('skcs_after_auth');
-                window.location.href = dest;
+                window.location.href = 'index.html';
             } catch (error) {
                 messageDiv.className = 'message error';
                 messageDiv.textContent = 'Connection error';
@@ -273,54 +253,9 @@
 
         // Register handler
         document.getElementById('registerBtn').addEventListener('click', async () => {
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
             const messageDiv = document.getElementById('registerMessage');
-
-            if (!email || !password) {
-                messageDiv.className = 'message error';
-                messageDiv.textContent = 'Please fill in all fields';
-                return;
-            }
-            if (password.length < 6) {
-                messageDiv.className = 'message error';
-                messageDiv.textContent = 'Password must be at least 6 characters';
-                return;
-            }
-
-            try {
-                if (!supabaseClient) {
-                    messageDiv.className = 'message error';
-                    messageDiv.textContent = 'Supabase Auth is not configured.';
-                    return;
-                }
-
-                const { data, error } = await supabaseClient.auth.signUp({
-                    email,
-                    password
-                });
-
-                if (error) {
-                    messageDiv.className = 'message error';
-                    messageDiv.textContent = error.message || 'Registration failed';
-                    return;
-                }
-
-                if (data?.session) {
-                    messageDiv.className = 'message success';
-                    messageDiv.textContent = 'Account created. Redirecting…';
-                    const dest = sessionStorage.getItem('skcs_after_auth') || 'index.html';
-                    sessionStorage.removeItem('skcs_after_auth');
-                    window.location.href = dest;
-                    return;
-                }
-
-                messageDiv.className = 'message success';
-                messageDiv.textContent = 'Check your email to confirm your account, then sign in.';
-            } catch (error) {
-                messageDiv.className = 'message error';
-                messageDiv.textContent = 'Connection error';
-            }
+            messageDiv.className = 'message error';
+            messageDiv.textContent = 'Registration is disabled.';
         });
     </script>
 </body>

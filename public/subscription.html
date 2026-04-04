@@ -409,31 +409,34 @@ async function selectPlan(tierId) {
   const { data: { session } } = await supabaseClient.auth.getSession();
   
   if (!session || !session.user) {
-    alert("Please sign in or register first, then choose a plan.");
-    window.location.href = "login.html?next=subscription.html&register=1";
+    alert("Please log in to select a plan.");
+    window.location.href = "login.html";
     return;
   }
 
-  const SKCS_BACKEND = window.API_BASE_URL || "https://skcsai.onrender.com";
-  const token = session.access_token;
+  const userEmail = session.user.email;
+  const SKCS_BACKEND = "https://skcsai.onrender.com";
 
   try {
     const res = await fetch(SKCS_BACKEND + "/api/select-plan", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer " + token
+        "x-api-key": "skcs_user_12345"
       },
-      body: JSON.stringify({ tier_id: tierId })
+      body: JSON.stringify({
+        user_email: userEmail,
+        tier_id: tierId
+      })
     });
 
     const data = await res.json();
     
-    if (res.ok && data.success) {
-      alert(`✅ Plan activated: ${data.tier_name || tierId}\nExpires: ${new Date(data.expires_at || data.expiresAt).toLocaleDateString()}`);
+    if (data.success) {
+      alert(`✅ Plan activated: ${data.tier_name}\nExpires: ${new Date(data.expires_at).toLocaleDateString()}`);
       window.location.href = "index.html";
     } else if (data.requires_payment) {
-      alert(data.message || "Payment is not enabled yet. Your account must be on the server free-pass list (SKCS_FREE_PASS_EMAILS), or use staging mode (SKCS_SUBSCRIBE_OPEN).");
+      alert("Payment processing coming soon. For now, use test email: sfynn13433@gmail.com");
     } else {
       alert(data.error || "Failed to select plan. Please try again.");
     }

@@ -4,23 +4,11 @@ const express = require('express');
 const { query } = require('../db');
 const { rebuildFinalOutputs } = require('../services/aiPipeline');
 const { requireRole } = require('../utils/auth');
-const config = require('../config');
-const { createClient } = require('@supabase/supabase-js');
 
 const router = express.Router();
 
 const SPORT_FILTER_MAP = {
-    football: [
-        'football',
-        'soccer_epl',
-        'soccer_england_efl_cup',
-        'soccer_uefa_champs_league',
-        'soccer_spain_la_liga',
-        'soccer_germany_bundesliga',
-        'soccer_italy_serie_a',
-        'soccer_france_ligue_one',
-        'soccer_uefa_europa_league'
-    ],
+    football: ['football', 'soccer_epl', 'soccer_england_efl_cup', 'soccer_uefa_champs_league'],
     basketball: ['basketball', 'nba', 'basketball_nba', 'basketball_euroleague'],
     nfl: ['nfl', 'american_football', 'americanfootball_nfl'],
     rugby: ['rugby', 'rugbyunion_international', 'rugbyunion_six_nations'],
@@ -73,10 +61,11 @@ function buildPlayersByTeam(rows) {
 }
 
 // GET /api/predictions
-// Default tier = deep (elite pool); subscription limits use /api/user/predictions
+// Simplified: always returns data, default tier = 'normal'
 router.get('/', requireRole('user'), async (req, res) => {
     try {
-        const tier = req.query.tier || 'deep';
+        // Use 'normal' as default if tier is missing
+        const tier = req.query.tier || 'normal';
         const sport = req.query.sport;
         const sportFilterValues = getSportFilterValues(sport);
 
@@ -100,37 +89,7 @@ router.get('/', requireRole('user'), async (req, res) => {
         queryStr += ` ORDER BY created_at DESC LIMIT 20;`;
 
         const dbRes = await query(queryStr, queryParams);
-        let predictions = dbRes.rows || [];
-
-        // If DB returned no predictions, attempt Supabase fallback (useful when Supabase is the source)
-        try {
-            if ((!predictions || predictions.length === 0) && config.supabase && config.supabase.url && config.supabase.anonKey) {
-                console.log('[predictions] DB empty - attempting Supabase fallback');
-                const sb = createClient(config.supabase.url, config.supabase.anonKey);
-                const { data, error } = await sb.from('predictions_final').select('*').order('created_at', { ascending: false }).limit(100);
-                if (!error && Array.isArray(data) && data.length > 0) {
-                    // Filter Supabase rows by tier and sport
-                    const tierKey = String(tier || 'deep');
-                    const sportVals = (sportFilterValues || []).map(s => String(s).toLowerCase());
-                    const filtered = data.filter(r => {
-                        try {
-                            const rowTier = String(r.tier || 'normal');
-                            if (rowTier !== tierKey) return false;
-                            const matches = Array.isArray(r.matches) ? r.matches : [];
-                            if (sportVals.length === 0) return true;
-                            return matches.some(m => sportVals.includes(String(m.sport || '').toLowerCase()));
-                        } catch (e) {
-                            return false;
-                        }
-                    });
-                    predictions = filtered;
-                } else if (error) {
-                    console.warn('[predictions] Supabase fallback error:', error.message || error);
-                }
-            }
-        } catch (fbErr) {
-            console.warn('[predictions] Supabase fallback failed:', fbErr.message || fbErr);
-        }
+        const predictions = dbRes.rows;
 
         const teamNames = extractTeamNames(predictions).map(n => n.toLowerCase());
         const teamInfoByName = new Map();
