@@ -1163,11 +1163,8 @@
             </div>
             <button class="secondary-toggle" data-card-id="${cardId}" style="margin-top:8px; width:100%; padding:6px; background:#e7f1ff; color:#0d6efd; border:1px solid #0d6efd; border-radius:4px; cursor:pointer; font-size:0.85rem; font-weight:600;">View Secondary Markets</button>
             <div class="secondary-markets" id="secondary-${cardId}" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid #e2e8f0;">
-                <p style="color:#718096; font-size:0.9rem; margin-bottom:8px;">📊 Over/Under, BTTS, and other secondary markets for this match</p>
                 <div style="background:#f8f9fa; padding:8px; border-radius:4px; font-size:0.85rem; color:#4a5568;">
-                    <p>• Over 2.5 Goals (65% confidence)</p>
-                    <p>• Both Teams to Score (58% confidence)</p>
-                    <p>• Under 3.5 Goals (72% confidence)</p>
+                    Additional secondary-market selections are not available in the current feed for this match.
                 </div>
             </div>
         `;
@@ -1254,6 +1251,39 @@
      * Format match info (teams, league, context)
      */
     function formatMatchInfo(match, sport) {
+        const humanizeSportKey = (value) => {
+            const key = String(value || '').trim();
+            if (!key) return '';
+
+            const aliases = {
+                soccer_uefa_europa_league: 'UEFA Europa League',
+                soccer_uefa_champs_league: 'UEFA Champions League',
+                soccer_spain_la_liga: 'La Liga',
+                soccer_italy_serie_a: 'Serie A',
+                soccer_germany_bundesliga: 'Bundesliga',
+                soccer_france_ligue_one: 'Ligue 1',
+                soccer_epl: 'Premier League',
+                soccer_england_efl_cup: 'EFL Cup',
+                icehockey_nhl: 'NHL',
+                baseball_mlb: 'MLB',
+                basketball_nba: 'NBA',
+                basketball_euroleague: 'EuroLeague',
+                americanfootball_nfl: 'NFL',
+                rugbyunion_six_nations: 'Six Nations',
+                rugbyunion_international: 'International Rugby',
+                aussierules_afl: 'AFL',
+                mma_mixed_martial_arts: 'MMA'
+            };
+
+            if (aliases[key]) return aliases[key];
+
+            return key
+                .split('_')
+                .filter(Boolean)
+                .map(part => part.length <= 3 ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1))
+                .join(' ');
+        };
+
         const findTeam = (obj, side) => {
             if (!obj) return null;
             const keys = side === 'home' 
@@ -1292,6 +1322,8 @@
             contextLabel = `${meta.league}${meta.matchday ? ' • ' + meta.matchday : ''}${meta.week ? ' • ' + meta.week : ''}${meta.round ? ' • ' + meta.round : ''}${meta.division ? ' • ' + meta.division : ''}${meta.conference ? ' • ' + meta.conference : ''}`;
         } else if (homeInfo && homeInfo.league && homeInfo.league.name) {
             contextLabel = homeInfo.league.name;
+        } else if (match.sport) {
+            contextLabel = humanizeSportKey(match.sport);
         }
 
         const rawMatchTime = match.commence_time || meta.match_time || meta.event_time || match.match_date || null;
