@@ -971,6 +971,10 @@
 
             // If backend returned predictions use them
             if (preds.length > 0) {
+                if (sport === 'football') {
+                    renderFootballPredictions(preds);
+                    return;
+                }
                 renderSport(sport, sport + '-matches', preds);
                 return;
             }
@@ -978,11 +982,19 @@
             // Backend returned no predictions or errored: try Supabase fallback
             const supaPreds = await fetchFromSupabase();
             if (supaPreds && supaPreds.length > 0) {
+                if (sport === 'football') {
+                    renderFootballPredictions(supaPreds);
+                    return;
+                }
                 renderSport(sport, sport + '-matches', supaPreds);
                 return;
             }
 
             // Nothing found - show friendly message
+            if (sport === 'football') {
+                renderFootballPredictions([]);
+                return;
+            }
             if (container) {
                 container.innerHTML = `<p style="text-align:center;color:#4a5568;padding:20px;">No new ${sport} predictions available.</p>`;
             }
@@ -992,13 +1004,63 @@
             // Try Supabase fallback on error
             const supaPreds = await fetchFromSupabase();
             if (supaPreds && supaPreds.length > 0) {
+                if (sport === 'football') {
+                    renderFootballPredictions(supaPreds);
+                    return;
+                }
                 renderSport(sport, sport + '-matches', supaPreds);
+                return;
+            }
+            if (sport === 'football') {
+                renderFootballPredictions([]);
                 return;
             }
             if (container) {
                 container.innerHTML = `<p style="color:#e53e3e;text-align:center;padding:20px;">Connection Error: Check if ${SKCS_BACKEND} is live.</p>`;
             }
         }
+    }
+
+    function setFootballSection(sectionId, items, renderer, emptyLabel) {
+        const section = document.getElementById(sectionId);
+        if (!section) return;
+        section.innerHTML = '';
+
+        if (!items.length) {
+            section.innerHTML = `<p style="text-align:center;color:#4a5568;padding:20px;">${emptyLabel}</p>`;
+            return;
+        }
+
+        items.forEach((item, idx) => {
+            section.appendChild(renderer(item, 'football', `${sectionId}-${idx}`));
+        });
+    }
+
+    function renderFootballPredictions(predictions) {
+        const singles = predictions.filter(p => p.type === 'single' || !p.type);
+        const accas = predictions.filter(p => p.type === 'acca');
+        const directSingles = singles.filter(p => Array.isArray(p.matches) && p.matches.length === 1);
+        const multiPreds = singles.filter(p => Array.isArray(p.matches) && p.matches.length >= 2 && p.matches.length <= 3);
+        const sameMatchPreds = singles.filter(p => Array.isArray(p.matches) && p.matches.length > 3);
+
+        setFootballSection('football-direct-matches', directSingles, createPredictionCard, 'No direct football predictions available.');
+        setFootballSection('football-secondary-matches', [], createPredictionCard, 'Secondary football markets are not available in this feed yet.');
+        setFootballSection('football-multi-matches', multiPreds, createMultiCard, 'No football multi selections available.');
+        setFootballSection('football-same-matches', sameMatchPreds, createMultiCard, 'No same-match football bet builders available.');
+        setFootballSection('football-acca-matches', accas, createAccaCard, 'No football ACCA available.');
+
+        const counts = {
+            'football-direct-count': directSingles.length,
+            'football-secondary-count': 0,
+            'football-multi-count': multiPreds.length,
+            'football-same-count': sameMatchPreds.length,
+            'football-acca-count': accas.length
+        };
+
+        Object.entries(counts).forEach(([id, value]) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = String(value);
+        });
     }
 
     /**
@@ -1232,16 +1294,19 @@
             contextLabel = homeInfo.league.name;
         }
 
+        const rawMatchTime = match.commence_time || meta.match_time || meta.event_time || match.match_date || null;
         let dateTimeStr = '';
-        if (match.commence_time) {
+        if (rawMatchTime) {
             try {
-                const matchDate = new Date(match.commence_time);
-                const day = String(matchDate.getDate()).padStart(2, '0');
-                const month = String(matchDate.getMonth() + 1).padStart(2, '0');
-                const year = String(matchDate.getFullYear()).slice(-2);
-                const hours = String(matchDate.getHours()).padStart(2, '0');
-                const mins = String(matchDate.getMinutes()).padStart(2, '0');
-                dateTimeStr = `${day}/${month}/${year} ${hours}:${mins}`;
+                const matchDate = new Date(rawMatchTime);
+                if (!Number.isNaN(matchDate.getTime())) {
+                    const day = String(matchDate.getDate()).padStart(2, '0');
+                    const month = String(matchDate.getMonth() + 1).padStart(2, '0');
+                    const year = String(matchDate.getFullYear()).slice(-2);
+                    const hours = String(matchDate.getHours()).padStart(2, '0');
+                    const mins = String(matchDate.getMinutes()).padStart(2, '0');
+                    dateTimeStr = `${day}/${month}/${year} ${hours}:${mins}`;
+                }
             } catch (e) {
                 dateTimeStr = '';
             }
