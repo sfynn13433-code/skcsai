@@ -3,12 +3,20 @@ import hashlib
 import json
 import os
 import random
+import requests
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 from dotenv import load_dotenv
 from supabase import create_client
+
+try:
+    from google import genai
+    from google.genai import types as genai_types
+except ImportError:
+    genai = None
+    genai_types = None
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -34,7 +42,15 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 OPENAI_KEY = os.getenv("OPENAI_KEY")
 LOCAL_LLM_BASE_URL = os.getenv("LOCAL_LLM_BASE_URL") or "http://127.0.0.1:8080/v1"
 LOCAL_LLM_MODEL = os.getenv("LOCAL_LLM_MODEL") or "Dolphin3.0-Llama3.2-3B-Q5_K_M.gguf"
+LOCAL_LLM_TIMEOUT = float(os.getenv("LOCAL_LLM_TIMEOUT") or "120")
+GOOGLE_CLOUD_PROJECT = os.getenv("GOOGLE_CLOUD_PROJECT")
+GOOGLE_CLOUD_LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION") or "global"
+GOOGLE_GENAI_USE_VERTEXAI = os.getenv("GOOGLE_GENAI_USE_VERTEXAI", "").strip().lower() in {"1", "true", "yes", "on"}
+VERTEX_GEMINI_MODEL = os.getenv("VERTEX_GEMINI_MODEL") or "gemini-2.5-flash"
 PROVIDER_CHAIN_JSON = os.getenv("SKCS_PROVIDER_CHAIN_JSON")
+EVENT_LIMIT = int(os.getenv("SKCS_EVENT_LIMIT") or "0")
+MINIMUM_EVENT_COUNT = int(os.getenv("SKCS_MINIMUM_EVENT_COUNT") or "15")
+LOCAL_ONLY_MODE = os.getenv("SKCS_LOCAL_ONLY", "").strip().lower() in {"1", "true", "yes", "on"}
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise RuntimeError("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY/SUPABASE_KEY.")
@@ -152,6 +168,25 @@ To provide true backup options, pick exactly ONE market from each of these three
 - Category 2 (Action): OVER/UNDER CORNERS or RED CARDS
 - Category 3 (Structure): DOUBLE CHANCE or HALF TIME RESULT
 Never stack conflicting goal dependencies or overlapping traps.
+
+SKCS AI Logic Guardrails: Market Consistency
+You MUST ensure mathematical consistency between the primary outcome and secondary markets. Use the following truth table for your JSON response:
+
+1. Consistency Rules
+IF predicted_outcome is "HOME WIN", secondary_markets MUST include "DOUBLE CHANCE - 1X". It is a logical error to suggest "X2" if you are 65% confident in a Home Win.
+IF predicted_outcome is "AWAY WIN", secondary_markets MUST include "DOUBLE CHANCE - X2".
+IF predicted_outcome is "DRAW", secondary_markets SHOULD include both "1X" and "X2" as coverage, or "UNDER 2.5 GOALS".
+
+2. Confidence Tethering
+Secondary markets MUST have a higher confidence score than the 1X2 market.
+Example: If Home Win is 65%, 1X (Home or Draw) must be > 65% (e.g., 85%).
+
+3. Market Filtering
+Do not suggest "OVER 1.5 GOALS" if the reasoning focuses on a "0-0 Tactical Draw".
+Do not suggest "BOTH TEAMS TO SCORE" if the reasoning focuses on "Strong Defensive Clean Sheet".
+
+Updated JSON Output Requirements:
+Ensure the same_match_builder and secondary_markets arrays strictly follow the mathematical implication of your predicted_outcome.
 
 CRITICAL FILTERING RULES:
 - 1X2 Markets: Must survive all 6 stages with high confidence.
@@ -315,15 +350,27 @@ def build_provider_registry():
             "use_response_format": True,
         },
         {
+            "name": "Vertex Gemini",
+            "model": VERTEX_GEMINI_MODEL,
+            "timeout": 30.0,
+            "max_attempts": 1,
+            "transport": "google_genai",
+            "vertex_project": GOOGLE_CLOUD_PROJECT,
+            "vertex_location": GOOGLE_CLOUD_LOCATION,
+        },
+        {
             "name": "Local Dolphin",
             "base_url": LOCAL_LLM_BASE_URL,
             "api_key": "sk-local",
             "model": LOCAL_LLM_MODEL,
-            "timeout": 60.0,
+            "timeout": LOCAL_LLM_TIMEOUT,
             "max_attempts": 1,
             "use_response_format": False,
         },
     ]
+
+    if LOCAL_ONLY_MODE:
+        providers = [provider for provider in providers if provider["name"] == "Local Dolphin"]
 
     if PROVIDER_CHAIN_JSON:
         try:
@@ -337,6 +384,21 @@ def build_provider_registry():
 
     normalized_providers = []
     for provider in providers:
+        if provider.get("transport") == "google_genai":
+            if not genai or not (GOOGLE_GENAI_USE_VERTEXAI or provider.get("vertex_project")):
+                continue
+            normalized_providers.append(
+                {
+                    "name": provider["name"],
+                    "model": provider["model"],
+                    "timeout": float(provider.get("timeout", 30.0)),
+                    "max_attempts": int(provider.get("max_attempts", 1)),
+                    "transport": "google_genai",
+                    "vertex_project": provider.get("vertex_project"),
+                    "vertex_location": provider.get("vertex_location") or "global",
+                }
+            )
+            continue
         api_key = provider.get("api_key")
         api_key_env = provider.get("api_key_env")
         if api_key_env:
@@ -361,7 +423,10 @@ PROVIDERS = build_provider_registry()
 PROVIDER_CLIENTS = {
     provider["name"]: AsyncOpenAI(api_key=provider["api_key"], base_url=provider["base_url"])
     for provider in PROVIDERS
+    if provider.get("transport") != "google_genai"
 }
+
+VERTEX_GEMINI_CLIENT = None
 
 
 def clear_predictions():
@@ -370,13 +435,15 @@ def clear_predictions():
 
 
 def fetch_events():
-    response = (
+    query = (
         supabase.table("canonical_events")
         .select("*")
         .eq("sport", "football")
         .order("start_time_utc")
-        .execute()
     )
+    if EVENT_LIMIT > 0:
+        query = query.limit(EVENT_LIMIT)
+    response = query.execute()
     return response.data or []
 
 
@@ -425,7 +492,32 @@ def build_header_info(match):
     return f"FOOTBALL • {formatted} • {match['league']}"
 
 
+def enforce_market_consistency(payload):
+    """
+    Final check to prevent the 'Home Win vs X2' contradiction.
+    """
+    outcome = payload.get("predicted_outcome")
+    secondary = payload.get("secondary_markets", [])
+    
+    # 1. Fix 1X2 vs Double Chance Contradictions
+    if outcome == "HOME WIN":
+        # Remove X2 if it exists, replace with 1X
+        payload["secondary_markets"] = [m for m in secondary if "X2" not in m]
+        if "DOUBLE CHANCE - 1X" not in payload["secondary_markets"]:
+            payload["secondary_markets"].append("DOUBLE CHANCE - 1X")
+            
+    elif outcome == "AWAY WIN":
+        # Remove 1X if it exists, replace with X2
+        payload["secondary_markets"] = [m for m in secondary if "1X" not in m]
+        if "DOUBLE CHANCE - X2" not in payload["secondary_markets"]:
+            payload["secondary_markets"].append("DOUBLE CHANCE - X2")
+
+    return payload
+
+
 def normalize_ai_payload(payload):
+    payload = enforce_market_consistency(payload)
+
     prediction_map = {
         "HOME WIN": "HOME_WIN",
         "AWAY WIN": "AWAY_WIN",
@@ -560,20 +652,130 @@ def normalize_ai_payload(payload):
     return normalized
 
 
+def query_dolphin_with_streaming(provider, messages):
+    url = f"{provider['base_url'].rstrip('/')}/chat/completions"
+    timeout_seconds = float(provider.get("timeout") or LOCAL_LLM_TIMEOUT)
+    payload = {
+        "model": provider["model"],
+        "messages": messages,
+        "temperature": 0.2,
+        "stream": True,
+    }
+
+    print(
+        f"Starting streaming request to {provider['name']} "
+        f"(model={provider['model']}, timeout={timeout_seconds}s)..."
+    )
+    full_response = ""
+
+    try:
+        with requests.post(url, json=payload, timeout=timeout_seconds, stream=True) as response:
+            response.raise_for_status()
+
+            for line in response.iter_lines():
+                if not line:
+                    continue
+                decoded_line = line.decode("utf-8", errors="ignore")
+                if not decoded_line.startswith("data: "):
+                    continue
+
+                json_string = decoded_line[len("data: "):].strip()
+                if json_string == "[DONE]":
+                    break
+
+                try:
+                    chunk_data = json.loads(json_string)
+                except json.JSONDecodeError:
+                    continue
+
+                delta = (chunk_data.get("choices") or [{}])[0].get("delta") or {}
+                content_piece = delta.get("content") or ""
+                if not content_piece:
+                    continue
+
+                sys.stdout.write(content_piece)
+                sys.stdout.flush()
+                full_response += content_piece
+    finally:
+        if full_response:
+            sys.stdout.write("\n")
+            sys.stdout.flush()
+
+    if not full_response.strip():
+        raise RuntimeError(f"{provider['name']} returned an empty streaming response.")
+
+    return full_response
+
+
+def get_vertex_gemini_client(provider):
+    global VERTEX_GEMINI_CLIENT
+    if VERTEX_GEMINI_CLIENT is None:
+        if not genai or not genai_types:
+            raise RuntimeError("google-genai is not installed.")
+        if provider.get("vertex_project"):
+            VERTEX_GEMINI_CLIENT = genai.Client(
+                vertexai=True,
+                project=provider["vertex_project"],
+                location=provider.get("vertex_location") or "global",
+                http_options=genai_types.HttpOptions(api_version="v1"),
+            )
+        else:
+            VERTEX_GEMINI_CLIENT = genai.Client()
+    return VERTEX_GEMINI_CLIENT
+
+
+def query_vertex_gemini(provider, messages):
+    client = get_vertex_gemini_client(provider)
+    system_text = ""
+    user_parts = []
+    for message in messages:
+        role = message.get("role")
+        content = str(message.get("content") or "")
+        if role == "system":
+            system_text += content
+        elif role == "user":
+            user_parts.append(content)
+
+    prompt = "\n\n".join(part for part in user_parts if part)
+    response = client.models.generate_content(
+        model=provider["model"],
+        contents=prompt,
+        config=genai_types.GenerateContentConfig(
+            system_instruction=system_text or None,
+            temperature=0.2,
+            response_mime_type="application/json",
+        ),
+    )
+
+    content = (response.text or "").strip()
+    if not content:
+        raise RuntimeError(f"{provider['name']} returned an empty response.")
+    return content
+
+
 async def get_real_skcs_intelligence(event):
     prompt = build_match_prompt(event)
     match = extract_match(event)
 
     async def request_model(provider):
-        client = PROVIDER_CLIENTS[provider["name"]]
         for attempt in range(1, provider["max_attempts"] + 1):
             try:
+                messages = [
+                    {"role": "system", "content": SKCS_SYSTEM_PROMPT},
+                    {"role": "user", "content": prompt},
+                ]
+                if provider.get("transport") == "google_genai":
+                    content = await asyncio.to_thread(query_vertex_gemini, provider, messages)
+                    return normalize_ai_payload(json.loads(content))
+
+                client = PROVIDER_CLIENTS[provider["name"]]
+                if provider["name"] == "Local Dolphin":
+                    content = await asyncio.to_thread(query_dolphin_with_streaming, provider, messages)
+                    return normalize_ai_payload(json.loads(content))
+
                 kwargs = {
                     "model": provider["model"],
-                    "messages": [
-                        {"role": "system", "content": SKCS_SYSTEM_PROMPT},
-                        {"role": "user", "content": prompt},
-                    ],
+                    "messages": messages,
                     "temperature": 0.2,
                     "timeout": provider["timeout"],
                 }
@@ -972,8 +1174,11 @@ def generate_vip_master_set():
     print("Fetching live football canonical events...")
 
     events = fetch_events()
-    if len(events) < 15:
-        print("Not enough events to generate a full VIP Saturday set. Need at least 15.")
+    if len(events) < MINIMUM_EVENT_COUNT:
+        print(
+            f"Not enough events to generate the requested set. "
+            f"Need at least {MINIMUM_EVENT_COUNT}, found {len(events)}."
+        )
         return 0
 
     day_name = get_schedule_day_name()
@@ -991,6 +1196,10 @@ def generate_vip_master_set():
         f"Multi={multi_quotas['vip']}, SameMatch={same_match_quotas['vip']}, "
         f"ACCA={acca_quotas['vip']}"
     )
+    if LOCAL_ONLY_MODE:
+        print("Local-only provider mode active: using Local Dolphin only.")
+    if EVENT_LIMIT > 0:
+        print(f"Event limit override active: {EVENT_LIMIT}")
 
     direct_events = events[: min(direct_quotas["vip"], len(events))]
     if PROVIDERS:

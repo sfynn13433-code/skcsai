@@ -83,6 +83,34 @@ function buildPlayersByTeam(rows) {
     return map;
 }
 
+function enrichPredictionDetails(prediction) {
+    const matches = Array.isArray(prediction?.matches) ? prediction.matches : [];
+    const firstMatch = matches[0] || {};
+    const firstMeta = firstMatch.metadata || {};
+    const existing = prediction?.prediction_details;
+    if (existing && existing.outcome && existing.reasoning) return prediction;
+
+    const type = String(prediction?.type || prediction?.section_type || '').toLowerCase();
+    const fallbackOutcome =
+        (firstMeta.prediction_details && firstMeta.prediction_details.outcome) ||
+        (type === 'acca' ? '6-Match ACCA' :
+            type === 'same_match' ? 'Same Match Builder' :
+                type === 'multi' ? 'Multi Bet' :
+                    (firstMeta.predicted_outcome || firstMatch.prediction || 'Prediction'));
+    const fallbackReasoning =
+        (firstMeta.prediction_details && firstMeta.prediction_details.reasoning) ||
+        firstMeta.reasoning ||
+        '';
+
+    return {
+        ...prediction,
+        prediction_details: {
+            outcome: fallbackOutcome,
+            reasoning: fallbackReasoning
+        }
+    };
+}
+
 // GET /api/predictions
 // Default tier = deep (elite pool); subscription limits use /api/user/predictions
 router.get('/', requireRole('user'), async (req, res) => {
@@ -240,7 +268,7 @@ router.get('/', requireRole('user'), async (req, res) => {
                 ...row,
                 matches: enrichedMatches
             };
-        });
+        }).map(enrichPredictionDetails);
 
         const planFilteredPredictions = filterPredictionsForPlan(enrichedPredictions, planId)
             .filter((prediction) => predictionMatchesSport(prediction, sportFilterValues));

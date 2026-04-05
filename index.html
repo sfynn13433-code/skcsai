@@ -1266,6 +1266,11 @@
         const card = document.createElement('div');
         card.className = 'prediction-card';
         card.id = cardId;
+        const firstMatch = (pred.matches && pred.matches[0]) ? pred.matches[0] : {};
+        const firstMeta = firstMatch.metadata || {};
+        const predictionDetails = pred.prediction_details || firstMeta.prediction_details || {};
+        const reasoning = predictionDetails.reasoning || firstMeta.reasoning || '';
+        const outcome = predictionDetails.outcome || 'Multi Bet';
 
         const legsHtml = (pred.matches || []).map((m, idx) => {
             const info = formatMatchInfo(m, sport);
@@ -1282,9 +1287,10 @@
             </div>
             <div style="margin-bottom:12px;">${legsHtml}</div>
             <div style="border-top:1px solid #e2e8f0; padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
-                <div style="color:#059669; font-weight:bold;">Combined</div>
+                <div style="color:#059669; font-weight:bold;">${outcome}</div>
                 <div style="color:#4a5568; font-size:0.85rem;">${pred.total_confidence || 0}% Confidence</div>
             </div>
+            ${reasoning ? `<div style="margin-top:10px;padding:10px;border-radius:6px;background:#f8fafc;color:#334155;font-size:0.85rem;line-height:1.5;"><strong>AI Reasoning:</strong> ${reasoning}</div>` : ''}
         `;
 
         return card;
@@ -1297,6 +1303,11 @@
         const card = document.createElement('div');
         card.className = 'prediction-card';
         card.id = cardId;
+        const firstMatch = (pred.matches && pred.matches[0]) ? pred.matches[0] : {};
+        const firstMeta = firstMatch.metadata || {};
+        const predictionDetails = pred.prediction_details || firstMeta.prediction_details || {};
+        const reasoning = predictionDetails.reasoning || firstMeta.reasoning || '';
+        const outcome = predictionDetails.outcome || '6-Match Accumulator';
 
         const legsHtml = (pred.matches || []).map((m, idx) => {
             const info = formatMatchInfo(m, sport);
@@ -1313,9 +1324,10 @@
             </div>
             <div style="margin-bottom:12px; max-height:200px; overflow-y:auto;">${legsHtml}</div>
             <div style="border-top:1px solid #e2e8f0; padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
-                <div style="color:#f87171; font-weight:bold;">6-Match Accumulator</div>
+                <div style="color:#f87171; font-weight:bold;">${outcome}</div>
                 <div style="color:#4a5568; font-size:0.85rem;">${pred.total_confidence || 0}% Confidence</div>
             </div>
+            ${reasoning ? `<div style="margin-top:10px;padding:10px;border-radius:6px;background:#f8fafc;color:#334155;font-size:0.85rem;line-height:1.5;"><strong>AI Reasoning:</strong> ${reasoning}</div>` : ''}
         `;
 
         return card;
@@ -1383,8 +1395,10 @@
 
         const meta = match.metadata || {};
         let contextLabel = '';
-        
-        if (meta.race_name) {
+
+        if (meta.header_info) {
+            contextLabel = meta.header_info;
+        } else if (meta.race_name) {
             contextLabel = `${meta.race_name}${meta.circuit ? ' • ' + meta.circuit : ''}`;
         } else if (meta.tournament) {
             contextLabel = `${meta.tournament}${meta.stage ? ' • ' + meta.stage : ''}${meta.gender ? ' • ' + meta.gender : ''}`;
@@ -1420,7 +1434,9 @@
 
         return {
             teams: `${homeLogo}${h} <span style="color:#718096;font-size:0.8rem;">vs</span> ${a}${awayLogo}`,
-            context: `${sport.toUpperCase()}${dateTimeStr ? ' • ' + dateTimeStr : ''}${contextLabel ? ' • ' + contextLabel : ''}`
+            context: meta.header_info
+                ? contextLabel
+                : `${sport.toUpperCase()}${dateTimeStr ? ' • ' + dateTimeStr : ''}${contextLabel ? ' • ' + contextLabel : ''}`
         };
     }
 

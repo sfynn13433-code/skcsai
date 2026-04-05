@@ -1,0 +1,92 @@
+[
+  {
+    "provider": "1. Local Server (Dolphin)",
+    "model": "Dolphin3.0-Llama3.2-3B-Q5_K_M.gguf",
+    "base_url": "http://127.0.0.1:8080/v1",
+    "status": "success",
+    "elapsed_seconds": 56.74,
+    "json_score": 11,
+    "json_score_max": 11,
+    "notes": [],
+    "prediction": "HOME WIN",
+    "confidence": 72,
+    "reasoning": "Stage 1 Baseline gives HOME WIN a 55% edge. Stage 2 Context notes Arsenal's strong form and Chelsea's defensive vulnerability.",
+    "raw_output_preview": null
+  },
+  {
+    "provider": "2. Groq (Llama 3.3 70B)",
+    "model": "llama-3.3-70b-versatile",
+    "base_url": "https://api.groq.com/openai/v1",
+    "status": "success",
+    "elapsed_seconds": 4.37,
+    "json_score": 11,
+    "json_score_max": 11,
+    "notes": [],
+    "prediction": "HOME WIN",
+    "confidence": 78,
+    "reasoning": "Arsenal's 5-match win streak and Chelsea's missing goalkeeper gives HOME WIN a significant edge.",
+    "raw_output_preview": null
+  },
+  {
+    "provider": "3. Gemini 2.5 Flash",
+    "model": "gemini-2.5-flash",
+    "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+    "status": "success",
+    "elapsed_seconds": 5.73,
+    "json_score": 11,
+    "json_score_max": 11,
+    "notes": [],
+    "prediction": "HOME WIN",
+    "confidence": 82,
+    "reasoning": "Stage 1 Baseline indicates a HOME WIN with 50% probability based on odds. Stage 2 Context significantly strengthens this prediction due to Arsenal's strong 5-match win streak and Chelsea's critical absence of their starting goalkeeper, which is a major defensive disadvantage.",
+    "raw_output_preview": null
+  },
+  {
+    "provider": "4. DeepSeek",
+    "model": "deepseek-chat",
+    "base_url": "https://api.deepseek.com/v1",
+    "status": "connection_or_api_error",
+    "elapsed_seconds": null,
+    "json_score": null,
+    "json_score_max": null,
+    "notes": [
+      "APIStatusError(\"Error code: 402 - {'error': {'message': 'Insufficient Balance', 'type': 'unknown_error', 'param': None, 'code': 'invalid_request_error'}}\")"
+    ],
+    "prediction": null,
+    "confidence": null,
+    "reasoning": null,
+    "raw_output_preview": null
+  },
+  {
+    "provider": "5. OpenAI (GPT-4o-mini)",
+    "model": "gpt-4o-mini",
+    "base_url": "https://api.openai.com/v1",
+    "status": "connection_or_api_error",
+    "elapsed_seconds": null,
+    "json_score": null,
+    "json_score_max": null,
+    "notes": [
+      "RateLimitError(\"Error code: 429 - {'error': {'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, read the docs: https://platform.openai.com/docs/guides/error-codes/api-errors.', 'type': 'insufficient_quota', 'param': None, 'code': 'insufficient_quota'}}\")"
+    ],
+    "prediction": null,
+    "confidence": null,
+    "reasoning": null,
+    "raw_output_preview": null
+  },
+  {
+    "provider": "6. OpenRouter (Mistral/Llama mix)",
+    "model": "meta-llama/llama-3.2-3b-instruct",
+    "base_url": "https://openrouter.ai/api/v1",
+    "status": "connection_or_api_error",
+    "elapsed_seconds": null,
+    "json_score": null,
+    "json_score_max": null,
+    "notes": [
+      "AuthenticationError(\"Error code: 401 - {'error': {'message': 'User not found.', 'code': 401}}\")"
+    ],
+    "prediction": null,
+    "confidence": null,
+    "reasoning": null,
+    "raw_output_preview": null
+  }
+]

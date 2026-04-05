@@ -1,0 +1,31 @@
+.gcloudignore
+
+# Security: never upload local secrets
+.env
+*.env
+.env.local
+
+# Dependency and build directories
+node_modules/
+backend/node_modules/
+.venv/
+venv/
+env/
+build/
+dist/
+__pycache__/
+*.py[cod]
+
+# Local IDE and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Git metadata
+.git/
+
+# Large local artifacts and logs
+backend/scripts/results/
+chaos_run.log
+chaos_run.err.log
