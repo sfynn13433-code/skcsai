@@ -237,6 +237,34 @@ function enforcePerMatchLimit(predictions, maxPerMatch) {
     return out;
 }
 
+function getMetadata(prediction) {
+    return prediction && typeof prediction.metadata === 'object' && prediction.metadata !== null
+        ? prediction.metadata
+        : {};
+}
+
+function parseKickoff(prediction) {
+    const metadata = getMetadata(prediction);
+    const value = metadata.match_time || metadata.kickoff || metadata.kickoff_time || null;
+    if (!value) return null;
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function isPublishablePrediction(prediction, now = new Date()) {
+    const metadata = getMetadata(prediction);
+
+    if (metadata.data_mode === 'test') return true;
+    if (String(metadata.prediction_source || '').trim().toLowerCase() !== 'provider') return false;
+    if (typeof metadata.league !== 'string' || metadata.league.trim().length === 0) return false;
+
+    const kickoff = parseKickoff(prediction);
+    if (!kickoff) return false;
+
+    const staleCutoff = new Date(now.getTime() - 15 * 60 * 1000);
+    return kickoff >= staleCutoff;
+}
+
 async function loadValidFilteredPredictions(tier, client) {
     const t = normalizeTier(tier);
 
@@ -262,7 +290,7 @@ async function loadValidFilteredPredictions(tier, client) {
         [t]
     );
 
-    return res.rows;
+    return res.rows.filter((row) => isPublishablePrediction(row));
 }
 
 async function clearFinalForTier(tier, client) {
