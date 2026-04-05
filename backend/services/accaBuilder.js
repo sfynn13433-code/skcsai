@@ -251,7 +251,21 @@ function parseKickoff(prediction) {
     return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
-function isPublishablePrediction(prediction, now = new Date()) {
+function getPublishWindowDays(tier) {
+    return tier === 'deep' ? 5 : 7;
+}
+
+function normalizeSportKey(value) {
+    const sport = String(value || '').trim().toLowerCase();
+    if (!sport) return 'unknown';
+    if (sport.startsWith('soccer_')) return 'football';
+    if (sport.startsWith('icehockey_')) return 'hockey';
+    if (sport.startsWith('basketball_')) return 'basketball';
+    if (sport.startsWith('americanfootball_')) return 'american_football';
+    return sport;
+}
+
+function isPublishablePrediction(prediction, tier, now = new Date()) {
     const metadata = getMetadata(prediction);
 
     if (metadata.data_mode === 'test') return true;
@@ -262,7 +276,47 @@ function isPublishablePrediction(prediction, now = new Date()) {
     if (!kickoff) return false;
 
     const staleCutoff = new Date(now.getTime() - 15 * 60 * 1000);
-    return kickoff >= staleCutoff;
+    if (kickoff < staleCutoff) return false;
+
+    const maxWindowDays = getPublishWindowDays(tier);
+    const maxFuture = new Date(now.getTime() + maxWindowDays * 24 * 60 * 60 * 1000);
+    return kickoff <= maxFuture;
+}
+
+function compareCandidates(a, b) {
+    const kickoffA = parseKickoff(a);
+    const kickoffB = parseKickoff(b);
+
+    if (kickoffA && kickoffB) {
+        const timeDiff = kickoffA.getTime() - kickoffB.getTime();
+        if (timeDiff !== 0) return timeDiff;
+    } else if (kickoffA) {
+        return -1;
+    } else if (kickoffB) {
+        return 1;
+    }
+
+    const confidenceDiff = (Number(b.confidence) || 0) - (Number(a.confidence) || 0);
+    if (confidenceDiff !== 0) return confidenceDiff;
+
+    const createdA = new Date(a.created_at || 0).getTime();
+    const createdB = new Date(b.created_at || 0).getTime();
+    return createdB - createdA;
+}
+
+function enforcePerSportLimit(predictions, limitPerSport) {
+    const counts = new Map();
+    const out = [];
+
+    for (const prediction of predictions) {
+        const key = normalizeSportKey(prediction.sport);
+        const current = counts.get(key) || 0;
+        if (current >= limitPerSport) continue;
+        counts.set(key, current + 1);
+        out.push(prediction);
+    }
+
+    return out;
 }
 
 async function loadValidFilteredPredictions(tier, client) {
@@ -290,7 +344,9 @@ async function loadValidFilteredPredictions(tier, client) {
         [t]
     );
 
-    return res.rows.filter((row) => isPublishablePrediction(row));
+    return res.rows
+        .filter((row) => isPublishablePrediction(row, t))
+        .sort(compareCandidates);
 }
 
 async function clearFinalForTier(tier, client) {
@@ -320,10 +376,11 @@ async function buildFinalForTier(tier) {
 
         const valid = await loadValidFilteredPredictions(t, client);
         const perMatchLimited = enforcePerMatchLimit(valid, accaRules.max_per_match);
+        const perSportLimited = enforcePerSportLimit(perMatchLimited, 4);
 
         // Limit candidates to prevent combinatorial explosion and timeouts
         const MAX_ACCA_CANDIDATES = 30;
-        const limitedCandidates = perMatchLimited.slice(0, MAX_ACCA_CANDIDATES);
+        const limitedCandidates = perSportLimited.slice(0, MAX_ACCA_CANDIDATES);
 
         await clearFinalForTier(t, client);
 
