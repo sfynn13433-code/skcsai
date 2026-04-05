@@ -221,6 +221,29 @@ function normalizeMarketName(value) {
     return String(value || '').trim().toLowerCase();
 }
 
+function getPlanAccessLevel(planId) {
+    const key = String(planId || '').trim().toLowerCase();
+    if (!key.startsWith('elite_')) return null;
+    if (key.includes('deep_vip')) return 'vip';
+    if (key.includes('deep_pro')) return 'pro';
+    if (key.includes('deep_strike')) return 'strike';
+    if (key.includes('deep_dive')) return 'deep_dive';
+    return null;
+}
+
+function predictionAllowsPlanAccess(prediction, planId) {
+    const accessLevel = getPlanAccessLevel(planId);
+    if (!accessLevel) return true;
+
+    const matches = Array.isArray(prediction?.matches) ? prediction.matches : [];
+    const tierAccessSets = matches
+        .map((match) => match?.metadata?.tier_access)
+        .filter((value) => Array.isArray(value) && value.length > 0);
+
+    if (tierAccessSets.length === 0) return true;
+    return tierAccessSets.every((allowed) => allowed.includes(accessLevel));
+}
+
 function getPredictionCategory(prediction) {
     const explicit = String(prediction?.section_type || prediction?.type || '').trim().toLowerCase();
     if (PLAN_CATEGORIES.includes(explicit)) return explicit;
@@ -277,6 +300,8 @@ function filterPredictionsForPlan(predictions, planId, now = new Date()) {
         });
     }
 
+    filtered = filtered.filter((prediction) => predictionAllowsPlanAccess(prediction, planId));
+
     const buckets = new Map(PLAN_CATEGORIES.map((category) => [category, []]));
     for (const prediction of filtered) {
         const category = getPredictionCategory(prediction);
@@ -301,6 +326,7 @@ module.exports = {
     calculateDailyAllocations,
     getPlanCapabilities,
     filterPredictionsForPlan,
+    getPlanAccessLevel,
     getPlansByFamily,
     getBaselinePlan
 };
