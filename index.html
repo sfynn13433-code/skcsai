@@ -918,6 +918,7 @@
 
                 const res = await fetch(`${supabaseUrl}/rest/v1/predictions_final?select=*&order=created_at.desc`, {
                     method: 'GET',
+                    cache: 'no-store',
                     headers: {
                         'apikey': anon,
                         'Authorization': `Bearer ${anon}`
@@ -940,10 +941,12 @@
         }
 
         try {
-            let url = `${SKCS_BACKEND}/api/predictions?plan_id=${userPlanId}&sport=${sport}`;
+            const cacheBust = Date.now();
+            let url = `${SKCS_BACKEND}/api/predictions?plan_id=${userPlanId}&sport=${sport}&_ts=${cacheBust}`;
 
             let response = await fetch(url, {
                 method: 'GET',
+                cache: 'no-store',
                 headers: {
                     'x-api-key': 'skcs_user_12345'
                 }
@@ -955,9 +958,10 @@
             let preds = (response.ok && data && Array.isArray(data.predictions)) ? data.predictions : [];
 
             if (preds.length === 0 && userPlanId.includes('elite')) {
-                const urlN = `${SKCS_BACKEND}/api/predictions?plan_id=core_30day_limitless&sport=${sport}`;
+                const urlN = `${SKCS_BACKEND}/api/predictions?plan_id=core_30day_limitless&sport=${sport}&_ts=${cacheBust}`;
                 const r2 = await fetch(urlN, {
                     method: 'GET',
+                    cache: 'no-store',
                     headers: {
                         'x-api-key': 'skcs_user_12345'
                     }
