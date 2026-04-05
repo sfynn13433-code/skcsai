@@ -1037,21 +1037,23 @@
     }
 
     function renderFootballPredictions(predictions) {
-        const singles = predictions.filter(p => p.type === 'single' || !p.type);
-        const accas = predictions.filter(p => p.type === 'acca');
-        const directSingles = singles.filter(p => Array.isArray(p.matches) && p.matches.length === 1);
-        const multiPreds = singles.filter(p => Array.isArray(p.matches) && p.matches.length >= 2 && p.matches.length <= 3);
-        const sameMatchPreds = singles.filter(p => Array.isArray(p.matches) && p.matches.length > 3);
+        const sectionType = (pred) => String(pred.section_type || pred.type || '').toLowerCase();
+        const singles = predictions.filter(p => p.type === 'single' || !p.type || ['direct', 'secondary'].includes(sectionType(p)));
+        const accas = predictions.filter(p => p.type === 'acca' || sectionType(p) === 'acca_6match');
+        const directSingles = singles.filter(p => sectionType(p) === 'direct' || (!sectionType(p) && Array.isArray(p.matches) && p.matches.length === 1));
+        const secondarySingles = singles.filter(p => sectionType(p) === 'secondary');
+        const multiPreds = predictions.filter(p => sectionType(p) === 'multi' || (Array.isArray(p.matches) && p.matches.length >= 2 && p.matches.length <= 3));
+        const sameMatchPreds = predictions.filter(p => sectionType(p) === 'same_match' || (Array.isArray(p.matches) && p.matches.length > 1 && new Set((p.matches || []).map(m => m.match_id)).size === 1));
 
         setFootballSection('football-direct-matches', directSingles, createPredictionCard, 'No direct football predictions available.');
-        setFootballSection('football-secondary-matches', [], createPredictionCard, 'Secondary football markets are not available in this feed yet.');
+        setFootballSection('football-secondary-matches', secondarySingles, createPredictionCard, 'No football secondary markets available.');
         setFootballSection('football-multi-matches', multiPreds, createMultiCard, 'No football multi selections available.');
         setFootballSection('football-same-matches', sameMatchPreds, createMultiCard, 'No same-match football bet builders available.');
         setFootballSection('football-acca-matches', accas, createAccaCard, 'No football ACCA available.');
 
         const counts = {
             'football-direct-count': directSingles.length,
-            'football-secondary-count': 0,
+            'football-secondary-count': secondarySingles.length,
             'football-multi-count': multiPreds.length,
             'football-same-count': sameMatchPreds.length,
             'football-acca-count': accas.length
@@ -1077,12 +1079,14 @@
         }
 
         // Categorize by type: 'single' = Direct/1X2, 'acca' = Accumulators
-        const singles = predictions.filter(p => p.type === 'single' || !p.type);
-        const accas = predictions.filter(p => p.type === 'acca');
+        const sectionType = (pred) => String(pred.section_type || pred.type || '').toLowerCase();
+        const singles = predictions.filter(p => p.type === 'single' || !p.type || ['direct', 'secondary'].includes(sectionType(p)));
+        const accas = predictions.filter(p => p.type === 'acca' || sectionType(p) === 'acca_6match');
 
         container.innerHTML = '';
 
-        const directSingles = singles.filter(p => Array.isArray(p.matches) && p.matches.length === 1);
+        const directSingles = singles.filter(p => sectionType(p) === 'direct' || (!sectionType(p) && Array.isArray(p.matches) && p.matches.length === 1));
+        const secondarySingles = singles.filter(p => sectionType(p) === 'secondary');
 
         // Section 1: Direct (1X2) — only true single-match rows (multi-leg lives under Multi)
         if (directSingles.length > 0) {
@@ -1102,8 +1106,25 @@
             container.appendChild(directSection);
         }
 
+        if (secondarySingles.length > 0) {
+            const secondarySection = document.createElement('div');
+            secondarySection.style.marginBottom = '2rem';
+            secondarySection.innerHTML = `<h4 style="color:#f59e0b;margin-bottom:1rem;font-size:1.1rem;">📊 Secondary (Over/Under, BTTS)</h4>`;
+
+            const secondaryGrid = document.createElement('div');
+            secondaryGrid.className = 'prediction-grid';
+
+            secondarySingles.forEach((pred, idx) => {
+                const card = createPredictionCard(pred, sport, `secondary-${idx}`);
+                secondaryGrid.appendChild(card);
+            });
+
+            secondarySection.appendChild(secondaryGrid);
+            container.appendChild(secondarySection);
+        }
+
         // Section 2: Multi Bets (2-3 legs combined)
-        const multiPreds = singles.filter(p => p.matches && p.matches.length >= 2 && p.matches.length <= 3);
+        const multiPreds = predictions.filter(p => sectionType(p) === 'multi' || (p.matches && p.matches.length >= 2 && p.matches.length <= 3));
         if (multiPreds.length > 0) {
             const multiSection = document.createElement('div');
             multiSection.style.marginBottom = '2rem';
@@ -1119,6 +1140,24 @@
             
             multiSection.appendChild(multiGrid);
             container.appendChild(multiSection);
+        }
+
+        const sameMatchPreds = predictions.filter(p => sectionType(p) === 'same_match' || (p.matches && p.matches.length > 1 && new Set((p.matches || []).map(m => m.match_id)).size === 1));
+        if (sameMatchPreds.length > 0) {
+            const sameMatchSection = document.createElement('div');
+            sameMatchSection.style.marginBottom = '2rem';
+            sameMatchSection.innerHTML = `<h4 style="color:#22c55e;margin-bottom:1rem;font-size:1.1rem;">🎯 Same Match (Bet Builders)</h4>`;
+
+            const sameMatchGrid = document.createElement('div');
+            sameMatchGrid.className = 'prediction-grid';
+
+            sameMatchPreds.forEach((pred, idx) => {
+                const card = createMultiCard(pred, sport, `same-match-${idx}`);
+                sameMatchGrid.appendChild(card);
+            });
+
+            sameMatchSection.appendChild(sameMatchGrid);
+            container.appendChild(sameMatchSection);
         }
 
         // Section 3: Accumulators (4+ legs)

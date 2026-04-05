@@ -7,7 +7,7 @@ const { requireRole } = require('../utils/auth');
 const config = require('../config');
 const { createClient } = require('@supabase/supabase-js');
 
-const { getPlanCapabilities, filterPredictionsForPlan } = require('../config/subscriptionMatrix');
+const { getPlanCapabilities, filterPredictionsForPlan, calculateDailyAllocations } = require('../config/subscriptionMatrix');
 const { getPredictionWindow } = require('../utils/dateNormalization');
 
 const router = express.Router();
@@ -107,7 +107,7 @@ router.get('/', requireRole('user'), async (req, res) => {
             queryParams.push(sportFilterValues);
         }
 
-        queryStr += ` ORDER BY created_at DESC LIMIT 20;`;
+        queryStr += ` ORDER BY created_at DESC LIMIT 400;`;
 
         const dbRes = await query(queryStr, queryParams);
         let predictions = dbRes.rows || [];
@@ -234,11 +234,17 @@ router.get('/', requireRole('user'), async (req, res) => {
             };
         });
 
+        const planFilteredPredictions = filterPredictionsForPlan(enrichedPredictions, planId);
+        const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' }).toLowerCase();
+        const dailyLimits = calculateDailyAllocations(planId, todayName);
+
         res.status(200).json({
             plan_id: planId,
             sport: sport || 'all',
-            count: enrichedPredictions.length,
-            predictions: enrichedPredictions
+            day: todayName,
+            daily_limits: dailyLimits,
+            count: planFilteredPredictions.length,
+            predictions: planFilteredPredictions
         });
     } catch (err) {
         console.error('[predictions] Route Error:', err);
