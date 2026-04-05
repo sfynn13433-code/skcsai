@@ -1,5 +1,5 @@
 // Force the API to point to Render, regardless of where the site is hosted
-window.API_BASE_URL = "https://skcsai.onrender.com"; 
+window.API_BASE_URL = "https://skcsai-z8cd.onrender.com"; 
 
 // Safety check: ensure no trailing slash
 if (window.API_BASE_URL.endsWith('/')) {
