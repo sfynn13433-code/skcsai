@@ -27,6 +27,80 @@ function normalizeMode(mode) {
     throw new Error(`Invalid DATA_MODE: ${mode}`);
 }
 
+function humanizeCompetitionLabel(value) {
+    const key = String(value || '').trim();
+    if (!key) return null;
+
+    const aliases = {
+        soccer_epl: 'Premier League',
+        soccer_england_efl_cup: 'EFL Cup',
+        soccer_uefa_champs_league: 'UEFA Champions League',
+        soccer_uefa_europa_league: 'UEFA Europa League',
+        soccer_spain_la_liga: 'La Liga',
+        soccer_germany_bundesliga: 'Bundesliga',
+        soccer_italy_serie_a: 'Serie A',
+        soccer_france_ligue_one: 'Ligue 1',
+        basketball_nba: 'NBA',
+        basketball_euroleague: 'EuroLeague',
+        americanfootball_nfl: 'NFL',
+        icehockey_nhl: 'NHL',
+        baseball_mlb: 'MLB',
+        mma_mixed_martial_arts: 'MMA',
+        aussierules_afl: 'AFL',
+        rugbyunion_international: 'International Rugby',
+        rugbyunion_six_nations: 'Six Nations'
+    };
+
+    if (aliases[key]) return aliases[key];
+
+    return key
+        .split('_')
+        .filter(Boolean)
+        .map(part => part.length <= 3 ? part.toUpperCase() : part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+}
+
+function derivePredictionFromH2HOutcomes(event) {
+    const bookmakers = Array.isArray(event?.bookmakers) ? event.bookmakers : [];
+
+    for (const bookmaker of bookmakers) {
+        const markets = Array.isArray(bookmaker?.markets) ? bookmaker.markets : [];
+        const h2h = markets.find((market) => market?.key === 'h2h');
+        const outcomes = Array.isArray(h2h?.outcomes) ? h2h.outcomes : [];
+        if (outcomes.length < 2) continue;
+
+        const ranked = outcomes
+            .filter((outcome) => typeof outcome?.price === 'number' && Number.isFinite(outcome.price))
+            .sort((a, b) => a.price - b.price);
+
+        const best = ranked[0];
+        const second = ranked[1] || null;
+        if (!best) continue;
+
+        const bestName = String(best.name || '').trim();
+        const prediction = bestName === event.home_team
+            ? 'home_win'
+            : bestName === event.away_team
+                ? 'away_win'
+                : null;
+
+        if (!prediction) continue;
+
+        const gap = second ? Math.max(0, second.price - best.price) : 0.15;
+        const confidence = Math.max(56, Math.min(78, 58 + gap * 35));
+        const volatility = confidence >= 72 ? 'low' : confidence >= 64 ? 'medium' : 'high';
+
+        return {
+            prediction,
+            confidence: Math.round(confidence * 100) / 100,
+            volatility,
+            bookmaker: bookmaker.title || null
+        };
+    }
+
+    return null;
+}
+
 function buildTestData() {
     // 8 deterministic test entries
     return [
@@ -52,18 +126,24 @@ async function fetchOddsData(sportKey) {
 
     const normalizedSport = normalizeSportKey(sportKey);
 
-    return data.map(event => ({
+    return data.map(event => {
+        const marketView = derivePredictionFromH2HOutcomes(event);
+        return {
         match_id: `odds-${event.id}`,
         sport: normalizedSport,
         home_team: event.home_team,
         away_team: event.away_team,
         date: event.commence_time || null,
         market: '1X2',
-        prediction: 'home_win',
-        confidence: null,
-        volatility: null,
-        odds: null
-    }));
+        prediction: marketView?.prediction || null,
+        confidence: marketView?.confidence || null,
+        volatility: marketView?.volatility || null,
+        odds: null,
+        provider: 'odds-api',
+        league: event.sport_title || humanizeCompetitionLabel(sportKey),
+        bookmaker: marketView?.bookmaker || null
+    };
+    });
 }
 
 function todayStr() {
@@ -90,7 +170,12 @@ function normalizeFixture(f, sport) {
             prediction: null,
             confidence: null,
             volatility: null,
-            odds: null
+            odds: null,
+            provider: 'api-sports',
+            league: f.league?.name || null,
+            country: f.league?.country || null,
+            round: f.league?.round || null,
+            venue: f.fixture?.venue?.name || null
         };
     }
     // Other sports v1/v2 format (games, races, fights)
@@ -99,6 +184,8 @@ function normalizeFixture(f, sport) {
     const away = f.teams?.away?.name || f.players?.away?.name || f.competitors?.[1]?.name || null;
     const date = f.date || f.game?.date || f.fight?.date || f.race?.date || null;
     const status = f.status?.short || f.game?.status?.short || null;
+    const league = f.league?.name || f.competition?.name || f.tournament?.name || humanizeCompetitionLabel(sport);
+    const venue = f.venue?.name || f.game?.venue?.name || f.race?.circuit?.name || null;
 
     return {
         match_id: id ? String(id) : `live-${sport}-${home}-${away}`,
@@ -111,7 +198,11 @@ function normalizeFixture(f, sport) {
         prediction: null,
         confidence: null,
         volatility: null,
-        odds: null
+        odds: null,
+        provider: 'api-sports',
+        league,
+        venue,
+        stage: f.stage || f.competition?.stage || f.tournament?.stage || null
     };
 }
 

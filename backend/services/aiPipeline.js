@@ -30,22 +30,32 @@ function buildRawPredictionFromProviderItem(item) {
 
     const rawPrediction = String(item.prediction || '').trim();
     const prediction = rawPrediction || (scoring.winner === 'home' ? 'home_win' : 'away_win');
+    const confidence = typeof item.confidence === 'number' && Number.isFinite(item.confidence)
+        ? item.confidence
+        : scoring.confidence;
+    const volatility = item.volatility || scoring.volatility;
 
     const raw = {
         match_id,
         sport,
         market,
         prediction,
-        confidence: scoring.confidence,
-        volatility: scoring.volatility,
+        confidence,
+        volatility,
         odds: item.odds !== undefined ? item.odds : null,
         metadata: {
             source: 'aiPipeline:v2-provider+aiScoring',
             data_mode: item.data_mode || null,
             provider: item.provider || null,
+            bookmaker: item.bookmaker || null,
             home_team: item.home_team || null,
             away_team: item.away_team || null,
             match_time: item.date || item.commence_time || item.kickoff || null,
+            league: item.league || null,
+            tournament: item.tournament || null,
+            stage: item.stage || item.round || null,
+            venue: item.venue || null,
+            country: item.country || null,
             ai: {
                 winner: scoring.winner
             }
