@@ -43,6 +43,14 @@ function getSportFilterValues(sport) {
     return SPORT_FILTER_MAP[key] || [key];
 }
 
+function predictionMatchesSport(prediction, sportFilterValues) {
+    if (!Array.isArray(sportFilterValues) || sportFilterValues.length === 0) return true;
+    const allowed = new Set(sportFilterValues.map((value) => String(value).toLowerCase()));
+    const matches = Array.isArray(prediction?.matches) ? prediction.matches : [];
+    if (matches.length === 0) return false;
+    return matches.every((match) => allowed.has(String(match?.sport || '').toLowerCase()));
+}
+
 function extractTeamNames(predictions) {
     const names = new Set();
     for (const row of predictions) {
@@ -234,7 +242,8 @@ router.get('/', requireRole('user'), async (req, res) => {
             };
         });
 
-        const planFilteredPredictions = filterPredictionsForPlan(enrichedPredictions, planId);
+        const planFilteredPredictions = filterPredictionsForPlan(enrichedPredictions, planId)
+            .filter((prediction) => predictionMatchesSport(prediction, sportFilterValues));
         const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' }).toLowerCase();
         const dailyLimits = calculateDailyAllocations(planId, todayName);
 
