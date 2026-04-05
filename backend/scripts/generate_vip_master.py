@@ -28,24 +28,18 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_KEY")
 GROQ_KEY = os.getenv("GROQ_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+COHERE_API_KEY = os.getenv("COHERE_API_KEY")
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENAI_KEY = os.getenv("OPENAI_KEY")
+LOCAL_LLM_BASE_URL = os.getenv("LOCAL_LLM_BASE_URL") or "http://127.0.0.1:8080/v1"
+LOCAL_LLM_MODEL = os.getenv("LOCAL_LLM_MODEL") or "Dolphin3.0-Llama3.2-3B-Q5_K_M.gguf"
+PROVIDER_CHAIN_JSON = os.getenv("SKCS_PROVIDER_CHAIN_JSON")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise RuntimeError("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY/SUPABASE_KEY.")
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-groq_client = (
-    AsyncOpenAI(api_key=GROQ_KEY, base_url="https://api.groq.com/openai/v1")
-    if GROQ_KEY
-    else None
-)
-gemini_client = (
-    AsyncOpenAI(
-        api_key=GEMINI_API_KEY,
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-    )
-    if GEMINI_API_KEY
-    else None
-)
 
 ELITE_DAILY_LIMITS = {
     "monday": {
@@ -264,6 +258,112 @@ def build_default_same_match_builder(prediction, confidence):
     ]
 
 
+def build_provider_registry():
+    providers = [
+        {
+            "name": "Groq",
+            "base_url": "https://api.groq.com/openai/v1",
+            "api_key": GROQ_KEY,
+            "model": "llama-3.3-70b-versatile",
+            "timeout": 8.0,
+            "max_attempts": 3,
+            "use_response_format": True,
+        },
+        {
+            "name": "Cohere",
+            "base_url": "https://api.cohere.ai/compatibility/v1",
+            "api_key": COHERE_API_KEY,
+            "model": "command-a-03-2025",
+            "timeout": 12.0,
+            "max_attempts": 2,
+            "use_response_format": True,
+        },
+        {
+            "name": "DeepSeek",
+            "base_url": "https://api.deepseek.com/v1",
+            "api_key": DEEPSEEK_API_KEY,
+            "model": "deepseek-chat",
+            "timeout": 12.0,
+            "max_attempts": 2,
+            "use_response_format": True,
+        },
+        {
+            "name": "OpenRouter",
+            "base_url": "https://openrouter.ai/api/v1",
+            "api_key": OPENROUTER_API_KEY,
+            "model": "openrouter/auto",
+            "timeout": 15.0,
+            "max_attempts": 2,
+            "use_response_format": True,
+        },
+        {
+            "name": "Gemini",
+            "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+            "api_key": GEMINI_API_KEY,
+            "model": "gemini-2.5-flash",
+            "timeout": 15.0,
+            "max_attempts": 2,
+            "use_response_format": True,
+        },
+        {
+            "name": "OpenAI",
+            "base_url": "https://api.openai.com/v1",
+            "api_key": OPENAI_KEY,
+            "model": "gpt-4o-mini",
+            "timeout": 12.0,
+            "max_attempts": 2,
+            "use_response_format": True,
+        },
+        {
+            "name": "Local Dolphin",
+            "base_url": LOCAL_LLM_BASE_URL,
+            "api_key": "sk-local",
+            "model": LOCAL_LLM_MODEL,
+            "timeout": 60.0,
+            "max_attempts": 1,
+            "use_response_format": False,
+        },
+    ]
+
+    if PROVIDER_CHAIN_JSON:
+        try:
+            extra_providers = json.loads(PROVIDER_CHAIN_JSON)
+            if isinstance(extra_providers, list):
+                for item in extra_providers:
+                    if isinstance(item, dict):
+                        providers.append(item)
+        except json.JSONDecodeError:
+            print("Invalid SKCS_PROVIDER_CHAIN_JSON. Ignoring extra providers.")
+
+    normalized_providers = []
+    for provider in providers:
+        api_key = provider.get("api_key")
+        api_key_env = provider.get("api_key_env")
+        if api_key_env:
+            api_key = os.getenv(api_key_env)
+        if provider.get("name") != "Local Dolphin" and not api_key:
+            continue
+        normalized_providers.append(
+            {
+                "name": provider["name"],
+                "base_url": provider["base_url"],
+                "api_key": api_key,
+                "model": provider["model"],
+                "timeout": float(provider.get("timeout", 15.0)),
+                "max_attempts": int(provider.get("max_attempts", 2)),
+                "use_response_format": bool(provider.get("use_response_format", True)),
+            }
+        )
+    return normalized_providers
+
+
+PROVIDERS = build_provider_registry()
+PROVIDER_CLIENTS = {
+    provider["name"]: AsyncOpenAI(api_key=provider["api_key"], base_url=provider["base_url"])
+    for provider in PROVIDERS
+}
+
+
 def clear_predictions():
     response = supabase.table("predictions_final").delete().neq("id", 0).execute()
     return len(response.data or [])
@@ -464,47 +564,37 @@ async def get_real_skcs_intelligence(event):
     prompt = build_match_prompt(event)
     match = extract_match(event)
 
-    async def request_model(client, model, timeout, max_attempts):
-        for attempt in range(1, max_attempts + 1):
+    async def request_model(provider):
+        client = PROVIDER_CLIENTS[provider["name"]]
+        for attempt in range(1, provider["max_attempts"] + 1):
             try:
-                response = await client.chat.completions.create(
-                    model=model,
-                    messages=[
+                kwargs = {
+                    "model": provider["model"],
+                    "messages": [
                         {"role": "system", "content": SKCS_SYSTEM_PROMPT},
                         {"role": "user", "content": prompt},
                     ],
-                    response_format={"type": "json_object"},
-                    temperature=0.2,
-                    timeout=timeout,
-                )
+                    "temperature": 0.2,
+                    "timeout": provider["timeout"],
+                }
+                if provider.get("use_response_format", True):
+                    kwargs["response_format"] = {"type": "json_object"}
+                response = await client.chat.completions.create(**kwargs)
                 content = response.choices[0].message.content or "{}"
                 return normalize_ai_payload(json.loads(content))
             except Exception:
-                if attempt == max_attempts:
+                if attempt == provider["max_attempts"]:
                     raise
                 await asyncio.sleep(4 * attempt)
 
-    if groq_client:
+    for provider in PROVIDERS:
         try:
-            intelligence = await request_model(
-                groq_client, "llama-3.3-70b-versatile", 8.0, max_attempts=3
-            )
-            intelligence["provider"] = "groq"
+            intelligence = await request_model(provider)
+            intelligence["provider"] = provider["name"].lower().replace(" ", "_")
             return intelligence
         except Exception as exc:
             print(
-                f"Groq fallback triggered for "
-                f"{safe_console_text(match['home_team'])} vs {safe_console_text(match['away_team'])}: {exc}"
-            )
-
-    if gemini_client:
-        try:
-            intelligence = await request_model(gemini_client, "gemini-2.5-flash", 15.0, max_attempts=2)
-            intelligence["provider"] = "gemini"
-            return intelligence
-        except Exception as exc:
-            print(
-                f"Gemini fallback triggered for "
+                f"{provider['name']} fallback triggered for "
                 f"{safe_console_text(match['home_team'])} vs {safe_console_text(match['away_team'])}: {exc}"
             )
 
@@ -903,21 +993,25 @@ def generate_vip_master_set():
     )
 
     direct_events = events[: min(direct_quotas["vip"], len(events))]
-    if groq_client or gemini_client:
-        print("Requesting live SKCS intelligence with Groq primary and Gemini fallback...")
+    if PROVIDERS:
+        provider_names = ", ".join(provider["name"] for provider in PROVIDERS)
+        print(f"Requesting live SKCS intelligence with provider chain: {provider_names}")
         intelligence_map = asyncio.run(build_intelligence_map(direct_events))
         for event in direct_events:
             match = extract_match(event)
             event["_skcs_intelligence"] = intelligence_map.get(match["match_id"])
-        live_count = sum(1 for value in intelligence_map.values() if value and value.get("provider") == "groq")
-        fallback_count = sum(1 for value in intelligence_map.values() if value and value.get("provider") == "gemini")
+        provider_counts = {}
+        for value in intelligence_map.values():
+            provider = (value or {}).get("provider")
+            if provider:
+                provider_counts[provider] = provider_counts.get(provider, 0) + 1
         deterministic_count = sum(1 for value in intelligence_map.values() if not value)
-        print(
-            f"Live intelligence complete. Groq={live_count}, Gemini={fallback_count}, "
-            f"DeterministicFallback={deterministic_count}"
-        )
+        provider_summary = ", ".join(
+            f"{name}={count}" for name, count in sorted(provider_counts.items())
+        ) or "No providers succeeded"
+        print(f"Live intelligence complete. {provider_summary}, DeterministicFallback={deterministic_count}")
     else:
-        print("No Groq/Gemini credentials found. Using deterministic local generator only.")
+        print("No provider credentials found. Using deterministic local generator only.")
 
     print("Wiping old predictions for the new daily run...")
     deleted = clear_predictions()
