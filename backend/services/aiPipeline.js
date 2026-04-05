@@ -14,6 +14,21 @@ function normalizeSport(sport) {
     return sport.trim().toLowerCase();
 }
 
+function normalizePrediction(prediction) {
+    const value = String(prediction || '').trim().toLowerCase();
+    if (!value) return null;
+
+    const aliases = {
+        home: 'home_win',
+        away: 'away_win',
+        home_win: 'home_win',
+        away_win: 'away_win',
+        draw: 'draw'
+    };
+
+    return aliases[value] || value;
+}
+
 function buildRawPredictionFromProviderItem(item) {
     const match_id = String(item.match_id || item.id || '').trim();
     if (!match_id) throw new Error('match_id missing in provider item');
@@ -28,8 +43,9 @@ function buildRawPredictionFromProviderItem(item) {
         away_team: item.away_team || null
     });
 
-    const rawPrediction = String(item.prediction || '').trim();
-    const prediction = rawPrediction || (scoring.winner === 'home' ? 'home_win' : 'away_win');
+    const providerPrediction = normalizePrediction(item.prediction);
+    const predictionSource = providerPrediction ? 'provider' : 'ai_fallback';
+    const prediction = providerPrediction || (scoring.winner === 'home' ? 'home_win' : 'away_win');
     const confidence = typeof item.confidence === 'number' && Number.isFinite(item.confidence)
         ? item.confidence
         : scoring.confidence;
@@ -46,19 +62,22 @@ function buildRawPredictionFromProviderItem(item) {
         metadata: {
             source: 'aiPipeline:v2-provider+aiScoring',
             data_mode: item.data_mode || null,
+            prediction_source: predictionSource,
             provider: item.provider || null,
             bookmaker: item.bookmaker || null,
             home_team: item.home_team || null,
             away_team: item.away_team || null,
-            match_time: item.date || item.commence_time || item.kickoff || null,
+            match_time: item.date || item.commence_time || item.kickoff || item.match_time || null,
             league: item.league || null,
             tournament: item.tournament || null,
             stage: item.stage || item.round || null,
             venue: item.venue || null,
             country: item.country || null,
-            ai: {
-                winner: scoring.winner
-            }
+            ai: predictionSource === 'ai_fallback'
+                ? {
+                    winner: scoring.winner
+                }
+                : null
         }
     };
 

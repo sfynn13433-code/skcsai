@@ -46,6 +46,63 @@ function buildRejectReason({ tier, reason, raw }) {
     return `[tier=${tier}] ${reason} (confidence=${raw.confidence}, market=${raw.market}, volatility=${raw.volatility})`;
 }
 
+function getMetadata(raw) {
+    return raw && typeof raw.metadata === 'object' && raw.metadata !== null ? raw.metadata : {};
+}
+
+function parseMatchTime(raw) {
+    const metadata = getMetadata(raw);
+    const value = metadata.match_time || metadata.kickoff || metadata.kickoff_time || null;
+    if (!value) return null;
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function isTestPrediction(raw) {
+    const metadata = getMetadata(raw);
+    return metadata.data_mode === 'test';
+}
+
+function evaluateMetadataQuality(raw, tier) {
+    if (isTestPrediction(raw)) {
+        return { is_valid: true, reject_reason: null };
+    }
+
+    const metadata = getMetadata(raw);
+    const predictionSource = String(metadata.prediction_source || '').trim().toLowerCase();
+    if (predictionSource !== 'provider') {
+        return {
+            is_valid: false,
+            reject_reason: buildRejectReason({ tier, reason: 'Prediction source is not provider-backed', raw })
+        };
+    }
+
+    if (typeof metadata.league !== 'string' || metadata.league.trim().length === 0) {
+        return {
+            is_valid: false,
+            reject_reason: buildRejectReason({ tier, reason: 'Missing league metadata', raw })
+        };
+    }
+
+    const kickoff = parseMatchTime(raw);
+    if (!kickoff) {
+        return {
+            is_valid: false,
+            reject_reason: buildRejectReason({ tier, reason: 'Missing or invalid kickoff time', raw })
+        };
+    }
+
+    const staleCutoff = new Date(Date.now() - 15 * 60 * 1000);
+    if (kickoff < staleCutoff) {
+        return {
+            is_valid: false,
+            reject_reason: buildRejectReason({ tier, reason: 'Kickoff time is already in the past', raw })
+        };
+    }
+
+    return { is_valid: true, reject_reason: null };
+}
+
 async function upsertFilteredRow({ rawId, tier, isValid, rejectReason }, client) {
     const sql = `
         insert into predictions_filtered (raw_id, tier, is_valid, reject_reason)
@@ -79,6 +136,11 @@ function evaluateRawAgainstTier(raw, rules) {
 
     if (!isVolatilityAllowed(rules.allowed_volatility, raw.volatility)) {
         return { is_valid: false, reject_reason: buildRejectReason({ tier, reason: 'Volatility not allowed by tier_rules', raw }) };
+    }
+
+    const metadataGate = evaluateMetadataQuality(raw, tier);
+    if (!metadataGate.is_valid) {
+        return metadataGate;
     }
 
     return { is_valid: true, reject_reason: null };
