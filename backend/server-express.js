@@ -73,6 +73,8 @@ const allowedOrigins = new Set([
   "https://skcsaiedge.onrender.com",
   "https://skcsai-z8cd.onrender.com",
   "https://skcs-sports-edge.github.io",
+  "https://skcsaisports.vercel.app",
+  "https://skcsai.vercel.app",
   "https://www.skcs.co.za",
   "https://skcsaisports-6x2zcgjq1-stephens-projects-e3dd898a.vercel.app",
   "https://skcsaisports-o200aflsl-stephens-projects-e3dd898a.vercel.app",
