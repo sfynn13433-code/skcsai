@@ -663,10 +663,6 @@
                     <h4 style="color:#60a5fa;margin-bottom:1rem;">⚽ Direct (Match Winners)</h4>
                     <div id="football-direct-matches" class="prediction-grid"><p>Loading...</p></div>
                 </div>
-                <div id="football-secondary" class="prediction-category">
-                    <h4 style="color:#fbbf24;margin-bottom:1rem;">📊 Secondary (Over/Under, BTTS)</h4>
-                    <div id="football-secondary-matches" class="prediction-grid"><p>Loading...</p></div>
-                </div>
                 <div id="football-multi" class="prediction-category">
                     <h4 style="color:#c084fc;margin-bottom:1rem;">🔀 Multi (Combined Selections)</h4>
                     <div id="football-multi-matches" class="prediction-grid"><p>Loading...</p></div>
@@ -1077,19 +1073,16 @@
         const singles = predictions.filter(p => p.type === 'single' || !p.type || ['direct', 'secondary'].includes(sectionType(p)));
         const accas = predictions.filter(p => p.type === 'acca' || sectionType(p) === 'acca_6match');
         const directSingles = singles.filter(p => sectionType(p) === 'direct' || (!sectionType(p) && Array.isArray(p.matches) && p.matches.length === 1));
-        const secondarySingles = singles.filter(p => sectionType(p) === 'secondary');
         const multiPreds = predictions.filter(p => sectionType(p) === 'multi' || (Array.isArray(p.matches) && p.matches.length >= 2 && p.matches.length <= 3));
         const sameMatchPreds = predictions.filter(p => sectionType(p) === 'same_match' || (Array.isArray(p.matches) && p.matches.length > 1 && new Set((p.matches || []).map(m => m.match_id)).size === 1));
 
         setFootballSection('football-direct-matches', directSingles, createPredictionCard, 'No direct football predictions available.');
-        setFootballSection('football-secondary-matches', secondarySingles, createPredictionCard, 'No football secondary markets available.');
         setFootballSection('football-multi-matches', multiPreds, createMultiCard, 'No football multi selections available.');
         setFootballSection('football-same-matches', sameMatchPreds, createMultiCard, 'No same-match football bet builders available.');
         setFootballSection('football-acca-matches', accas, createAccaCard, 'No football ACCA available.');
 
         const counts = {
             'football-direct-count': directSingles.length,
-            'football-secondary-count': secondarySingles.length,
             'football-multi-count': multiPreds.length,
             'football-same-count': sameMatchPreds.length,
             'football-acca-count': accas.length
@@ -1122,7 +1115,6 @@
         container.innerHTML = '';
 
         const directSingles = singles.filter(p => sectionType(p) === 'direct' || (!sectionType(p) && Array.isArray(p.matches) && p.matches.length === 1));
-        const secondarySingles = singles.filter(p => sectionType(p) === 'secondary');
 
         // Section 1: Direct (1X2) — only true single-match rows (multi-leg lives under Multi)
         if (directSingles.length > 0) {
@@ -1140,23 +1132,6 @@
             
             directSection.appendChild(directGrid);
             container.appendChild(directSection);
-        }
-
-        if (secondarySingles.length > 0) {
-            const secondarySection = document.createElement('div');
-            secondarySection.style.marginBottom = '2rem';
-            secondarySection.innerHTML = `<h4 style="color:#f59e0b;margin-bottom:1rem;font-size:1.1rem;">📊 Secondary (Over/Under, BTTS)</h4>`;
-
-            const secondaryGrid = document.createElement('div');
-            secondaryGrid.className = 'prediction-grid';
-
-            secondarySingles.forEach((pred, idx) => {
-                const card = createPredictionCard(pred, sport, `secondary-${idx}`);
-                secondaryGrid.appendChild(card);
-            });
-
-            secondarySection.appendChild(secondaryGrid);
-            container.appendChild(secondarySection);
         }
 
         // Section 2: Multi Bets (2-3 legs combined)
@@ -1216,7 +1191,7 @@
     }
 
     /**
-     * Create a Direct prediction card with nested secondary toggle
+     * Create a Direct prediction card
      */
     function createPredictionCard(pred, sport, cardId) {
         const card = document.createElement('div');
@@ -1226,6 +1201,43 @@
         const firstMatch = (pred.matches && pred.matches[0]) ? pred.matches[0] : {};
         const matchInfo = formatMatchInfo(firstMatch, sport);
         const prediction = formatPrediction(firstMatch);
+        const meta = firstMatch.metadata || {};
+        const reasoning = meta.reasoning || '';
+        const secondaryMarkets = Array.isArray(meta.secondary_markets) ? meta.secondary_markets : [];
+        const pipeline = meta.pipeline_data || {};
+        const baseline = pipeline.stage_1_baseline || null;
+        const contextNote = pipeline.stage_2_context || '';
+        const reality = pipeline.stage_3_reality || {};
+        const decision = pipeline.stage_4_decision || {};
+
+        const baselineHtml = baseline
+            ? `<div style="font-size:0.8rem;color:#475569;margin-top:8px;">
+                    <strong>Stage 1:</strong> H ${baseline.home ?? '-'}% | D ${baseline.draw ?? '-'}% | A ${baseline.away ?? '-'}%
+               </div>`
+            : '';
+
+        const contextHtml = contextNote
+            ? `<div style="font-size:0.8rem;color:#475569;margin-top:6px;"><strong>Stage 2:</strong> ${contextNote}</div>`
+            : '';
+
+        const realityHtml = (reality.weather || reality.volatility)
+            ? `<div style="font-size:0.8rem;color:#475569;margin-top:6px;"><strong>Stage 3:</strong> ${reality.weather || 'Unknown'} conditions • ${reality.volatility || 'Unknown'} volatility</div>`
+            : '';
+
+        const decisionHtml = Object.keys(decision).length
+            ? `<div style="font-size:0.8rem;color:#475569;margin-top:6px;"><strong>Stage 4:</strong> ACCA Safe = ${decision.acca_safe ? 'Yes' : 'No'}</div>`
+            : '';
+
+        const secondaryHtml = secondaryMarkets.length
+            ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0;">
+                    <div style="font-size:0.8rem;font-weight:700;color:#b45309;margin-bottom:8px;">Secondary Backup Markets</div>
+                    ${secondaryMarkets.map((market) => {
+                        const label = typeof market === 'string' ? market : (market.prediction || market.market || 'Secondary Market');
+                        const confidence = typeof market === 'object' && market !== null && market.confidence ? ` <span style="color:#64748b;">(${market.confidence}%)</span>` : '';
+                        return `<div style="font-size:0.85rem;color:#1f2937;margin-bottom:4px;">• ${label}${confidence}</div>`;
+                    }).join('')}
+               </div>`
+            : '';
 
         card.innerHTML = `
             <div class="match-info">
@@ -1236,26 +1248,13 @@
                 <div class="prediction" style="color:#059669; font-weight:bold;">${prediction}</div>
                 <div class="confidence" style="color:#4a5568; font-size:0.85rem;">${pred.total_confidence || 0}% Confidence</div>
             </div>
-            <button class="secondary-toggle" data-card-id="${cardId}" style="margin-top:8px; width:100%; padding:6px; background:#e7f1ff; color:#0d6efd; border:1px solid #0d6efd; border-radius:4px; cursor:pointer; font-size:0.85rem; font-weight:600;">View Secondary Markets</button>
-            <div class="secondary-markets" id="secondary-${cardId}" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid #e2e8f0;">
-                <div style="background:#f8f9fa; padding:8px; border-radius:4px; font-size:0.85rem; color:#4a5568;">
-                    Additional secondary-market selections are not available in the current feed for this match.
-                </div>
-            </div>
+            ${reasoning ? `<div style="margin-top:10px;padding:10px;border-radius:6px;background:#f8fafc;color:#334155;font-size:0.85rem;line-height:1.5;"><strong>AI Reasoning:</strong> ${reasoning}</div>` : ''}
+            ${baselineHtml}
+            ${contextHtml}
+            ${realityHtml}
+            ${decisionHtml}
+            ${secondaryHtml}
         `;
-
-        // Add toggle listener
-        const toggleBtn = card.querySelector('.secondary-toggle');
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', function() {
-                const secondaryDiv = document.getElementById(`secondary-${cardId}`);
-                if (secondaryDiv) {
-                    const isHidden = secondaryDiv.style.display === 'none';
-                    secondaryDiv.style.display = isHidden ? 'block' : 'none';
-                    toggleBtn.textContent = isHidden ? 'Hide Secondary Markets' : 'View Secondary Markets';
-                }
-            });
-        }
 
         return card;
     }
