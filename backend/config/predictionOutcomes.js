@@ -16,6 +16,9 @@ function validatePredictionOutcomes(outcomesConfig) {
     assert(outcomesConfig && typeof outcomesConfig === 'object', 'predictionOutcomes must be an object');
 
     for (const [sport, sportConfig] of Object.entries(outcomesConfig)) {
+        if (!sportConfig || typeof sportConfig !== 'object' || !Array.isArray(sportConfig.markets)) {
+            continue;
+        }
         assert(sportConfig && typeof sportConfig === 'object', `Sport config missing or invalid for sport=${sport}`);
         assert(Array.isArray(sportConfig.markets), `Sport config must contain markets[] for sport=${sport}`);
         assert(sportConfig.markets.length > 0, `Sport must have at least 1 market for sport=${sport}`);
@@ -331,4 +334,3 @@ predictionOutcomes.getMarketsBySport = getMarketsBySport;
 validatePredictionOutcomes(predictionOutcomes);
 
 module.exports = predictionOutcomes;
-
