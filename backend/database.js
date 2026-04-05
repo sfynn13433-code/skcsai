@@ -219,12 +219,32 @@ async function initializeTables() {
         await client.query(`CREATE TABLE IF NOT EXISTS predictions_final (
             id BIGSERIAL PRIMARY KEY,
             tier TEXT NOT NULL CHECK (tier IN ('normal', 'deep')),
-            type TEXT NOT NULL CHECK (type IN ('single', 'acca')),
+            type TEXT NOT NULL CHECK (type IN ('single', 'acca', 'direct', 'secondary', 'multi', 'same_match', 'acca_6match')),
             matches JSONB NOT NULL,
             total_confidence REAL NOT NULL,
             risk_level TEXT NOT NULL CHECK (risk_level IN ('safe', 'medium')),
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )`);
+
+        await client.query(`
+            DO $$
+            BEGIN
+                IF EXISTS (
+                    SELECT 1
+                    FROM pg_constraint
+                    WHERE conname = 'predictions_final_type_check'
+                ) THEN
+                    ALTER TABLE predictions_final DROP CONSTRAINT predictions_final_type_check;
+                END IF;
+            END
+            $$;
+        `);
+
+        await client.query(`
+            ALTER TABLE predictions_final
+            ADD CONSTRAINT predictions_final_type_check
+            CHECK (type IN ('single', 'acca', 'direct', 'secondary', 'multi', 'same_match', 'acca_6match'))
+        `);
 
         // Tier Rules
         await client.query(`CREATE TABLE IF NOT EXISTS tier_rules (

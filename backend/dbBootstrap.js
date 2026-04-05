@@ -38,13 +38,35 @@ async function bootstrap() {
             CREATE TABLE IF NOT EXISTS predictions_final (
                 id bigserial PRIMARY KEY,
                 tier text NOT NULL CHECK (tier IN ('normal', 'deep')),
-                type text NOT NULL CHECK (type IN ('single', 'acca')),
+                type text NOT NULL CHECK (type IN ('single', 'acca', 'direct', 'secondary', 'multi', 'same_match', 'acca_6match')),
                 matches jsonb NOT NULL,
                 total_confidence numeric NOT NULL,
                 risk_level text NOT NULL CHECK (risk_level IN ('safe', 'medium')),
                 created_at timestamptz NOT NULL DEFAULT now()
             );
         `);
+
+        await query(`
+            DO $$
+            BEGIN
+                IF EXISTS (
+                    SELECT 1
+                    FROM pg_constraint
+                    WHERE conname = 'predictions_final_type_check'
+                ) THEN
+                    ALTER TABLE predictions_final DROP CONSTRAINT predictions_final_type_check;
+                END IF;
+            END
+            $$;
+        `);
+
+        await query(`
+            ALTER TABLE predictions_final
+            ADD CONSTRAINT predictions_final_type_check
+            CHECK (type IN ('single', 'acca', 'direct', 'secondary', 'multi', 'same_match', 'acca_6match'));
+        `).catch((err) => {
+            if (!String(err.message || '').includes('already exists')) throw err;
+        });
 
         await query(`
             CREATE TABLE IF NOT EXISTS tier_rules (
