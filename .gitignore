@@ -33,3 +33,10 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# Exclude local environment, IDE, and log files
+backend/scripts/_vendor/
+.idea/
+backend/scripts/results/
+chaos_run.log
+chaos_run.err.log

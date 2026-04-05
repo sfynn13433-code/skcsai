@@ -21,10 +21,6 @@ except ImportError:
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent.parent
-VENDOR_DIR = SCRIPT_DIR / "_vendor"
-
-if VENDOR_DIR.exists():
-    sys.path.insert(0, str(VENDOR_DIR))
 
 from openai import AsyncOpenAI
 
