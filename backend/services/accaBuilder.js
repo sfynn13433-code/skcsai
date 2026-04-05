@@ -3,6 +3,7 @@
 const { withTransaction } = require('../db');
 const { detectConflicts } = require('../utils/conflictResolver');
 const { isValidCombination } = require('./conflictEngine');
+const { scoreMarkets } = require('./marketScoringEngine');
 
 function normalizeTier(tier) {
     if (tier === 'normal' || tier === 'deep') return tier;
@@ -222,6 +223,35 @@ function toFinalMatchPayload(p) {
     };
 }
 
+function toScoringMatchPayload(prediction) {
+    const metadata = prediction.metadata || {};
+    return {
+        match_id: prediction.match_id,
+        sport: prediction.sport,
+        home_team: metadata.home_team || null,
+        away_team: metadata.away_team || null
+    };
+}
+
+function toSecondaryPayload(prediction, marketScore) {
+    return {
+        raw_id: prediction.raw_id,
+        match_id: prediction.match_id,
+        sport: prediction.sport,
+        market: marketScore.legacyMarketHint || marketScore.market,
+        prediction: marketScore.pick,
+        confidence: marketScore.confidence,
+        volatility: prediction.volatility,
+        odds: prediction.odds,
+        metadata: {
+            ...(prediction.metadata || {}),
+            market_type: marketScore.type,
+            market_key: marketScore.market,
+            market_description: marketScore.description
+        }
+    };
+}
+
 function enforcePerMatchLimit(predictions, maxPerMatch) {
     const counts = new Map();
     const out = [];
@@ -319,6 +349,102 @@ function enforcePerSportLimit(predictions, limitPerSport) {
     return out;
 }
 
+function uniqueBy(rows, keyFn) {
+    const seen = new Set();
+    const out = [];
+    for (const row of rows) {
+        const key = keyFn(row);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(row);
+    }
+    return out;
+}
+
+function buildSecondaryCandidates(predictions) {
+    const secondary = [];
+
+    for (const prediction of predictions) {
+        const scoredMarkets = scoreMarkets(toScoringMatchPayload(prediction));
+        const derived = scoredMarkets
+            .filter((market) => market.type === 'secondary' || market.type === 'advanced')
+            .slice(0, 2)
+            .map((market) => toSecondaryPayload(prediction, market));
+
+        secondary.push(...derived);
+    }
+
+    return uniqueBy(secondary, (row) => `${row.match_id}:${row.market}:${row.prediction}`);
+}
+
+function buildSameMatchCandidates(predictions, secondaryCandidates) {
+    const groupedSecondary = new Map();
+    for (const row of secondaryCandidates) {
+        if (!groupedSecondary.has(row.match_id)) groupedSecondary.set(row.match_id, []);
+        groupedSecondary.get(row.match_id).push(row);
+    }
+
+    const out = [];
+    for (const prediction of predictions) {
+        const secondary = (groupedSecondary.get(prediction.match_id) || []).slice(0, 2);
+        if (secondary.length === 0) continue;
+
+        const legs = [toFinalMatchPayload(prediction), ...secondary.map(toFinalMatchPayload)];
+        out.push({
+            match_id: prediction.match_id,
+            matches: legs,
+            total_confidence: computeTotalConfidence(legs),
+            risk_level: riskLevelFromConfidence(computeTotalConfidence(legs))
+        });
+    }
+
+    return out;
+}
+
+function buildMultiCandidates(predictions, maxRows = 16) {
+    const direct = predictions.slice(0, 12);
+    const combos = [];
+
+    for (let size = 2; size <= 3; size++) {
+        for (const combo of combinations(direct, size)) {
+            const ids = combo.map((row) => row.match_id);
+            if (new Set(ids).size !== ids.length) continue;
+            const legs = combo.map(toFinalMatchPayload);
+            combos.push({
+                match_id: ids.join('|'),
+                matches: legs,
+                total_confidence: computeTotalConfidence(legs),
+                risk_level: riskLevelFromConfidence(computeTotalConfidence(legs))
+            });
+        }
+    }
+
+    return combos
+        .sort((a, b) => b.total_confidence - a.total_confidence)
+        .slice(0, maxRows);
+}
+
+function buildAcca6Candidates(predictions, maxRows = 6) {
+    const direct = predictions.slice(0, 18);
+    if (direct.length < 6) return [];
+
+    const rows = [];
+    for (let start = 0; start <= direct.length - 6 && rows.length < maxRows; start++) {
+        const combo = direct.slice(start, start + 6);
+        const ids = combo.map((row) => row.match_id);
+        if (new Set(ids).size !== ids.length) continue;
+        const legs = combo.map(toFinalMatchPayload);
+        rows.push({
+            match_id: ids.join('|'),
+            matches: legs,
+            total_confidence: computeTotalConfidence(legs),
+            risk_level: riskLevelFromConfidence(computeTotalConfidence(legs))
+        });
+    }
+
+    return rows;
+}
+
 async function loadValidFilteredPredictions(tier, client) {
     const t = normalizeTier(tier);
 
@@ -384,58 +510,80 @@ async function buildFinalForTier(tier) {
 
         await clearFinalForTier(t, client);
 
-        // Build singles from all limited candidates
-        const singles = [];
+        const directRows = [];
         for (const p of limitedCandidates) {
             const matches = [toFinalMatchPayload(p)];
             const total = computeTotalConfidence(matches);
             const row = await insertFinalRow({
-                tier: t, type: 'single', matches, total_confidence: total, risk_level: riskLevelFromConfidence(total)
+                tier: t, type: 'direct', matches, total_confidence: total, risk_level: riskLevelFromConfidence(total)
             }, client);
-            singles.push(row);
+            directRows.push(row);
         }
 
-        // Build ACCAs only if we have reasonable number of low volatility candidates
-        const lowVol = limitedCandidates.filter(p => p.volatility === 'low');
-        const accas = [];
-        const maxAccaSize = Math.min(tierRules.max_acca_size, 3); // Cap at 3 to limit combinations
-
-        // Only build ACCAs if we have 2-10 low volatility candidates
-        if (lowVol.length >= 2 && lowVol.length <= 10) {
-            for (let size = 2; size <= maxAccaSize; size++) {
-                const combos = combinations(lowVol, size);
-                for (const combo of combos) {
-                    if (!combo.length) continue;
-
-                    if (accaRules.no_same_match) {
-                        const matchIds = combo.map(p => p.match_id);
-                        const set = new Set(matchIds);
-                        if (set.size !== matchIds.length) continue;
-                    }
-
-                    if (!accaRules.allow_high_volatility) {
-                        if (combo.some(p => p.volatility === 'high')) continue;
-                    }
-
-                    if (t === 'deep' && combo.some(p => p.volatility !== 'low')) continue;
-
-                    if (accaRules.no_conflicting_markets) {
-                        const { hasConflicts } = detectConflicts(combo);
-                        if (hasConflicts) continue;
-                    }
-
-                    const matches = combo.map(toFinalMatchPayload);
-                    const avg = computeTotalConfidence(matches);
-                    const row = await insertFinalRow({
-                        tier: t, type: 'acca', matches, total_confidence: avg, risk_level: riskLevelFromConfidence(avg)
-                    }, client);
-                    accas.push(row);
-                }
-            }
+        const secondaryCandidates = buildSecondaryCandidates(limitedCandidates);
+        const secondaryRows = [];
+        for (const prediction of secondaryCandidates) {
+            const matches = [toFinalMatchPayload(prediction)];
+            const total = computeTotalConfidence(matches);
+            const row = await insertFinalRow({
+                tier: t, type: 'secondary', matches, total_confidence: total, risk_level: riskLevelFromConfidence(total)
+            }, client);
+            secondaryRows.push(row);
         }
 
-        console.log('[accaBuilder] tier=%s singles=%s accas=%s', t, singles.length, accas.length);
-        return { tier: t, singles, accas };
+        const sameMatchRows = [];
+        for (const row of buildSameMatchCandidates(limitedCandidates, secondaryCandidates)) {
+            const inserted = await insertFinalRow({
+                tier: t,
+                type: 'same_match',
+                matches: row.matches,
+                total_confidence: row.total_confidence,
+                risk_level: row.risk_level
+            }, client);
+            sameMatchRows.push(inserted);
+        }
+
+        const multiRows = [];
+        for (const row of buildMultiCandidates(limitedCandidates)) {
+            const inserted = await insertFinalRow({
+                tier: t,
+                type: 'multi',
+                matches: row.matches,
+                total_confidence: row.total_confidence,
+                risk_level: row.risk_level
+            }, client);
+            multiRows.push(inserted);
+        }
+
+        const accaRows = [];
+        for (const row of buildAcca6Candidates(limitedCandidates.filter((p) => p.volatility === 'low'))) {
+            const inserted = await insertFinalRow({
+                tier: t,
+                type: 'acca_6match',
+                matches: row.matches,
+                total_confidence: row.total_confidence,
+                risk_level: row.risk_level
+            }, client);
+            accaRows.push(inserted);
+        }
+
+        console.log('[accaBuilder] tier=%s direct=%s secondary=%s same_match=%s multi=%s acca_6match=%s',
+            t,
+            directRows.length,
+            secondaryRows.length,
+            sameMatchRows.length,
+            multiRows.length,
+            accaRows.length
+        );
+
+        return {
+            tier: t,
+            direct: directRows,
+            secondary: secondaryRows,
+            same_match: sameMatchRows,
+            multi: multiRows,
+            acca_6match: accaRows
+        };
     });
 }
 
