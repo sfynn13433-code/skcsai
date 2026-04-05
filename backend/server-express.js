@@ -71,7 +71,11 @@ app.disable('x-powered-by');
 // -----------------  CORS configuration (HARDENED)  -----------------
 const allowedOrigins = new Set([
   "https://skcsaiedge.onrender.com",
+  "https://skcsai-z8cd.onrender.com",
   "https://skcs-sports-edge.github.io",
+  "https://www.skcs.co.za",
+  "https://skcsaisports-6x2zcgjq1-stephens-projects-e3dd898a.vercel.app",
+  "https://skcsaisports-o200aflsl-stephens-projects-e3dd898a.vercel.app",
   "http://localhost:3000",
   "http://localhost:5173",
   "http://127.0.0.1:3000",
