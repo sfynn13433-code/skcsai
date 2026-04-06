@@ -1,4 +1,4 @@
-# Google Cloud: Soccer Refresh Workflow
+# Google Cloud: Soccer Refresh And Grading Workflow
 
 Use this wording in Google Cloud, Cloud Scheduler, or Cloud Code:
 
@@ -8,12 +8,13 @@ Use this wording in Google Cloud, Cloud Scheduler, or Cloud Code:
 
 Cloud services do not run a source file directly. They either call an HTTP endpoint on a running service or execute a deployed job/container.
 
-## Current SKCS Trigger
+## Current SKCS Triggers
 
-The backend supports a sport-specific refresh endpoint:
+The backend supports these sport-specific endpoints:
 
 ```text
 POST /api/refresh-predictions?sport=football
+POST /api/grade-predictions?sport=football&date=YYYY-MM-DD
 ```
 
 Required header:
@@ -22,7 +23,7 @@ Required header:
 x-api-key: <SKCS_REFRESH_KEY>
 ```
 
-The response already includes the publish-run summary, so this is the correct trigger for daily soccer pulls.
+The refresh response includes the publish-run summary. The grading response includes the context backfill summary plus the accuracy grading summary.
 
 ## Recommended Schedule
 
@@ -31,6 +32,7 @@ The backend currently works on these South Africa times:
 - `08:00` SAST
 - `16:00` SAST
 - `20:00` SAST
+- `04:00` SAST for grading yesterday's football window
 
 If you want Google Cloud Scheduler to be the external trigger, use `Africa/Johannesburg` and this cron:
 
@@ -84,6 +86,46 @@ npm run refresh:football
 
 The script calls the same backend endpoint and prints the returned JSON, including the publish-run information.
 
+## Daily Football Grading
+
+The grading workflow should run once daily against yesterday's football fixtures. If you omit `date`, the backend defaults to yesterday in `Africa/Johannesburg`.
+
+Target:
+
+```text
+https://<your-backend-host>/api/grade-predictions?sport=football
+```
+
+### Create The Scheduler Job
+
+```bash
+gcloud scheduler jobs create http skcs-football-grade --location=us-central1 --schedule="0 4 * * *" --time-zone="Africa/Johannesburg" --uri="https://<your-backend-host>/api/grade-predictions?sport=football" --http-method=POST --headers="x-api-key=<SKCS_REFRESH_KEY>" --attempt-deadline=30m --description="Grade yesterday's soccer predictions"
+```
+
+### Update The Scheduler Job
+
+```bash
+gcloud scheduler jobs update http skcs-football-grade --location=us-central1 --schedule="0 4 * * *" --time-zone="Africa/Johannesburg" --uri="https://<your-backend-host>/api/grade-predictions?sport=football" --http-method=POST --update-headers="x-api-key=<SKCS_REFRESH_KEY>" --attempt-deadline=30m --description="Grade yesterday's soccer predictions"
+```
+
+### Run It Immediately
+
+```bash
+gcloud scheduler jobs run skcs-football-grade --location=us-central1
+```
+
+### Manual Trigger From This Repo
+
+```bash
+npm run grade:football -- --host=https://<your-backend-host> --api-key=<SKCS_REFRESH_KEY>
+```
+
+For a specific date:
+
+```bash
+npm run grade:football -- --host=https://<your-backend-host> --api-key=<SKCS_REFRESH_KEY> --date=2026-04-05
+```
+
 ## Operational Expectation
 
 When the job succeeds, you should see:
@@ -92,6 +134,7 @@ When the job succeeds, you should see:
 2. `requested_sports = ['football']`
 3. Fresh football rows in `predictions_final`
 4. A new available run in `/api/accuracy?date=<today>&sport=football`
+5. After grading, non-zero `graded` rows for `/api/accuracy?date=<yesterday>&sport=football`
 
 For a fresh same-day run, the accuracy window may still show `0 graded` until matches settle. That is normal. The run is still valid if the publish summary shows products and legs.
 
@@ -99,4 +142,4 @@ For a fresh same-day run, the accuracy window may still show `0 graded` until ma
 
 Use this sentence in runbooks and internal notes:
 
-`Cloud Scheduler triggers the soccer prediction refresh workflow by sending an authenticated POST request to the SKCS backend refresh endpoint with sport=football.`
+`Cloud Scheduler triggers the soccer prediction refresh workflow by sending an authenticated POST request to the SKCS backend refresh endpoint with sport=football, and a separate 04:00 SAST job grades yesterday's football predictions through the grading endpoint.`

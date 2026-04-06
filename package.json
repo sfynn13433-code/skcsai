@@ -10,6 +10,8 @@
     "test:smoke": "node scripts/smoke-test.js",
     "refresh:trigger": "node scripts/trigger-refresh.js",
     "refresh:football": "node scripts/trigger-refresh.js --sport=football",
+    "grade:trigger": "node scripts/trigger-grade.js",
+    "grade:football": "node scripts/trigger-grade.js --sport=football",
     "accuracy:track": "node scripts/track-prediction-accuracy.js",
     "accuracy:april5": "node scripts/track-prediction-accuracy.js --date=2026-04-05 --sport=football",
     "context:backfill": "node scripts/backfill-football-context.js",

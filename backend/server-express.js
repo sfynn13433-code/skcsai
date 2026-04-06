@@ -7,6 +7,7 @@ const helmet       = require('helmet');
 const rateLimit    = require('express-rate-limit');
 const cors         = require('cors');
 const morgan       = require('morgan');
+const { spawn }    = require('child_process');
 const moment       = require('moment-timezone');
 const path         = require('path');
 const { query }            = require('./db');
@@ -323,6 +324,117 @@ app.post('/api/refresh-predictions', async (req, res) => {
     } catch (err) {
         console.error('REFRESH PREDICTIONS ERROR:', err);
         res.status(500).json({ error: 'Failed to refresh predictions' });
+    }
+});
+
+function parseJsonSafe(value) {
+    try {
+        return value ? JSON.parse(value) : null;
+    } catch {
+        return null;
+    }
+}
+
+function runNodeScript(scriptRelativePath, args = []) {
+    const projectRoot = path.resolve(__dirname, '..');
+    const scriptPath = path.join(projectRoot, scriptRelativePath);
+
+    return new Promise((resolve, reject) => {
+        const child = spawn(process.execPath, [scriptPath, ...args], {
+            cwd: projectRoot,
+            env: process.env
+        });
+
+        let stdout = '';
+        let stderr = '';
+
+        child.stdout.on('data', (chunk) => {
+            stdout += chunk.toString();
+        });
+
+        child.stderr.on('data', (chunk) => {
+            stderr += chunk.toString();
+        });
+
+        child.on('error', (error) => {
+            reject(error);
+        });
+
+        child.on('close', (code) => {
+            const trimmedStdout = stdout.trim();
+            const trimmedStderr = stderr.trim();
+            const payload = parseJsonSafe(trimmedStdout);
+
+            if (code !== 0) {
+                const error = new Error(`Script failed: ${scriptRelativePath} (exit ${code})`);
+                error.code = code;
+                error.stdout = trimmedStdout;
+                error.stderr = trimmedStderr;
+                error.payload = payload;
+                reject(error);
+                return;
+            }
+
+            resolve({
+                code,
+                stdout: trimmedStdout,
+                stderr: trimmedStderr,
+                payload
+            });
+        });
+    });
+}
+
+function getDefaultGradeDate() {
+    return moment.tz('Africa/Johannesburg').subtract(1, 'day').format('YYYY-MM-DD');
+}
+
+// -------------------------------------------------
+//  Grade predictions endpoint
+// -------------------------------------------------
+app.post('/api/grade-predictions', async (req, res) => {
+    try {
+        const apiKey = req.headers['x-api-key'];
+        const requestedSport = req.query.sport ? String(req.query.sport).toLowerCase() : 'football';
+        const requestedDate = req.query.date ? String(req.query.date) : getDefaultGradeDate();
+        const requestedRunId = req.query.run_id ? String(req.query.run_id) : null;
+
+        if (apiKey !== process.env.SKCS_REFRESH_KEY && apiKey !== 'skcs_refresh_key') {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(requestedDate)) {
+            return res.status(400).json({ error: 'Invalid date. Expected YYYY-MM-DD.' });
+        }
+
+        console.log(`[GRADE] Backfilling context and grading predictions for ${requestedSport} on ${requestedDate}${requestedRunId ? ` (run ${requestedRunId})` : ''}...`);
+
+        const backfillArgs = [`--date=${requestedDate}`, `--sport=${requestedSport}`];
+        const trackerArgs = [`--date=${requestedDate}`, `--sport=${requestedSport}`];
+        if (requestedRunId) trackerArgs.push(`--run-id=${requestedRunId}`);
+
+        const backfill = await runNodeScript(path.join('scripts', 'backfill-football-context.js'), backfillArgs);
+        const grading = await runNodeScript(path.join('scripts', 'track-prediction-accuracy.js'), trackerArgs);
+
+        res.status(200).json({
+            success: true,
+            message: 'Predictions graded',
+            date: requestedDate,
+            requestedSport,
+            runId: requestedRunId ? Number(requestedRunId) : (grading.payload?.publishRunId || null),
+            backfill: backfill.payload || { stdout: backfill.stdout },
+            grading: grading.payload || { stdout: grading.stdout },
+            timestamp: new Date().toISOString()
+        });
+    } catch (err) {
+        console.error('GRADE PREDICTIONS ERROR:', err);
+        res.status(500).json({
+            error: 'Failed to grade predictions',
+            detail: err.message,
+            stdout: err.stdout || null,
+            stderr: err.stderr || null,
+            payload: err.payload || null
+        });
     }
 });
 
