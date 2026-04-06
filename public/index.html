@@ -1203,6 +1203,69 @@
     /**
      * Create a Direct prediction card
      */
+    function getTierLabel(pred) {
+        return String(pred && pred.tier || '').toLowerCase() === 'deep' ? 'Elite Tier' : 'Core Tier';
+    }
+
+    function getProductLabel(pred) {
+        const type = String(pred && (pred.section_type || pred.type) || '').toLowerCase();
+        if (type === 'same_match') return 'Same Match';
+        if (type === 'acca_6match') return '6-Match ACCA';
+        if (type === 'multi') return 'Multi';
+        if (type === 'secondary') return 'Secondary';
+        if (type === 'direct') return 'Direct';
+        return 'Prediction';
+    }
+
+    function renderCardBadges(pred) {
+        return `
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+                <span style="display:inline-block;background:#0f172a;color:#fff;padding:4px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;">${getTierLabel(pred)}</span>
+                <span style="display:inline-block;background:#e2e8f0;color:#1e293b;padding:4px 8px;border-radius:999px;font-size:0.72rem;font-weight:700;">${getProductLabel(pred)}</span>
+            </div>
+        `;
+    }
+
+    function renderPipelinePanel(pred, meta) {
+        const pipeline = meta && meta.pipeline_data ? meta.pipeline_data : {};
+        const isElite = String(pred && pred.tier || '').toLowerCase() === 'deep';
+        const stageSource = isElite
+            ? (pipeline.elite_6_stage || {})
+            : (pipeline.core_4_stage || {});
+
+        const stageEntries = isElite
+            ? [
+                ['Stage 1', stageSource.stage_1_collection],
+                ['Stage 2', stageSource.stage_2_baseline],
+                ['Stage 3', stageSource.stage_3_context],
+                ['Stage 4', stageSource.stage_4_reality],
+                ['Stage 5', stageSource.stage_5_decision],
+                ['Stage 6', stageSource.stage_6_final]
+            ]
+            : [
+                ['Stage 1', stageSource.stage_1_baseline],
+                ['Stage 2', stageSource.stage_2_context],
+                ['Stage 3', stageSource.stage_3_reality],
+                ['Stage 4', stageSource.stage_4_final]
+            ];
+
+        const filteredStages = stageEntries.filter(([, value]) => String(value || '').trim().length > 0);
+        if (!filteredStages.length) return '';
+
+        return `
+            <div style="margin-top:12px;padding:12px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;">
+                <div style="font-size:0.78rem;font-weight:800;color:#0f172a;margin-bottom:8px;letter-spacing:0.06em;text-transform:uppercase;">
+                    ${isElite ? 'Elite 6-Stage Process' : 'Core 4-Stage Process'}
+                </div>
+                ${filteredStages.map(([label, value]) => `
+                    <div style="font-size:0.82rem;color:#334155;line-height:1.5;margin-bottom:6px;">
+                        <strong style="color:#0f172a;">${label}:</strong> ${value}
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
     function createPredictionCard(pred, sport, cardId) {
         const card = document.createElement('div');
         card.className = 'prediction-card';
@@ -1237,6 +1300,9 @@
         const decisionHtml = Object.keys(decision).length
             ? `<div style="font-size:0.8rem;color:#475569;margin-top:6px;"><strong>Stage 4:</strong> ACCA Safe = ${decision.acca_safe ? 'Yes' : 'No'}</div>`
             : '';
+        const badgesHtml = renderCardBadges(pred);
+        const pipelineHtml = renderPipelinePanel(pred, meta);
+        const legacyStagesHtml = pipelineHtml ? '' : `${baselineHtml}${contextHtml}${realityHtml}${decisionHtml}`;
 
         const secondaryHtml = secondaryMarkets.length
             ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0;">
@@ -1250,6 +1316,7 @@
             : '';
 
         card.innerHTML = `
+            ${badgesHtml}
             <div class="match-info">
                 <div class="teams" style="font-weight:bold; color:#1a202c; font-size:1.1rem; line-height:1.4;">${matchInfo.teams}</div>
                 <div class="match-date" style="color:#4a5568; font-size:0.75rem; margin-top:8px; letter-spacing:1px;">${matchInfo.context}</div>
@@ -1259,11 +1326,9 @@
                 <div class="confidence" style="color:#4a5568; font-size:0.85rem;">${pred.total_confidence || 0}% Confidence</div>
             </div>
             ${reasoning ? `<div style="margin-top:10px;padding:10px;border-radius:6px;background:#f8fafc;color:#334155;font-size:0.85rem;line-height:1.5;"><strong>AI Reasoning:</strong> ${reasoning}</div>` : ''}
-            ${baselineHtml}
-            ${contextHtml}
-            ${realityHtml}
-            ${decisionHtml}
+            ${legacyStagesHtml}
             ${secondaryHtml}
+            ${pipelineHtml}
         `;
 
         return card;
@@ -1281,17 +1346,21 @@
         const predictionDetails = pred.prediction_details || firstMeta.prediction_details || {};
         const reasoning = predictionDetails.reasoning || firstMeta.reasoning || '';
         const outcome = predictionDetails.outcome || 'Multi Bet';
+        const badgesHtml = renderCardBadges(pred);
+        const pipelineHtml = renderPipelinePanel(pred, firstMeta);
 
         const legsHtml = (pred.matches || []).map((m, idx) => {
             const info = formatMatchInfo(m, sport);
             const pred_text = formatPrediction(m);
             return `<div style="margin-bottom:8px; padding:8px; background:#f8f9fa; border-radius:4px;">
                 <div style="font-weight:600; color:#1a202c; font-size:0.95rem;">${info.teams}</div>
+                <div style="color:#64748b; font-size:0.72rem; margin-top:4px; letter-spacing:0.03em;">${info.context}</div>
                 <div style="color:#059669; font-weight:600; margin-top:4px;">${pred_text}</div>
             </div>`;
         }).join('');
 
         card.innerHTML = `
+            ${badgesHtml}
             <div style="margin-bottom:8px;">
                 <span style="display:inline-block; background:#c084fc; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold;">MULTI (${pred.matches.length} LEGS)</span>
             </div>
@@ -1301,6 +1370,7 @@
                 <div style="color:#4a5568; font-size:0.85rem;">${pred.total_confidence || 0}% Confidence</div>
             </div>
             ${reasoning ? `<div style="margin-top:10px;padding:10px;border-radius:6px;background:#f8fafc;color:#334155;font-size:0.85rem;line-height:1.5;"><strong>AI Reasoning:</strong> ${reasoning}</div>` : ''}
+            ${pipelineHtml}
         `;
 
         return card;
@@ -1318,17 +1388,21 @@
         const predictionDetails = pred.prediction_details || firstMeta.prediction_details || {};
         const reasoning = predictionDetails.reasoning || firstMeta.reasoning || '';
         const outcome = predictionDetails.outcome || '6-Match Accumulator';
+        const badgesHtml = renderCardBadges(pred);
+        const pipelineHtml = renderPipelinePanel(pred, firstMeta);
 
         const legsHtml = (pred.matches || []).map((m, idx) => {
             const info = formatMatchInfo(m, sport);
             const pred_text = formatPrediction(m);
             return `<div style="margin-bottom:6px; padding:6px; background:#f8f9fa; border-radius:4px; font-size:0.9rem;">
                 <div style="font-weight:600; color:#1a202c;">${info.teams}</div>
+                <div style="color:#64748b; font-size:0.72rem; margin-top:4px; letter-spacing:0.03em;">${info.context}</div>
                 <div style="color:#059669; font-weight:600;">${pred_text}</div>
             </div>`;
         }).join('');
 
         card.innerHTML = `
+            ${badgesHtml}
             <div style="margin-bottom:8px;">
                 <span style="display:inline-block; background:#f87171; color:white; padding:4px 8px; border-radius:4px; font-size:0.75rem; font-weight:bold;">ACCA (${pred.matches.length} LEGS)</span>
             </div>
@@ -1338,6 +1412,7 @@
                 <div style="color:#4a5568; font-size:0.85rem;">${pred.total_confidence || 0}% Confidence</div>
             </div>
             ${reasoning ? `<div style="margin-top:10px;padding:10px;border-radius:6px;background:#f8fafc;color:#334155;font-size:0.85rem;line-height:1.5;"><strong>AI Reasoning:</strong> ${reasoning}</div>` : ''}
+            ${pipelineHtml}
         `;
 
         return card;
