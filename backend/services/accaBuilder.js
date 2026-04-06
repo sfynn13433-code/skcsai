@@ -210,16 +210,22 @@ async function getAccaRules(client) {
 }
 
 function toFinalMatchPayload(p) {
+    const metadata = getMetadata(p);
+    const kickoff = metadata.match_time || metadata.kickoff || metadata.kickoff_time || null;
     return {
         raw_id: p.raw_id,
         match_id: p.match_id,
-        sport: p.sport,
+        sport: normalizeSportKey(p.sport),
+        home_team: metadata.home_team || null,
+        away_team: metadata.away_team || null,
+        match_date: kickoff,
+        commence_time: kickoff,
         market: p.market,
         prediction: p.prediction,
         confidence: p.confidence,
         volatility: p.volatility,
         odds: p.odds,
-        metadata: p.metadata
+        metadata
     };
 }
 
@@ -445,8 +451,16 @@ function buildAcca6Candidates(predictions, maxRows = 6) {
     return rows;
 }
 
-async function loadValidFilteredPredictions(tier, client) {
+function normalizeRequestedSports(requestedSports = []) {
+    const values = Array.isArray(requestedSports) ? requestedSports : [requestedSports];
+    return values
+        .map((value) => normalizeSportKey(value))
+        .filter((value) => value && value !== 'all');
+}
+
+async function loadValidFilteredPredictions(tier, client, options = {}) {
     const t = normalizeTier(tier);
+    const requestedSports = normalizeRequestedSports(options.requestedSports);
 
     const res = await client.query(
         `
@@ -471,36 +485,35 @@ async function loadValidFilteredPredictions(tier, client) {
     );
 
     return res.rows
+        .filter((row) => requestedSports.length === 0 || requestedSports.includes(normalizeSportKey(row.sport)))
         .filter((row) => isPublishablePrediction(row, t))
         .sort(compareCandidates);
 }
 
-async function clearFinalForTier(tier, client) {
-    const t = normalizeTier(tier);
-    await client.query('delete from predictions_final where tier = $1;', [t]);
-}
-
-async function insertFinalRow({ tier, type, matches, total_confidence, risk_level }, client) {
+async function insertFinalRow({ publish_run_id, tier, type, matches, total_confidence, risk_level }, client) {
     const res = await client.query(
         `
-        insert into predictions_final (tier, type, matches, total_confidence, risk_level)
-        values ($1, $2, $3::jsonb, $4, $5)
+        insert into predictions_final (publish_run_id, tier, type, matches, total_confidence, risk_level)
+        values ($1, $2, $3, $4::jsonb, $5, $6)
         returning *;
         `,
-        [tier, type, JSON.stringify(matches), total_confidence, risk_level]
+        [publish_run_id || null, tier, type, JSON.stringify(matches), total_confidence, risk_level]
     );
 
     return res.rows[0];
 }
 
-async function buildFinalForTier(tier) {
+async function buildFinalForTier(tier, options = {}) {
     const t = normalizeTier(tier);
+    const publishRunId = options.publishRunId || null;
 
     return withTransaction(async (client) => {
         const tierRules = await getTierRules(t, client);
         const accaRules = await getAccaRules(client);
 
-        const valid = await loadValidFilteredPredictions(t, client);
+        const valid = await loadValidFilteredPredictions(t, client, {
+            requestedSports: options.requestedSports
+        });
         const perMatchLimited = enforcePerMatchLimit(valid, accaRules.max_per_match);
         const perSportLimited = enforcePerSportLimit(perMatchLimited, 4);
 
@@ -508,14 +521,17 @@ async function buildFinalForTier(tier) {
         const MAX_ACCA_CANDIDATES = 30;
         const limitedCandidates = perSportLimited.slice(0, MAX_ACCA_CANDIDATES);
 
-        await clearFinalForTier(t, client);
-
         const directRows = [];
         for (const p of limitedCandidates) {
             const matches = [toFinalMatchPayload(p)];
             const total = computeTotalConfidence(matches);
             const row = await insertFinalRow({
-                tier: t, type: 'direct', matches, total_confidence: total, risk_level: riskLevelFromConfidence(total)
+                publish_run_id: publishRunId,
+                tier: t,
+                type: 'direct',
+                matches,
+                total_confidence: total,
+                risk_level: riskLevelFromConfidence(total)
             }, client);
             directRows.push(row);
         }
@@ -526,7 +542,12 @@ async function buildFinalForTier(tier) {
             const matches = [toFinalMatchPayload(prediction)];
             const total = computeTotalConfidence(matches);
             const row = await insertFinalRow({
-                tier: t, type: 'secondary', matches, total_confidence: total, risk_level: riskLevelFromConfidence(total)
+                publish_run_id: publishRunId,
+                tier: t,
+                type: 'secondary',
+                matches,
+                total_confidence: total,
+                risk_level: riskLevelFromConfidence(total)
             }, client);
             secondaryRows.push(row);
         }
@@ -534,6 +555,7 @@ async function buildFinalForTier(tier) {
         const sameMatchRows = [];
         for (const row of buildSameMatchCandidates(limitedCandidates, secondaryCandidates)) {
             const inserted = await insertFinalRow({
+                publish_run_id: publishRunId,
                 tier: t,
                 type: 'same_match',
                 matches: row.matches,
@@ -546,6 +568,7 @@ async function buildFinalForTier(tier) {
         const multiRows = [];
         for (const row of buildMultiCandidates(limitedCandidates)) {
             const inserted = await insertFinalRow({
+                publish_run_id: publishRunId,
                 tier: t,
                 type: 'multi',
                 matches: row.matches,
@@ -558,6 +581,7 @@ async function buildFinalForTier(tier) {
         const accaRows = [];
         for (const row of buildAcca6Candidates(limitedCandidates.filter((p) => p.volatility === 'low'))) {
             const inserted = await insertFinalRow({
+                publish_run_id: publishRunId,
                 tier: t,
                 type: 'acca_6match',
                 matches: row.matches,

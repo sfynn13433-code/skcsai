@@ -129,8 +129,26 @@ router.get('/', requireRole('user'), async (req, res) => {
         }
 
         let queryStr = `
-            SELECT id, tier, type, matches, total_confidence, risk_level, created_at
-            FROM predictions_final
+            WITH latest_runs AS (
+                SELECT DISTINCT ON (sport_key)
+                    sport_key,
+                    publish_run_id
+                FROM (
+                    SELECT
+                        LOWER(COALESCE(pf.matches->0->>'sport', 'unknown')) AS sport_key,
+                        pf.publish_run_id,
+                        COALESCE(pr.completed_at, pr.started_at, pf.created_at) AS run_completed_at
+                    FROM predictions_final pf
+                    LEFT JOIN prediction_publish_runs pr ON pr.id = pf.publish_run_id
+                    WHERE pf.publish_run_id IS NOT NULL
+                ) ranked
+                ORDER BY sport_key, run_completed_at DESC, publish_run_id DESC
+            )
+            SELECT pf.id, pf.publish_run_id, pf.tier, pf.type, pf.matches, pf.total_confidence, pf.risk_level, pf.created_at
+            FROM predictions_final pf
+            JOIN latest_runs lr
+              ON lr.publish_run_id = pf.publish_run_id
+             AND LOWER(COALESCE(pf.matches->0->>'sport', 'unknown')) = lr.sport_key
             WHERE tier IN (${planCapabilities.tiers.map(t => `'${t}'`).join(',')})
         `;
         const queryParams = [];

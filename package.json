@@ -7,7 +7,13 @@
     "start": "node backend/server-express.js",
     "dev": "nodemon backend/server-express.js",
     "test": "node scripts/smoke-test.js",
-    "test:smoke": "node scripts/smoke-test.js"
+    "test:smoke": "node scripts/smoke-test.js",
+    "refresh:trigger": "node scripts/trigger-refresh.js",
+    "refresh:football": "node scripts/trigger-refresh.js --sport=football",
+    "accuracy:track": "node scripts/track-prediction-accuracy.js",
+    "accuracy:april5": "node scripts/track-prediction-accuracy.js --date=2026-04-05 --sport=football",
+    "context:backfill": "node scripts/backfill-football-context.js",
+    "context:april5": "node scripts/backfill-football-context.js --date=2026-04-05 --sport=football"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.101.1",

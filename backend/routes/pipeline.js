@@ -6,7 +6,7 @@ const {
     runPipelineFromConfiguredDataMode, 
     rebuildFinalOutputs 
 } = require('../services/aiPipeline');
-const { syncAllSports } = require('../services/syncService');
+const { syncAllSports, syncSports } = require('../services/syncService');
 const config = require('../config');
 const { requireRole } = require('../utils/auth');
 
@@ -18,24 +18,26 @@ const router = express.Router();
  * This is the main button to pull real matches from APIs into Supabase.
  */
 router.post('/sync', requireRole('admin'), async (req, res) => {
-    console.log('[pipeline] Starting manual sync of REAL sports data (background)...');
+    const requestedSport = req.body?.sport ? String(req.body.sport).toLowerCase() : null;
+    console.log(`[pipeline] Starting manual sync of REAL sports data${requestedSport ? ` for ${requestedSport}` : ''} (background)...`);
     
     // Return immediately to avoid Render's 30-second timeout
     res.status(202).json({
         ok: true,
-        message: "Sync started in background. Check /api/pipeline/status for results."
+        message: "Sync started in background. Check /api/pipeline/status for results.",
+        requestedSport
     });
 
     // Run sync in background
     try {
-        const result = await syncAllSports();
-        const final = await rebuildFinalOutputs();
+        const result = requestedSport
+            ? await syncSports({ sports: requestedSport })
+            : await syncAllSports();
         console.log('[pipeline] Background sync complete:', JSON.stringify({
             sync: result ? 'ok' : 'no result',
-            normal_singles: final?.normal?.singles?.length || 0,
-            normal_accas: final?.normal?.accas?.length || 0,
-            deep_singles: final?.deep?.singles?.length || 0,
-            deep_accas: final?.deep?.accas?.length || 0
+            requestedSport,
+            publishRun: result?.publishRun || null,
+            totalMatchesProcessed: result?.totalMatchesProcessed || 0
         }));
     } catch (err) {
         console.error('[pipeline] Background sync failed:', err.message);

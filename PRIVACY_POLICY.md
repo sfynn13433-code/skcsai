@@ -2,7 +2,7 @@ Privacy Policy
 Last updated: 2 April 2026
 
 1. Introduction
-Welcome to SKCS AI Sports Edge (Pty) Ltd ("SKCS", "we", "us", or "our"). We respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website (www.skcsai.co.za) and use our AI sports analytics subscription service (the "Service").
+Welcome to SKCS AI Sports Edge (Pty) Ltd ("SKCS", "we", "us", or "our"). We respect your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website (`https://skcs.co.za`) and use our AI sports analytics subscription service (the "Service").
 This policy is designed to comply with the South African Protection of Personal Information Act (POPIA) and the General Data Protection Regulation (GDPR) for our international users.
 
 2. Information We Collect

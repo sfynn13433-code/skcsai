@@ -191,6 +191,21 @@ async function initializeTables() {
         )`);
 
         // Predictions Raw
+        await client.query(`CREATE TABLE IF NOT EXISTS prediction_publish_runs (
+            id BIGSERIAL PRIMARY KEY,
+            trigger_source TEXT NOT NULL DEFAULT 'manual',
+            requested_sports TEXT[] NOT NULL DEFAULT ARRAY[]::text[],
+            run_scope TEXT NOT NULL DEFAULT 'all',
+            status TEXT NOT NULL DEFAULT 'running' CHECK (status IN ('running', 'completed', 'failed')),
+            notes TEXT,
+            error_message TEXT,
+            metadata JSONB NOT NULL DEFAULT '{}'::JSONB,
+            started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            completed_at TIMESTAMPTZ,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )`);
+
+        // Predictions Raw
         await client.query(`CREATE TABLE IF NOT EXISTS predictions_raw (
             id BIGSERIAL PRIMARY KEY,
             match_id TEXT NOT NULL,
@@ -218,6 +233,7 @@ async function initializeTables() {
         // Predictions Final
         await client.query(`CREATE TABLE IF NOT EXISTS predictions_final (
             id BIGSERIAL PRIMARY KEY,
+            publish_run_id BIGINT REFERENCES prediction_publish_runs(id) ON DELETE CASCADE,
             tier TEXT NOT NULL CHECK (tier IN ('normal', 'deep')),
             type TEXT NOT NULL CHECK (type IN ('single', 'acca', 'direct', 'secondary', 'multi', 'same_match', 'acca_6match')),
             matches JSONB NOT NULL,
@@ -225,6 +241,16 @@ async function initializeTables() {
             risk_level TEXT NOT NULL CHECK (risk_level IN ('safe', 'medium')),
             created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )`);
+
+        await client.query(`
+            ALTER TABLE predictions_final
+            ADD COLUMN IF NOT EXISTS publish_run_id BIGINT REFERENCES prediction_publish_runs(id) ON DELETE CASCADE
+        `);
+
+        await client.query(`
+            CREATE INDEX IF NOT EXISTS idx_predictions_final_publish_run_id
+            ON predictions_final(publish_run_id)
+        `);
 
         await client.query(`
             DO $$

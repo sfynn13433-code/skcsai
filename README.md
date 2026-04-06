@@ -2,14 +2,14 @@
 
 ## 🚀 Live Deployment
 
-### GitHub Pages
-- **URL**: https://skcs-sports-edge.github.io/skcsai/
-- **Status**: Deployed via GitHub Actions
-- **Source**: `public/` folder
+### Primary Frontend
+- **URL**: https://skcs.co.za
+- **Status**: Intended production domain
+- **Source**: `public/` folder via Vercel
 
-### Alternative Deployment Options
-- **Vercel**: https://skcsai.vercel.app (if configured)
-- **Render**: https://skcsai.onrender.com (backend API)
+### Supporting Deployments
+- **Vercel**: project-specific `*.vercel.app` domain during setup and previews
+- **Render**: https://skcsai-z8cd.onrender.com (backend API)
 
 ## 📁 Project Structure
 ```
@@ -23,7 +23,7 @@
 - Frontend: HTML/CSS/JavaScript
 - Backend: Node.js + Express
 - Database: Supabase
-- Deployment: GitHub Pages (frontend) + Render (backend)
+- Deployment: Vercel (frontend) + Render (backend)
 
 ## 📊 Features
 - Multi-sport predictions (13 sports)

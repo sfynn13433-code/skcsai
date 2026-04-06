@@ -8,6 +8,22 @@ async function bootstrap() {
     try {
         // Create tables if they don't exist
         await query(`
+            CREATE TABLE IF NOT EXISTS prediction_publish_runs (
+                id bigserial PRIMARY KEY,
+                trigger_source text NOT NULL DEFAULT 'manual',
+                requested_sports text[] NOT NULL DEFAULT ARRAY[]::text[],
+                run_scope text NOT NULL DEFAULT 'all',
+                status text NOT NULL DEFAULT 'running' CHECK (status IN ('running', 'completed', 'failed')),
+                notes text,
+                error_message text,
+                metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+                started_at timestamptz NOT NULL DEFAULT now(),
+                completed_at timestamptz,
+                created_at timestamptz NOT NULL DEFAULT now()
+            );
+        `);
+
+        await query(`
             CREATE TABLE IF NOT EXISTS predictions_raw (
                 id bigserial PRIMARY KEY,
                 match_id text NOT NULL,
@@ -37,6 +53,7 @@ async function bootstrap() {
         await query(`
             CREATE TABLE IF NOT EXISTS predictions_final (
                 id bigserial PRIMARY KEY,
+                publish_run_id bigint REFERENCES prediction_publish_runs(id) ON DELETE CASCADE,
                 tier text NOT NULL CHECK (tier IN ('normal', 'deep')),
                 type text NOT NULL CHECK (type IN ('single', 'acca', 'direct', 'secondary', 'multi', 'same_match', 'acca_6match')),
                 matches jsonb NOT NULL,
@@ -67,6 +84,16 @@ async function bootstrap() {
         `).catch((err) => {
             if (!String(err.message || '').includes('already exists')) throw err;
         });
+
+        await query(`
+            ALTER TABLE predictions_final
+            ADD COLUMN IF NOT EXISTS publish_run_id bigint REFERENCES prediction_publish_runs(id) ON DELETE CASCADE;
+        `);
+
+        await query(`
+            CREATE INDEX IF NOT EXISTS idx_predictions_final_publish_run_id
+            ON predictions_final(publish_run_id);
+        `);
 
         await query(`
             CREATE TABLE IF NOT EXISTS tier_rules (

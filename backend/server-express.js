@@ -7,6 +7,7 @@ const helmet       = require('helmet');
 const rateLimit    = require('express-rate-limit');
 const cors         = require('cors');
 const morgan       = require('morgan');
+const moment       = require('moment-timezone');
 const path         = require('path');
 const { query }            = require('./db');
 const { requireRole }        = require('./utils/auth');
@@ -14,7 +15,7 @@ const { upsertProfile }     = require('./database');
 const { getPlan }           = require('./config/subscriptionPlans');
 const { requireSupabaseUser } = require('./middleware/supabaseJwt');
 const cron         = require('node-cron');
-const { syncAllSports }      = require('./services/syncService');
+const { syncAllSports, syncSports }      = require('./services/syncService');
 const { bootstrap }          = require('./dbBootstrap');
 
 // NEW: Import subscription matrix and date normalization
@@ -69,19 +70,26 @@ const app = express();
 app.disable('x-powered-by');
 
 // -----------------  CORS configuration (HARDENED)  -----------------
+const configuredOrigins = String(process.env.FRONTEND_ORIGINS || '')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
 const allowedOrigins = new Set([
   "https://skcsaiedge.onrender.com",
   "https://skcsai-z8cd.onrender.com",
   "https://skcs-sports-edge.github.io",
   "https://skcsaisports.vercel.app",
   "https://skcsai.vercel.app",
+  "https://skcs.co.za",
   "https://www.skcs.co.za",
   "https://skcsaisports-6x2zcgjq1-stephens-projects-e3dd898a.vercel.app",
   "https://skcsaisports-o200aflsl-stephens-projects-e3dd898a.vercel.app",
   "http://localhost:3000",
   "http://localhost:5173",
   "http://127.0.0.1:3000",
-  "http://127.0.0.1:5173"
+  "http://127.0.0.1:5173",
+  ...configuredOrigins
 ]);
 
 const corsOptions = {
@@ -290,6 +298,7 @@ app.get('/api/billing-status', (_req, res) => {
 app.post('/api/refresh-predictions', async (req, res) => {
     try {
         const apiKey = req.headers['x-api-key'];
+        const requestedSport = req.query.sport ? String(req.query.sport).toLowerCase() : null;
 
         // Simple auth check
         if (apiKey !== process.env.SKCS_REFRESH_KEY && apiKey !== 'skcs_refresh_key') {
@@ -297,8 +306,8 @@ app.post('/api/refresh-predictions', async (req, res) => {
         }
 
         // Trigger the sync service
-        console.log('[REFRESH] Triggering sports data sync...');
-        await syncAllSports().catch(err => {
+        console.log(`[REFRESH] Triggering sports data sync${requestedSport ? ` for ${requestedSport}` : ''}...`);
+        const result = await syncSports({ sports: requestedSport }).catch(err => {
             console.error('[REFRESH] Sync failed:', err);
             throw err;
         });
@@ -306,6 +315,8 @@ app.post('/api/refresh-predictions', async (req, res) => {
         res.status(200).json({
             success: true,
             message: 'Predictions refreshed',
+            requestedSport,
+            result,
             timestamp: new Date().toISOString()
         });
 
@@ -318,124 +329,644 @@ app.post('/api/refresh-predictions', async (req, res) => {
 // -------------------------------------------------
 //  Accuracy Dashboard endpoint
 // -------------------------------------------------
+const ACCURACY_TIER_DEFS = [
+    { key: 'core', label: 'Core' },
+    { key: 'elite', label: 'Elite' }
+];
+
+const ACCURACY_TYPE_DEFS = [
+    { key: 'direct', label: 'Direct' },
+    { key: 'secondary', label: 'Secondary' },
+    { key: 'multi', label: 'Multi' },
+    { key: 'same_match', label: 'Same Match' },
+    { key: 'acca', label: 'ACCA' }
+];
+
+function normalizeAccuracyTier(value) {
+    const normalized = String(value || '').toLowerCase();
+    if (normalized === 'deep' || normalized === 'elite') return 'elite';
+    if (normalized === 'normal' || normalized === 'core') return 'core';
+    return normalized || 'unknown';
+}
+
+function labelAccuracyTier(value) {
+    return normalizeAccuracyTier(value) === 'elite' ? 'Elite' : 'Core';
+}
+
+function normalizeAccuracyType(value) {
+    const normalized = String(value || '').toLowerCase();
+    if (normalized === 'acca' || normalized === 'acca_6match') return 'acca';
+    if (normalized === 'same_match') return 'same_match';
+    if (normalized === 'secondary') return 'secondary';
+    if (normalized === 'multi') return 'multi';
+    if (normalized === 'direct') return 'direct';
+    return normalized || 'other';
+}
+
+function labelAccuracyType(value) {
+    switch (normalizeAccuracyType(value)) {
+    case 'same_match':
+        return 'Same Match';
+    case 'secondary':
+        return 'Secondary';
+    case 'multi':
+        return 'Multi';
+    case 'direct':
+        return 'Direct';
+    case 'acca':
+        return 'ACCA';
+    default:
+        return 'Other';
+    }
+}
+
+function createAccuracyBucket(key, label) {
+    return {
+        key,
+        label,
+        wins: 0,
+        losses: 0,
+        graded: 0,
+        total: 0,
+        pending: 0,
+        void: 0,
+        unsupported: 0
+    };
+}
+
+function finalizeAccuracyBucket(bucket) {
+    return {
+        ...bucket,
+        winRate: bucket.graded > 0 ? Math.round((bucket.wins / bucket.graded) * 1000) / 10 : 0
+    };
+}
+
+function buildAccuracyBreakdown(rows, definitions, keyFn, labelFn) {
+    const bucketMap = new Map();
+    for (const definition of definitions) {
+        bucketMap.set(definition.key, createAccuracyBucket(definition.key, definition.label));
+    }
+
+    for (const row of rows) {
+        const key = keyFn(row);
+        if (!bucketMap.has(key)) {
+            bucketMap.set(key, createAccuracyBucket(key, labelFn(key)));
+        }
+        const bucket = bucketMap.get(key);
+        bucket.total += 1;
+
+        if (typeof row.is_correct === 'boolean') {
+            bucket.graded += 1;
+            if (row.is_correct) bucket.wins += 1;
+            else bucket.losses += 1;
+        } else if (row.resolution_status === 'pending') {
+            bucket.pending += 1;
+        } else if (row.resolution_status === 'void') {
+            bucket.void += 1;
+        } else if (row.resolution_status === 'unsupported') {
+            bucket.unsupported += 1;
+        }
+    }
+
+    return Array.from(bucketMap.values()).map(finalizeAccuracyBucket);
+}
+
+function buildAccuracySlipRows(rows) {
+    const slipMap = new Map();
+
+    for (const row of rows) {
+        const slipKey = String(row.prediction_final_id);
+        if (!slipMap.has(slipKey)) {
+            slipMap.set(slipKey, {
+                prediction_final_id: row.prediction_final_id,
+                prediction_tier: row.prediction_tier,
+                prediction_type: row.prediction_type,
+                sport: row.sport,
+                legs: []
+            });
+        }
+        slipMap.get(slipKey).legs.push(row);
+    }
+
+    return Array.from(slipMap.values()).map((slip) => {
+        const statuses = slip.legs.map((leg) => leg.resolution_status);
+        const hasLoss = statuses.includes('lost');
+        const hasPending = statuses.includes('pending') || statuses.includes('missing_event');
+        const wonCount = statuses.filter((status) => status === 'won').length;
+        const voidCount = statuses.filter((status) => status === 'void').length;
+        const unsupportedCount = statuses.filter((status) => status === 'unsupported').length;
+
+        let resolutionStatus = 'pending';
+        let isCorrect = null;
+
+        if (hasLoss) {
+            resolutionStatus = 'lost';
+            isCorrect = false;
+        } else if (hasPending) {
+            resolutionStatus = 'pending';
+        } else if (voidCount === statuses.length) {
+            resolutionStatus = 'void';
+        } else if (unsupportedCount > 0 && wonCount === 0) {
+            resolutionStatus = 'unsupported';
+        } else if (wonCount > 0 && wonCount + voidCount === statuses.length && unsupportedCount === 0) {
+            resolutionStatus = 'won';
+            isCorrect = true;
+        } else if (unsupportedCount > 0) {
+            resolutionStatus = 'unsupported';
+        }
+
+        return {
+            prediction_final_id: slip.prediction_final_id,
+            prediction_tier: slip.prediction_tier,
+            prediction_type: slip.prediction_type,
+            sport: slip.sport,
+            legCount: slip.legs.length,
+            resolution_status: resolutionStatus,
+            is_correct: isCorrect
+        };
+    });
+}
+
 app.get('/api/accuracy', async (req, res) => {
     try {
-        // Query database for resolved predictions and calculate accuracy stats
-        const dbRes = await query(`
-            SELECT 
-                tier,
-                type,
-                matches,
-                total_confidence,
-                created_at,
-                COALESCE((matches->0->>'result'), 'pending') as result
-            FROM predictions_final
-            WHERE created_at < NOW() - INTERVAL '1 day'
-            ORDER BY created_at DESC
-            LIMIT 500
-        `);
+        const requestedSport = String(req.query.sport || 'football').toLowerCase();
+        const requestedDate = req.query.date ? String(req.query.date) : null;
+        const requestedRunId = req.query.run_id ? Number(req.query.run_id) : null;
 
-        const predictions = dbRes.rows || [];
-        
-        // Calculate overall stats
-        let totalWins = 0;
-        let totalPredictions = predictions.length;
-        const tierStats = {};
-        const sportStats = {};
+        const latestDateRes = await query(
+            `SELECT MAX(LEFT(COALESCE(leg.match_item->>'match_date', leg.match_item->>'commence_time', ''), 10)) AS latest_date
+             FROM predictions_final pf
+             CROSS JOIN LATERAL jsonb_array_elements(pf.matches) AS leg(match_item)
+             WHERE COALESCE(leg.match_item->>'sport', '') = $1`,
+            [requestedSport]
+        );
 
-        predictions.forEach(p => {
-            const isWin = p.result && (p.result.toLowerCase() === 'win' || p.result.toLowerCase() === 'true');
-            if (isWin) totalWins++;
+        const effectiveDate = requestedDate || latestDateRes.rows?.[0]?.latest_date || null;
 
-            // Tier stats
-            if (!tierStats[p.tier]) {
-                tierStats[p.tier] = { wins: 0, total: 0 };
-            }
-            tierStats[p.tier].total++;
-            if (isWin) tierStats[p.tier].wins++;
-
-            // Sport stats
-            if (p.matches && Array.isArray(p.matches)) {
-                p.matches.forEach(m => {
-                    const sport = m.sport || 'unknown';
-                    if (!sportStats[sport]) {
-                        sportStats[sport] = { wins: 0, total: 0 };
+        if (!effectiveDate) {
+            return res.status(200).json({
+                overall: { winRate: 0, wins: 0, total: 0, graded: 0, pending: 0, void: 0, unsupported: 0 },
+                byTier: [],
+                byType: [],
+                tierTypeBreakdown: [],
+                bySport: [],
+                weekly: [],
+                losses: [],
+                availability: {
+                    availableSports: [],
+                    availableDates: [],
+                    availableRuns: []
+                },
+                window: {
+                    date: requestedDate,
+                    sport: requestedSport,
+                    runId: requestedRunId || null,
+                    publishRun: null,
+                    publishSummary: {
+                        products: 0,
+                        legs: 0
+                    },
+                    graded: 0,
+                    pending: 0,
+                    void: 0,
+                    unsupported: 0,
+                    missingEvent: 0,
+                    reasonCapabilities: {
+                        verified: ['goals', 'half-time scores', 'corners', 'red cards', 'match events', 'shots', 'possession'],
+                        unavailable: [
+                            'historical weather attribution unless separately ingested',
+                            'historical injury attribution unless separately ingested',
+                            'manual news context unless separately ingested'
+                        ]
+                    },
+                    contextCoverage: {
+                        injuryRows: 0,
+                        weatherRows: 0,
+                        newsRows: 0
                     }
-                    sportStats[sport].total++;
-                    if (isWin) sportStats[sport].wins++;
-                });
-            }
+                },
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        const availabilityRes = await query(
+            `SELECT sport, fixture_date::text AS fixture_date
+             FROM (
+                SELECT
+                    COALESCE(leg.match_item->>'sport', '') AS sport,
+                    LEFT(COALESCE(leg.match_item->>'match_date', leg.match_item->>'commence_time', ''), 10) AS fixture_date
+                FROM predictions_final pf
+                CROSS JOIN LATERAL jsonb_array_elements(pf.matches) AS leg(match_item)
+             ) availability
+             WHERE sport <> ''
+               AND fixture_date <> ''
+             GROUP BY sport, fixture_date
+             ORDER BY fixture_date DESC, sport ASC`
+        );
+        const availabilityRows = availabilityRes.rows || [];
+        const availableSports = Array.from(new Set(availabilityRows.map((row) => String(row.sport || '').toLowerCase()).filter(Boolean)));
+        const availableDates = availabilityRows
+            .filter((row) => String(row.sport || '').toLowerCase() === requestedSport)
+            .map((row) => row.fixture_date);
+
+        const availableRunsRes = await query(
+            `SELECT
+                pf.publish_run_id,
+                pr.trigger_source,
+                pr.status,
+                pr.started_at,
+                pr.completed_at,
+                pr.requested_sports,
+                MAX(COALESCE(pr.completed_at, pr.started_at, pf.created_at)) AS sort_time
+             FROM predictions_final pf
+             CROSS JOIN LATERAL jsonb_array_elements(pf.matches) AS leg(match_item)
+             LEFT JOIN prediction_publish_runs pr ON pr.id = pf.publish_run_id
+             WHERE LEFT(COALESCE(leg.match_item->>'match_date', leg.match_item->>'commence_time', ''), 10) = $1
+               AND COALESCE(leg.match_item->>'sport', '') = $2
+               AND pf.publish_run_id IS NOT NULL
+             GROUP BY
+                pf.publish_run_id,
+                pr.trigger_source,
+                pr.status,
+                pr.started_at,
+                pr.completed_at,
+                pr.requested_sports
+             ORDER BY sort_time DESC NULLS LAST, pf.publish_run_id DESC`,
+            [effectiveDate, requestedSport]
+        );
+        const availableRuns = (availableRunsRes.rows || []).map((row) => ({
+            runId: Number(row.publish_run_id),
+            triggerSource: row.trigger_source || 'unknown',
+            status: row.status || 'unknown',
+            startedAt: row.started_at || null,
+            completedAt: row.completed_at || null,
+            requestedSports: Array.isArray(row.requested_sports) ? row.requested_sports : []
+        }));
+        const effectiveRunId = availableRuns.some((run) => run.runId === requestedRunId)
+            ? requestedRunId
+            : (availableRuns[0]?.runId || null);
+        const effectiveRun = availableRuns.find((run) => run.runId === effectiveRunId) || null;
+        const publishSummaryRes = await query(
+            `SELECT
+                COUNT(DISTINCT pf.id)::int AS products,
+                COUNT(*)::int AS legs
+             FROM predictions_final pf
+             CROSS JOIN LATERAL jsonb_array_elements(pf.matches) AS leg(match_item)
+             WHERE LEFT(COALESCE(leg.match_item->>'match_date', leg.match_item->>'commence_time', ''), 10) = $1
+               AND COALESCE(leg.match_item->>'sport', '') = $2
+               AND ($3::bigint IS NULL OR pf.publish_run_id = $3::bigint)`,
+            [effectiveDate, requestedSport, effectiveRunId]
+        );
+        const publishSummary = publishSummaryRes.rows?.[0] || { products: 0, legs: 0 };
+
+        const contextCoverageRes = await query(
+            `SELECT
+                (SELECT COUNT(*)::int FROM event_injury_snapshots WHERE fixture_date = $1::date) AS injury_rows,
+                (SELECT COUNT(*)::int FROM event_weather_snapshots WHERE fixture_date = $1::date) AS weather_rows,
+                (SELECT COUNT(*)::int FROM event_news_snapshots WHERE fixture_date = $1::date) AS news_rows`,
+            [effectiveDate]
+        );
+        const contextCoverage = contextCoverageRes.rows?.[0] || { injury_rows: 0, weather_rows: 0, news_rows: 0 };
+        const verifiedCapabilities = ['goals', 'half-time scores', 'corners', 'red cards', 'match events', 'shots', 'possession'];
+        const unavailableCapabilities = [];
+        if (Number(contextCoverage.injury_rows) > 0) {
+            verifiedCapabilities.push('historical injury attribution');
+        } else {
+            unavailableCapabilities.push('historical injury attribution unless separately ingested');
+        }
+        if (Number(contextCoverage.weather_rows) > 0) {
+            verifiedCapabilities.push('historical weather attribution');
+        } else {
+            unavailableCapabilities.push('historical weather attribution unless separately ingested');
+        }
+        if (Number(contextCoverage.news_rows) > 0) {
+            verifiedCapabilities.push('manual news context');
+        } else {
+            unavailableCapabilities.push('manual news context unless separately ingested');
+        }
+
+        const windowRes = await query(
+            `SELECT *
+             FROM predictions_accuracy
+             WHERE fixture_date = $1::date
+               AND sport = $2
+               AND ($3::bigint IS NULL OR publish_run_id = $3::bigint)
+             ORDER BY confidence DESC NULLS LAST, prediction_final_id, prediction_match_index`,
+            [effectiveDate, requestedSport, effectiveRunId]
+        );
+
+        const allSportRes = await query(
+            `WITH grouped_runs AS (
+                SELECT
+                    fixture_date,
+                    publish_run_id,
+                    COALESCE(pr.completed_at, pr.started_at, MAX(pa.evaluated_at)) AS sort_time
+                FROM predictions_accuracy pa
+                LEFT JOIN prediction_publish_runs pr ON pr.id = pa.publish_run_id
+                WHERE pa.sport = $1
+                GROUP BY fixture_date, publish_run_id, pr.completed_at, pr.started_at
+             ),
+             ranked_runs AS (
+                SELECT
+                    fixture_date,
+                    publish_run_id,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY fixture_date
+                        ORDER BY sort_time DESC NULLS LAST, publish_run_id DESC NULLS LAST
+                    ) AS rn
+                FROM grouped_runs
+             )
+             SELECT pa.*
+             FROM predictions_accuracy pa
+             JOIN ranked_runs rr
+               ON rr.fixture_date = pa.fixture_date
+              AND COALESCE(rr.publish_run_id, -1) = COALESCE(pa.publish_run_id, -1)
+             WHERE pa.sport = $1
+               AND rr.rn = 1
+             ORDER BY pa.fixture_date DESC, pa.confidence DESC NULLS LAST`,
+            [requestedSport]
+        );
+
+        const rows = windowRes.rows || [];
+        const allRows = allSportRes.rows || [];
+        const slipRows = buildAccuracySlipRows(rows);
+
+        const gradedRows = rows.filter((row) => typeof row.is_correct === 'boolean');
+        const wins = gradedRows.filter((row) => row.is_correct).length;
+        const losses = gradedRows.length - wins;
+        const pending = rows.filter((row) => row.resolution_status === 'pending').length;
+        const voided = rows.filter((row) => row.resolution_status === 'void').length;
+        const unsupported = rows.filter((row) => row.resolution_status === 'unsupported').length;
+        const missingEvent = rows.filter((row) => row.resolution_status === 'missing_event').length;
+        const overallWinRate = gradedRows.length > 0 ? Math.round((wins / gradedRows.length) * 1000) / 10 : 0;
+
+        const byTier = buildAccuracyBreakdown(
+            slipRows,
+            ACCURACY_TIER_DEFS,
+            (row) => normalizeAccuracyTier(row.prediction_tier),
+            (key) => labelAccuracyTier(key)
+        ).map((entry) => ({
+            tierKey: entry.key,
+            tier: entry.label,
+            winRate: entry.winRate,
+            wins: entry.wins,
+            losses: entry.losses,
+            total: entry.total,
+            graded: entry.graded,
+            pending: entry.pending,
+            void: entry.void,
+            unsupported: entry.unsupported
+        }));
+
+        const byType = buildAccuracyBreakdown(
+            slipRows,
+            ACCURACY_TYPE_DEFS,
+            (row) => normalizeAccuracyType(row.prediction_type),
+            (key) => labelAccuracyType(key)
+        ).map((entry) => ({
+            typeKey: entry.key,
+            type: entry.label,
+            winRate: entry.winRate,
+            wins: entry.wins,
+            losses: entry.losses,
+            total: entry.total,
+            graded: entry.graded,
+            pending: entry.pending,
+            void: entry.void,
+            unsupported: entry.unsupported
+        }));
+
+        const tierTypeBreakdown = ACCURACY_TIER_DEFS.map((tierDef) => {
+            const tierRows = slipRows.filter((row) => normalizeAccuracyTier(row.prediction_tier) === tierDef.key);
+            const types = buildAccuracyBreakdown(
+                tierRows,
+                ACCURACY_TYPE_DEFS,
+                (row) => normalizeAccuracyType(row.prediction_type),
+                (key) => labelAccuracyType(key)
+            ).map((entry) => ({
+                typeKey: entry.key,
+                type: entry.label,
+                winRate: entry.winRate,
+                wins: entry.wins,
+                losses: entry.losses,
+                total: entry.total,
+                graded: entry.graded,
+                pending: entry.pending,
+                void: entry.void,
+                unsupported: entry.unsupported
+            }));
+
+            const tierSummary = byTier.find((entry) => entry.tierKey === tierDef.key) || {
+                tierKey: tierDef.key,
+                tier: tierDef.label,
+                winRate: 0,
+                wins: 0,
+                losses: 0,
+                total: 0,
+                graded: 0,
+                pending: 0,
+                void: 0,
+                unsupported: 0
+            };
+
+            return {
+                ...tierSummary,
+                types
+            };
         });
 
-        const overallWinRate = totalPredictions > 0 ? Math.round((totalWins / totalPredictions) * 1000) / 10 : 0;
+        const sportMap = new Map();
+        for (const row of rows) {
+            const key = row.sport || 'unknown';
+            if (!sportMap.has(key)) {
+                sportMap.set(key, { sport: key, wins: 0, graded: 0, total: 0 });
+            }
+            const entry = sportMap.get(key);
+            entry.total += 1;
+            if (typeof row.is_correct === 'boolean') {
+                entry.graded += 1;
+                if (row.is_correct) entry.wins += 1;
+            }
+        }
 
-        const byTier = Object.entries(tierStats).map(([tier, stats]) => ({
-            tier: tier.charAt(0).toUpperCase() + tier.slice(1),
-            winRate: stats.total > 0 ? Math.round((stats.wins / stats.total) * 1000) / 10 : 0,
-            wins: stats.wins,
-            total: stats.total
+        const bySport = Array.from(sportMap.values()).map((entry) => ({
+            sport: entry.sport,
+            winRate: entry.graded > 0 ? Math.round((entry.wins / entry.graded) * 1000) / 10 : 0,
+            wins: entry.wins,
+            total: entry.total,
+            graded: entry.graded
         }));
 
-        const bySport = Object.entries(sportStats).map(([sport, stats]) => ({
-            sport: sport.toLowerCase(),
-            winRate: stats.total > 0 ? Math.round((stats.wins / stats.total) * 1000) / 10 : 0,
-            wins: stats.wins,
-            total: stats.total
-        }));
+        const weeklyMap = new Map();
+        for (const row of allRows) {
+            if (!row.fixture_date) continue;
+            const weekKey = moment(row.fixture_date).startOf('isoWeek').format('YYYY-MM-DD');
+            if (!weeklyMap.has(weekKey)) {
+                weeklyMap.set(weekKey, {
+                    weekStart: weekKey,
+                    wins: 0,
+                    losses: 0,
+                    pending: 0,
+                    total: 0,
+                    reasonCounts: new Map()
+                });
+            }
 
-        const accuracyData = {
+            const entry = weeklyMap.get(weekKey);
+            entry.total += 1;
+
+            if (row.resolution_status === 'won') entry.wins += 1;
+            else if (row.resolution_status === 'lost') entry.losses += 1;
+            else if (row.resolution_status === 'pending') entry.pending += 1;
+
+            if (row.resolution_status === 'lost' && Array.isArray(row.loss_factors)) {
+                for (const factor of row.loss_factors) {
+                    const label = factor?.label || factor?.type || 'Unknown';
+                    entry.reasonCounts.set(label, (entry.reasonCounts.get(label) || 0) + 1);
+                }
+            }
+        }
+
+        const weekly = Array.from(weeklyMap.values())
+            .sort((a, b) => b.weekStart.localeCompare(a.weekStart))
+            .slice(0, 6)
+            .map((entry) => {
+                const graded = entry.wins + entry.losses;
+                const topReasons = Array.from(entry.reasonCounts.entries())
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3)
+                    .map(([label, count]) => `${label} (${count})`);
+
+                return {
+                    weekStart: entry.weekStart,
+                    wins: entry.wins,
+                    losses: entry.losses,
+                    pending: entry.pending,
+                    total: entry.total,
+                    accuracy: graded > 0 ? Math.round((entry.wins / graded) * 1000) / 10 : 0,
+                    reasons: topReasons
+                };
+            });
+
+        const lossCards = rows
+            .filter((row) => row.resolution_status === 'lost')
+            .slice(0, 12)
+            .map((row) => ({
+                predictionFinalId: row.prediction_final_id,
+                matchIndex: row.prediction_match_index,
+                match: `${row.home_team} vs ${row.away_team}`,
+                sport: row.sport,
+                tier: labelAccuracyTier(row.prediction_tier),
+                tierKey: normalizeAccuracyTier(row.prediction_tier),
+                predictionType: labelAccuracyType(row.prediction_type),
+                predictionTypeKey: normalizeAccuracyType(row.prediction_type),
+                market: row.market,
+                predictedOutcome: row.predicted_outcome,
+                actualResult: row.actual_result,
+                confidence: row.confidence,
+                eventStatus: row.event_status,
+                scoreline: [row.actual_home_score, row.actual_away_score].every((value) => Number.isFinite(Number(value)))
+                    ? `${row.actual_home_score}-${row.actual_away_score}`
+                    : null,
+                halftimeScoreline: [row.actual_home_score_ht, row.actual_away_score_ht].every((value) => Number.isFinite(Number(value)))
+                    ? `${row.actual_home_score_ht}-${row.actual_away_score_ht}`
+                    : null,
+                reasonSummary: row.loss_reason_summary || row.evaluation_notes || 'No verified loss reason captured.',
+                factors: Array.isArray(row.loss_factors) ? row.loss_factors : []
+            }));
+
+        res.status(200).json({
             overall: {
                 winRate: overallWinRate,
-                wins: totalWins,
-                total: totalPredictions
+                wins,
+                total: rows.length,
+                graded: gradedRows.length,
+                pending,
+                void: voided,
+                unsupported,
+                missingEvent
             },
-            byTier: byTier.length > 0 ? byTier : [
-                { tier: 'Normal', winRate: 65.2, wins: 325, total: 500 },
-                { tier: 'Deep', winRate: 71.8, wins: 518, total: 750 }
-            ],
-            bySport: bySport.length > 0 ? bySport : [
-                { sport: 'football', winRate: 55.0, wins: 110, total: 200 },
-                { sport: 'basketball', winRate: 68.5, wins: 137, total: 200 },
-                { sport: 'hockey', winRate: 72.3, wins: 145, total: 200 },
-                { sport: 'baseball', winRate: 61.2, wins: 122, total: 200 },
-                { sport: 'rugby', winRate: 70.1, wins: 140, total: 200 },
-                { sport: 'cricket', winRate: 74.8, wins: 150, total: 200 },
-                { sport: 'mma', winRate: 74.8, wins: 150, total: 200 },
-                { sport: 'formula1', winRate: 69.5, wins: 139, total: 200 },
-                { sport: 'afl', winRate: 65.3, wins: 131, total: 200 },
-                { sport: 'handball', winRate: 71.2, wins: 142, total: 200 },
-                { sport: 'volleyball', winRate: 79.2, wins: 158, total: 200 }
-            ],
+            byTier,
+            byType,
+            tierTypeBreakdown,
+            bySport,
+            weekly,
+            losses: lossCards,
+            availability: {
+                availableSports,
+                availableDates,
+                availableRuns
+            },
+            window: {
+                date: effectiveDate,
+                sport: requestedSport,
+                runId: effectiveRunId,
+                publishRun: effectiveRun,
+                publishSummary: {
+                    products: Number(publishSummary.products) || 0,
+                    legs: Number(publishSummary.legs) || 0
+                },
+                graded: gradedRows.length,
+                pending,
+                void: voided,
+                unsupported,
+                missingEvent,
+                contextCoverage: {
+                    injuryRows: Number(contextCoverage.injury_rows) || 0,
+                    weatherRows: Number(contextCoverage.weather_rows) || 0,
+                    newsRows: Number(contextCoverage.news_rows) || 0
+                },
+                reasonCapabilities: {
+                    verified: verifiedCapabilities,
+                    unavailable: unavailableCapabilities
+                }
+            },
             timestamp: new Date().toISOString()
-        };
-
-        // Ensure overall.winRate exists even if 0
-        if (!accuracyData.overall.winRate) accuracyData.overall.winRate = 0;
-
-        res.status(200).json(accuracyData);
+        });
 
     } catch (err) {
         console.error('ACCURACY ERROR:', err);
-        // Return fallback data if database query fails
         res.status(200).json({
-            overall: { winRate: 67.4, wins: 843, total: 1250 },
-            byTier: [
-                { tier: 'Normal', winRate: 65.2, wins: 325, total: 500 },
-                { tier: 'Deep', winRate: 71.8, wins: 518, total: 750 }
-            ],
-            bySport: [
-                { sport: 'football', winRate: 55.0, wins: 110, total: 200 },
-                { sport: 'basketball', winRate: 68.5, wins: 137, total: 200 },
-                { sport: 'hockey', winRate: 72.3, wins: 145, total: 200 },
-                { sport: 'baseball', winRate: 61.2, wins: 122, total: 200 },
-                { sport: 'rugby', winRate: 70.1, wins: 140, total: 200 },
-                { sport: 'cricket', winRate: 74.8, wins: 150, total: 200 },
-                { sport: 'mma', winRate: 74.8, wins: 150, total: 200 },
-                { sport: 'formula1', winRate: 69.5, wins: 139, total: 200 },
-                { sport: 'afl', winRate: 65.3, wins: 131, total: 200 },
-                { sport: 'handball', winRate: 71.2, wins: 142, total: 200 },
-                { sport: 'volleyball', winRate: 79.2, wins: 158, total: 200 }
-            ],
+            overall: { winRate: 0, wins: 0, total: 0, graded: 0, pending: 0, void: 0, unsupported: 0 },
+            byTier: [],
+            byType: [],
+            tierTypeBreakdown: [],
+            bySport: [],
+            weekly: [],
+            losses: [],
+            availability: {
+                availableSports: [],
+                availableDates: [],
+                availableRuns: []
+            },
+            window: {
+                date: req.query.date || null,
+                sport: String(req.query.sport || 'football').toLowerCase(),
+                runId: req.query.run_id ? Number(req.query.run_id) : null,
+                publishRun: null,
+                publishSummary: {
+                    products: 0,
+                    legs: 0
+                },
+                graded: 0,
+                pending: 0,
+                void: 0,
+                unsupported: 0,
+                missingEvent: 0,
+                reasonCapabilities: {
+                    verified: ['goals', 'half-time scores', 'corners', 'red cards', 'match events', 'shots', 'possession'],
+                    unavailable: [
+                        'historical weather attribution unless separately ingested',
+                        'historical injury attribution unless separately ingested',
+                        'manual news context unless separately ingested'
+                    ]
+                },
+                contextCoverage: {
+                    injuryRows: 0,
+                    weatherRows: 0,
+                    newsRows: 0
+                }
+            },
             timestamp: new Date().toISOString()
         });
     }

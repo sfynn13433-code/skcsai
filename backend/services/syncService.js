@@ -88,19 +88,58 @@ const SPORTS_CONFIG = [
     { sport: 'mma', leagueId: null, season: SEASON_YEAR, oddsKey: 'mma_mixed_martial_arts' },
 ];
 
+function normalizeRequestedSports(input) {
+    if (!input) return [];
+
+    const values = Array.isArray(input) ? input : [input];
+    return values
+        .flatMap((value) => String(value || '').split(','))
+        .map((value) => String(value || '').trim().toLowerCase())
+        .filter(Boolean);
+}
+
+function getSportsConfigForRequest(input) {
+    const requestedSports = normalizeRequestedSports(input);
+    if (!requestedSports.length) {
+        return {
+            configs: SPORTS_CONFIG,
+            requestedSports: []
+        };
+    }
+
+    const requestedSet = new Set(requestedSports);
+    return {
+        configs: SPORTS_CONFIG.filter((item) => requestedSet.has(String(item.sport || '').toLowerCase())),
+        requestedSports
+    };
+}
+
 /**
  * syncAllSports
  * This function clears out the "Test Data" and pulls REAL matches 
  * from the providers into your Supabase database.
  */
-async function syncAllSports() {
-    console.log('[syncService] Starting master sports data sync for REAL matches...');
+async function syncSports(options = {}) {
+    const { configs, requestedSports } = getSportsConfigForRequest(options.sports);
+    const scopeLabel = requestedSports.length ? requestedSports.join(', ') : 'all sports';
+    console.log(`[syncService] Starting sports data sync for REAL matches (${scopeLabel})...`);
     
     // FORCE REAL MODE: We ignore the 'test' config to ensure real data flows.
     try {
         let totalMatchesProcessed = 0;
+        const perSport = new Map();
 
-        for (const item of SPORTS_CONFIG) {
+        if (!configs.length) {
+            console.warn('[syncService] No matching sports configuration found for request:', requestedSports.join(', '));
+            return {
+                requestedSports,
+                totalMatchesProcessed: 0,
+                rebuiltFinalOutputs: false,
+                perSport: []
+            };
+        }
+
+        for (const item of configs) {
             try {
                 console.log(`[syncService] Fetching REAL matches for: ${item.sport}...`);
                 
@@ -110,9 +149,13 @@ async function syncAllSports() {
                     console.log(`[syncService] Found ${matches.length} REAL matches for ${item.sport}. Running AI Analysis...`);
                     await runPipelineForMatches({ matches });
                     totalMatchesProcessed += matches.length;
+                    perSport.set(item.sport, (perSport.get(item.sport) || 0) + matches.length);
                     console.log(`[syncService] ${item.sport}: pipeline complete for ${matches.length} matches`);
                 } else {
                     console.log(`[syncService] No upcoming REAL matches found for ${item.sport} right now.`);
+                    if (!perSport.has(item.sport)) {
+                        perSport.set(item.sport, 0);
+                    }
                 }
             } catch (sportErr) {
                 console.error(`[syncService] ERROR processing ${item.sport}:`, sportErr.message);
@@ -122,20 +165,47 @@ async function syncAllSports() {
         if (totalMatchesProcessed > 0) {
             console.log('[syncService] Sync successful. Rebuilding final outputs for the website...');
             // This moves the AI results into the 'predictions_final' table the website sees.
-            await rebuildFinalOutputs();
+            const rebuild = await rebuildFinalOutputs({
+                triggerSource: 'sync_service',
+                requestedSports: requestedSports.length ? requestedSports : ['all'],
+                metadata: {
+                    totalMatchesProcessed,
+                    perSport: Array.from(perSport.entries()).map(([sport, matchesProcessed]) => ({ sport, matchesProcessed }))
+                }
+            });
             console.log('[syncService] Master sync complete! Real data is now live.');
+            return {
+                requestedSports,
+                totalMatchesProcessed,
+                rebuiltFinalOutputs: true,
+                perSport: Array.from(perSport.entries()).map(([sport, matchesProcessed]) => ({ sport, matchesProcessed })),
+                publishRun: rebuild?.publish_run || null
+            };
         } else {
             console.warn('[syncService] Sync finished but 0 real matches were found. Check your API Keys.');
+            return {
+                requestedSports,
+                totalMatchesProcessed: 0,
+                rebuiltFinalOutputs: false,
+                perSport: Array.from(perSport.entries()).map(([sport, matchesProcessed]) => ({ sport, matchesProcessed }))
+            };
         }
 
     } catch (error) {
         console.error('[syncService] Master sync failed:', error.message);
+        throw error;
     }
+}
+
+async function syncAllSports() {
+    return syncSports();
 }
 
 // Allow manual trigger via command line
 if (require.main === module) {
-    syncAllSports()
+    syncSports({
+        sports: process.argv.slice(2)
+    })
         .then(() => {
             console.log('[syncService] Manual process finished.');
             process.exit(0);
@@ -147,5 +217,6 @@ if (require.main === module) {
 }
 
 module.exports = {
-    syncAllSports
+    syncAllSports,
+    syncSports
 };

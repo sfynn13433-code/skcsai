@@ -7,7 +7,8 @@ const { spawn } = require('child_process');
 const rootDir = path.resolve(__dirname, '..');
 const serverPath = path.join(rootDir, 'backend', 'server-express.js');
 const backendEnvPath = path.join(rootDir, 'backend', '.env');
-const baseUrl = 'http://127.0.0.1:3000';
+const smokePort = String(process.env.SMOKE_PORT || process.env.PORT || '3000');
+const baseUrl = `http://127.0.0.1:${smokePort}`;
 
 function parseEnvFile(filePath) {
     if (!fs.existsSync(filePath)) return {};
@@ -61,7 +62,8 @@ async function fetchJson(url, options = {}) {
 async function run() {
     const env = {
         ...process.env,
-        ...parseEnvFile(backendEnvPath)
+        ...parseEnvFile(backendEnvPath),
+        PORT: smokePort
     };
 
     const server = spawn(process.execPath, [serverPath], {

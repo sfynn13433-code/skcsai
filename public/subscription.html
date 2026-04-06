@@ -402,8 +402,8 @@ button:hover { opacity: 0.9; }
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
 <script>
-const SUPABASE_URL = "https://ghzjntdvaptuxfpvhybb.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdoempudGR2YXB0dXhmcHZoeWJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDAzNzIsImV4cCI6MjA4NzgxNjM3Mn0.nWxOY0lDIDDvexELk9De2aEfPfM5iJjoaW91tbL7YQk";
+const SUPABASE_URL = window.SUPABASE_URL || "";
+const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || "";
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let billingStatus = null;
@@ -425,7 +425,7 @@ function showElite(){
 async function loadBillingStatus() {
   const banner = document.getElementById('billingBanner');
   try {
-    const backend = window.API_BASE_URL || "https://skcsai.onrender.com";
+    const backend = window.API_BASE_URL || "https://skcsai-z8cd.onrender.com";
     const res = await fetch(backend + "/api/billing-status");
     billingStatus = await res.json();
 
@@ -458,7 +458,7 @@ async function selectPlan(tierId) {
     return;
   }
 
-  const SKCS_BACKEND = window.API_BASE_URL || "https://skcsai.onrender.com";
+  const SKCS_BACKEND = window.API_BASE_URL || "https://skcsai-z8cd.onrender.com";
   const token = session.access_token;
 
   try {

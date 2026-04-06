@@ -1,6 +1,6 @@
 'use strict';
 
-const { withTransaction } = require('../db');
+const { query, withTransaction } = require('../db');
 const { validateRawPredictionInput } = require('../utils/validation');
 const { filterRawPrediction } = require('./filterEngine');
 const { buildFinalForTier } = require('./accaBuilder');
@@ -222,10 +222,98 @@ async function runPipelineFromConfiguredDataMode() {
     }
 }
 
-async function rebuildFinalOutputs() {
-    const normal = await buildFinalForTier('normal');
-    const deep = await buildFinalForTier('deep');
-    return { normal, deep };
+async function rebuildFinalOutputs(options = {}) {
+    const requestedSports = Array.isArray(options.requestedSports)
+        ? options.requestedSports
+        : (options.requestedSports ? [options.requestedSports] : []);
+    const triggerSource = String(options.triggerSource || 'manual');
+    const runScope = requestedSports.length ? requestedSports.join(',') : 'all';
+
+    const runRes = await query(
+        `
+        INSERT INTO prediction_publish_runs (
+            trigger_source,
+            requested_sports,
+            run_scope,
+            status,
+            notes,
+            metadata
+        )
+        VALUES ($1, $2::text[], $3, 'running', $4, $5::jsonb)
+        RETURNING *;
+        `,
+        [
+            triggerSource,
+            requestedSports,
+            runScope,
+            options.notes || null,
+            JSON.stringify(options.metadata || {})
+        ]
+    );
+
+    const publishRun = runRes.rows[0];
+
+    try {
+        const buildOptions = {
+            publishRunId: publishRun.id,
+            requestedSports
+        };
+        const normal = await buildFinalForTier('normal', buildOptions);
+        const deep = await buildFinalForTier('deep', buildOptions);
+        const summary = {
+            normal: {
+                direct: normal?.direct?.length || 0,
+                secondary: normal?.secondary?.length || 0,
+                same_match: normal?.same_match?.length || 0,
+                multi: normal?.multi?.length || 0,
+                acca_6match: normal?.acca_6match?.length || 0
+            },
+            deep: {
+                direct: deep?.direct?.length || 0,
+                secondary: deep?.secondary?.length || 0,
+                same_match: deep?.same_match?.length || 0,
+                multi: deep?.multi?.length || 0,
+                acca_6match: deep?.acca_6match?.length || 0
+            }
+        };
+
+        await query(
+            `
+            UPDATE prediction_publish_runs
+            SET status = 'completed',
+                completed_at = NOW(),
+                metadata = COALESCE(metadata, '{}'::jsonb) || $2::jsonb
+            WHERE id = $1
+            `,
+            [
+                publishRun.id,
+                JSON.stringify({ summary })
+            ]
+        );
+
+        return {
+            publish_run: {
+                id: publishRun.id,
+                trigger_source: publishRun.trigger_source,
+                requested_sports: publishRun.requested_sports,
+                status: 'completed'
+            },
+            normal,
+            deep
+        };
+    } catch (error) {
+        await query(
+            `
+            UPDATE prediction_publish_runs
+            SET status = 'failed',
+                completed_at = NOW(),
+                error_message = $2
+            WHERE id = $1
+            `,
+            [publishRun.id, error.message]
+        );
+        throw error;
+    }
 }
 
 module.exports = {
