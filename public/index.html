@@ -663,6 +663,10 @@
                     <h4 style="color:#60a5fa;margin-bottom:1rem;">⚽ Direct (Match Winners)</h4>
                     <div id="football-direct-matches" class="prediction-grid"><p>Loading...</p></div>
                 </div>
+                <div id="football-secondary" class="prediction-category">
+                    <h4 style="color:#fbbf24;margin-bottom:1rem;">📊 Secondary (O/U, BTTS, Double Chance)</h4>
+                    <div id="football-secondary-matches" class="prediction-grid"><p>Loading...</p></div>
+                </div>
                 <div id="football-multi" class="prediction-category">
                     <h4 style="color:#c084fc;margin-bottom:1rem;">🔀 Multi (Combined Selections)</h4>
                     <div id="football-multi-matches" class="prediction-grid"><p>Loading...</p></div>
@@ -1073,16 +1077,22 @@
         const singles = predictions.filter(p => p.type === 'single' || !p.type || ['direct', 'secondary'].includes(sectionType(p)));
         const accas = predictions.filter(p => p.type === 'acca' || sectionType(p) === 'acca_6match');
         const directSingles = singles.filter(p => sectionType(p) === 'direct' || (!sectionType(p) && Array.isArray(p.matches) && p.matches.length === 1));
+        const secondarySingles = singles.filter(p => sectionType(p) === 'secondary');
         const multiPreds = predictions.filter(p => sectionType(p) === 'multi' || (Array.isArray(p.matches) && p.matches.length >= 2 && p.matches.length <= 3));
         const sameMatchPreds = predictions.filter(p => sectionType(p) === 'same_match' || (Array.isArray(p.matches) && p.matches.length > 1 && new Set((p.matches || []).map(m => m.match_id)).size === 1));
 
+        const tierSummary = document.getElementById('football-tier-summary');
+        if (tierSummary) tierSummary.style.display = 'block';
+
         setFootballSection('football-direct-matches', directSingles, createPredictionCard, 'No direct football predictions available.');
+        setFootballSection('football-secondary-matches', secondarySingles, createPredictionCard, 'No football secondary selections available.');
         setFootballSection('football-multi-matches', multiPreds, createMultiCard, 'No football multi selections available.');
         setFootballSection('football-same-matches', sameMatchPreds, createMultiCard, 'No same-match football bet builders available.');
         setFootballSection('football-acca-matches', accas, createAccaCard, 'No football ACCA available.');
 
         const counts = {
             'football-direct-count': directSingles.length,
+            'football-secondary-count': secondarySingles.length,
             'football-multi-count': multiPreds.length,
             'football-same-count': sameMatchPreds.length,
             'football-acca-count': accas.length
