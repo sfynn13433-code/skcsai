@@ -458,6 +458,13 @@ function normalizeRequestedSports(requestedSports = []) {
         .filter((value) => value && value !== 'all');
 }
 
+function getPerSportCandidateLimit(requestedSports = []) {
+    const sports = normalizeRequestedSports(requestedSports);
+    if (sports.length === 1) return 24;
+    if (sports.length > 1) return 8;
+    return 4;
+}
+
 async function loadValidFilteredPredictions(tier, client, options = {}) {
     const t = normalizeTier(tier);
     const requestedSports = normalizeRequestedSports(options.requestedSports);
@@ -515,7 +522,10 @@ async function buildFinalForTier(tier, options = {}) {
             requestedSports: options.requestedSports
         });
         const perMatchLimited = enforcePerMatchLimit(valid, accaRules.max_per_match);
-        const perSportLimited = enforcePerSportLimit(perMatchLimited, 4);
+        const perSportLimited = enforcePerSportLimit(
+            perMatchLimited,
+            getPerSportCandidateLimit(options.requestedSports)
+        );
 
         // Limit candidates to prevent combinatorial explosion and timeouts
         const MAX_ACCA_CANDIDATES = 30;

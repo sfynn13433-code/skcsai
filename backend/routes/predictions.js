@@ -37,6 +37,20 @@ const SPORT_FILTER_MAP = {
     cricket: ['cricket']
 };
 
+function normalizePredictionSportKey(value) {
+    const key = String(value || '').trim().toLowerCase();
+    if (!key) return 'unknown';
+    if (key.startsWith('soccer_')) return 'football';
+    if (key.startsWith('icehockey_')) return 'hockey';
+    if (key.startsWith('basketball_')) return 'basketball';
+    if (key.startsWith('americanfootball_')) return 'nfl';
+    if (key.startsWith('baseball_')) return 'baseball';
+    if (key.startsWith('rugbyunion_')) return 'rugby';
+    if (key.startsWith('aussierules_')) return 'afl';
+    if (key.startsWith('mma_')) return 'mma';
+    return key;
+}
+
 function getSportFilterValues(sport) {
     const key = String(sport || '').trim().toLowerCase();
     if (!key) return [];
@@ -45,10 +59,10 @@ function getSportFilterValues(sport) {
 
 function predictionMatchesSport(prediction, sportFilterValues) {
     if (!Array.isArray(sportFilterValues) || sportFilterValues.length === 0) return true;
-    const allowed = new Set(sportFilterValues.map((value) => String(value).toLowerCase()));
+    const allowed = new Set(sportFilterValues.map(normalizePredictionSportKey));
     const matches = Array.isArray(prediction?.matches) ? prediction.matches : [];
     if (matches.length === 0) return false;
-    return matches.every((match) => allowed.has(String(match?.sport || '').toLowerCase()));
+    return matches.every((match) => allowed.has(normalizePredictionSportKey(match?.sport || '')));
 }
 
 function extractTeamNames(predictions) {
@@ -135,7 +149,17 @@ router.get('/', requireRole('user'), async (req, res) => {
                     publish_run_id
                 FROM (
                     SELECT
-                        LOWER(COALESCE(pf.matches->0->>'sport', 'unknown')) AS sport_key,
+                        CASE
+                            WHEN LOWER(COALESCE(pf.matches->0->>'sport', '')) LIKE 'soccer\_%' THEN 'football'
+                            WHEN LOWER(COALESCE(pf.matches->0->>'sport', '')) LIKE 'icehockey\_%' THEN 'hockey'
+                            WHEN LOWER(COALESCE(pf.matches->0->>'sport', '')) LIKE 'basketball\_%' THEN 'basketball'
+                            WHEN LOWER(COALESCE(pf.matches->0->>'sport', '')) LIKE 'americanfootball\_%' THEN 'nfl'
+                            WHEN LOWER(COALESCE(pf.matches->0->>'sport', '')) LIKE 'baseball\_%' THEN 'baseball'
+                            WHEN LOWER(COALESCE(pf.matches->0->>'sport', '')) LIKE 'rugbyunion\_%' THEN 'rugby'
+                            WHEN LOWER(COALESCE(pf.matches->0->>'sport', '')) LIKE 'aussierules\_%' THEN 'afl'
+                            WHEN LOWER(COALESCE(pf.matches->0->>'sport', '')) LIKE 'mma\_%' THEN 'mma'
+                            ELSE LOWER(COALESCE(pf.matches->0->>'sport', 'unknown'))
+                        END AS sport_key,
                         pf.publish_run_id,
                         COALESCE(pr.completed_at, pr.started_at, pf.created_at) AS run_completed_at
                     FROM predictions_final pf
@@ -148,7 +172,19 @@ router.get('/', requireRole('user'), async (req, res) => {
             FROM predictions_final pf
             JOIN latest_runs lr
               ON lr.publish_run_id = pf.publish_run_id
-             AND LOWER(COALESCE(pf.matches->0->>'sport', 'unknown')) = lr.sport_key
+             AND (
+                CASE
+                    WHEN LOWER(COALESCE(pf.matches->0->>'sport', '')) LIKE 'soccer\_%' THEN 'football'
+                    WHEN LOWER(COALESCE(pf.matches->0->>'sport', '')) LIKE 'icehockey\_%' THEN 'hockey'
+                    WHEN LOWER(COALESCE(pf.matches->0->>'sport', '')) LIKE 'basketball\_%' THEN 'basketball'
+                    WHEN LOWER(COALESCE(pf.matches->0->>'sport', '')) LIKE 'americanfootball\_%' THEN 'nfl'
+                    WHEN LOWER(COALESCE(pf.matches->0->>'sport', '')) LIKE 'baseball\_%' THEN 'baseball'
+                    WHEN LOWER(COALESCE(pf.matches->0->>'sport', '')) LIKE 'rugbyunion\_%' THEN 'rugby'
+                    WHEN LOWER(COALESCE(pf.matches->0->>'sport', '')) LIKE 'aussierules\_%' THEN 'afl'
+                    WHEN LOWER(COALESCE(pf.matches->0->>'sport', '')) LIKE 'mma\_%' THEN 'mma'
+                    ELSE LOWER(COALESCE(pf.matches->0->>'sport', 'unknown'))
+                END
+             ) = lr.sport_key
             WHERE tier IN (${planCapabilities.tiers.map(t => `'${t}'`).join(',')})
         `;
         const queryParams = [];
